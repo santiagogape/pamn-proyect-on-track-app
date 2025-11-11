@@ -19,8 +19,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.on_track_app.ui.navigation.BottomNavigation
-import com.example.on_track_app.ui.navigation.Destinations
+import com.example.on_track_app.navigation.Navigation
+import com.example.on_track_app.navigation.Destinations
 
 @Composable
 fun OnTrackApp() {
@@ -79,7 +79,7 @@ fun OnTrackApp() {
             }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
-                BottomNavigation(navController = navController).let {}
+                Navigation(navController = navController).let {}
             }
         }
     }

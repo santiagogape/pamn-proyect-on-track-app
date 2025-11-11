@@ -1,4 +1,4 @@
-package com.example.on_track_app.ui.navigation
+package com.example.on_track_app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -20,7 +20,7 @@ object Destinations {
 
 // --- BottomNavigation principal de la app ---
 @Composable
-fun BottomNavigation(navController: NavHostController) {
+fun Navigation(navController: NavHostController) {
     NavHost(
         navController = navController,
         startDestination = Destinations.HOME
