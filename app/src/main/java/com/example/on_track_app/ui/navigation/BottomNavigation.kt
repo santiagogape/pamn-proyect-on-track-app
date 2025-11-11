@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.on_track_app.ui.fragments.navigable.calendar.CalendarScreen
 import com.example.on_track_app.ui.fragments.navigable.dashboard.DashboardScreen
 import com.example.on_track_app.ui.fragments.navigable.home.HomeScreen
 import com.example.on_track_app.ui.fragments.navigable.notifications.NotificationsScreen
@@ -13,6 +14,8 @@ object Destinations {
     const val HOME = "home"
     const val DASHBOARD = "dashboard"
     const val NOTIFICATIONS = "notifications"
+
+    const val CALENDAR = "calendar"
 }
 
 // --- BottomNavigation principal de la app ---
@@ -25,5 +28,6 @@ fun BottomNavigation(navController: NavHostController) {
         composable(Destinations.HOME) { HomeScreen() }
         composable(Destinations.DASHBOARD) { DashboardScreen() }
         composable(Destinations.NOTIFICATIONS) { NotificationsScreen() }
+        composable(Destinations.CALENDAR) { CalendarScreen() }
     }
 }

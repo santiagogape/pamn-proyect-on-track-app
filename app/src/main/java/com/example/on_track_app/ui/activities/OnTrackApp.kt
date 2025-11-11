@@ -1,4 +1,4 @@
-package com.example.on_track_app
+package com.example.on_track_app.ui.activities
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -14,9 +14,11 @@ import com.example.on_track_app.ui.theme.OnTrackAppTheme
 // Icons
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.on_track_app.ui.navigation.BottomNavigation
 import com.example.on_track_app.ui.navigation.Destinations
 
@@ -41,6 +43,11 @@ fun OnTrackApp() {
                 route = Destinations.NOTIFICATIONS,
                 label = "Notifications",
                 icon = Icons.Filled.Notifications
+            ),
+            NavItem(
+                route = Destinations.CALENDAR,
+                label = "Calendar",
+                icon = Icons.Filled.Event
             )
         )
 
@@ -56,9 +63,6 @@ fun OnTrackApp() {
                             onClick = {
                                 if (!selected) {
                                     navController.navigate(item.route) {
-                                        // Comportamiento típico de bottom nav:
-                                        // - reusar pila de cada destino
-                                        // - evitar múltiples copias del mismo destino
                                         popUpTo(navController.graph.startDestinationId) {
                                             saveState = true
                                         }
@@ -89,5 +93,5 @@ private fun NavDestination?.isOnDestination(route: String): Boolean {
 private data class NavItem(
     val route: String,
     val label: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val icon: ImageVector
 )
