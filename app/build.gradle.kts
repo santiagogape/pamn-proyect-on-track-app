@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
     alias(libs.plugins.kotlin.android)
 }
 
@@ -39,7 +40,10 @@ android {
 }
 
 dependencies {
-
+    // Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    // Firebase dependencies: Firestore
+    implementation("com.google.firebase:firebase-firestore")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
