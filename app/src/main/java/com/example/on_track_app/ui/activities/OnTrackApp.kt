@@ -1,6 +1,8 @@
 package com.example.on_track_app.ui.activities
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,11 +19,17 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.on_track_app.navigation.Navigation
 import com.example.on_track_app.navigation.Destinations
+import com.example.on_track_app.ui.theme.Black
+import com.example.on_track_app.ui.theme.DarkPink
+import com.example.on_track_app.ui.theme.White
+import com.example.on_track_app.ui.theme.ligtPink
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnTrackApp() {
     OnTrackAppTheme {
@@ -52,8 +60,30 @@ fun OnTrackApp() {
         )
 
         Scaffold(
+            containerColor = ligtPink,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentDestination = navBackStackEntry?.destination
+                        val currentItem = items.find { currentDestination.isOnDestination(it.route) }
+
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = currentItem?.label ?: "",
+                            color = Black
+                        )
+                    }
+            },
+                    colors = TopAppBarDefaults.mediumTopAppBarColors(
+                        containerColor = White,
+                    )
+                )
+            },
             bottomBar = {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = White
+                ) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
                     items.forEach { item ->
@@ -63,23 +93,32 @@ fun OnTrackApp() {
                             onClick = {
                                 if (!selected) {
                                     navController.navigate(item.route) {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
-                                        }
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true
                                     }
                                 }
                             },
                             icon = { Icon(imageVector = item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) }
+                            label = { Text(item.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = DarkPink,
+                                unselectedIconColor = Black,
+                                selectedTextColor = DarkPink,
+                                unselectedTextColor = Black
+                            )
                         )
                     }
                 }
             }
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                Navigation(navController = navController).let {}
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Navigation(navController = navController)
             }
         }
     }
