@@ -23,18 +23,21 @@ val Teal700   = Color(0xFF018786)
 val Black     = Color(0xFF000000)
 val White     = Color(0xFFFFFFFF)
 
-// (Opcional) Aliases para facilitar el paso a Material3 en Theme.kt
-// Los usaremos como primary/secondary en esquemas claro/oscuro.
-val PrimaryLight        = Purple500
-val PrimaryLightVariant = Purple700
-val SecondaryLight      = Teal200
-val SecondaryLightVariant = Teal700
-val OnPrimaryLight      = White
-val OnSecondaryLight    = Black
+val DarkPink =  Color(0xFFA35B88)
 
-val PrimaryDark         = Purple200
-val PrimaryDarkVariant  = Purple700
-val SecondaryDark       = Teal200
-val SecondaryDarkVariant = Teal700
-val OnPrimaryDark       = Black
-val OnSecondaryDark     = Black
+val ligtPink =  Color(0xFFFAEAF4)
+
+
+val AppBackground = Color(0xFFFAEAF4)
+
+val Surface = Color(0xFFFFFFFF)
+
+val PrimaryPurple = Color(0xFFA35B88)
+
+val OnPrimary = Color(0xFFFFFFFF)
+
+val TextPrimary = Color(0xFF1D1B20) // Un 'casi negro'
+
+val IconUnselected = Color(0xFF79747E)
+
+val prueba = Color(0xFFFF0000)

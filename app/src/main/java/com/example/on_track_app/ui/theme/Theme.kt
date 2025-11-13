@@ -11,21 +11,18 @@ import androidx.compose.ui.platform.LocalContext
 // ============================================================
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryLight,
-    onPrimary = OnPrimaryLight,
-    secondary = SecondaryLight,
-    onSecondary = OnSecondaryLight,
-    background = White,
-    onBackground = Black,
-    surface = White,
-    onSurface = Black,
+    primary = prueba,
+    onPrimary = OnPrimary,
+    background = AppBackground,
+    onBackground = TextPrimary,
+    surface = Surface,
+    onSurface = TextPrimary,
+    onSurfaceVariant = IconUnselected
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryDark,
-    onPrimary = OnPrimaryDark,
-    secondary = SecondaryDark,
-    onSecondary = OnSecondaryDark,
+    primary = PrimaryPurple,
+    onPrimary = OnPrimary,
     background = Black,
     onBackground = White,
     surface = Black,
@@ -39,7 +36,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun OnTrackAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true, 
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
