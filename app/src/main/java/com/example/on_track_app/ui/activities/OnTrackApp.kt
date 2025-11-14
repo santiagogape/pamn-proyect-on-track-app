@@ -75,8 +75,8 @@ fun OnTrackApp() {
                         )
                     }
             },
-                    colors = TopAppBarDefaults.mediumTopAppBarColors(
-                        containerColor = White,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = White
                     )
                 )
             },
