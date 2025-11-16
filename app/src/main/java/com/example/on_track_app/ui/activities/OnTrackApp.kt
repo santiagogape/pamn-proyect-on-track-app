@@ -15,24 +15,28 @@ import com.example.on_track_app.ui.theme.OnTrackAppTheme
 
 // Icons
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import com.example.on_track_app.R
 import com.example.on_track_app.navigation.Navigation
 import com.example.on_track_app.navigation.Destinations
-import com.example.on_track_app.ui.theme.Black
-import com.example.on_track_app.ui.theme.DarkPink
-import com.example.on_track_app.ui.theme.White
-import com.example.on_track_app.ui.theme.ligtPink
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnTrackApp() {
-    OnTrackAppTheme {
+    var darkTheme by remember { mutableStateOf(false) }
+    OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()
 
         // Bottom navigation items
@@ -60,7 +64,7 @@ fun OnTrackApp() {
         )
 
         Scaffold(
-            containerColor = ligtPink,
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
                     title = {
@@ -71,18 +75,27 @@ fun OnTrackApp() {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text(
                             text = currentItem?.label ?: "",
-                            color = Black
+                            color = MaterialTheme.colorScheme.onBackground
                         )
+                        IconButton(
+                            onClick = {darkTheme = !darkTheme},
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Icon(
+                                imageVector = if (darkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                                contentDescription = stringResource(R.string.theme_toggle)
+                            )
+                        }
                     }
             },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = White
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
                 )
             },
             bottomBar = {
                 NavigationBar(
-                    containerColor = White
+                    containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
@@ -102,10 +115,10 @@ fun OnTrackApp() {
                             icon = { Icon(imageVector = item.icon, contentDescription = item.label) },
                             label = { Text(item.label) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = DarkPink,
-                                unselectedIconColor = Black,
-                                selectedTextColor = DarkPink,
-                                unselectedTextColor = Black
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onBackground,
+                                selectedTextColor = MaterialTheme.colorScheme.onPrimary,
+                                unselectedTextColor = MaterialTheme.colorScheme.onBackground
                             )
                         )
                     }

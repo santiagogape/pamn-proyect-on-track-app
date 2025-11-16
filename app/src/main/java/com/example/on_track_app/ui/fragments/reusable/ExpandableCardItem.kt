@@ -49,7 +49,8 @@ fun ExpandableCardItem(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary
             )
 
             // Espacio cuando expandido
@@ -58,7 +59,8 @@ fun ExpandableCardItem(
 
                 Text(
                     text = content,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -71,8 +73,7 @@ fun ExpandableCardItemPreview() {
     OnTrackAppTheme(darkTheme = false) {
         ExpandableCardItem(
             title = "Título de ejemplo",
-            content = "Este es el contenido que aparece al expandir la tarjeta. " +
-                    "Puedes poner aquí texto más largo para ver cómo se adapta al tamaño."
+            content = "Este es el contenido que aparece al expandir la tarjeta. "
         )
     }
 }

@@ -1,7 +1,6 @@
 package com.example.on_track_app.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -13,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 private val LightColorScheme = lightColorScheme(
     primary = White,
     onPrimary = DarkPink,
-    background = ligtPink,
+    background = LightPink,
     onBackground = Black,
     surface = White,
     onSurface = Black,
@@ -22,11 +21,11 @@ private val LightColorScheme = lightColorScheme(
 
 private val DarkColorScheme = darkColorScheme(
     primary = Black,
-    onPrimary = Black,
+    onPrimary = LightPink,
     background = Black,
-    onBackground = White,
+    onBackground = DarkPink,
     surface = Black,
-    onSurface = White,
+    onSurface = DarkPink,
 )
 
 // ============================================================
@@ -35,7 +34,7 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun OnTrackAppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, //isSystemInDarkTheme()
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

@@ -8,6 +8,6 @@ val White     = Color(0xFFFFFFFF)
 
 val DarkPink =  Color(0xFFA35B88)
 
-val ligtPink =  Color(0xFFFAEAF4)
+val LightPink =  Color(0xFFFAEAF4)
 
 // Colores que se usan: blanco, negro, darkPink, lightPink
