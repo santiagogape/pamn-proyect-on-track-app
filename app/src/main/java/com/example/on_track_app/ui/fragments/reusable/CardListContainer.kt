@@ -16,13 +16,11 @@ fun ExpandableCards(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(contents) { item ->
-            ShadowCard {
-                ExpandableCardItem(
-                    title = item,
-                    content = item
-                )
-            }
+        items(contents, key = { it }) { item ->
+            ExpandableCardItem(
+                title = item,
+                content = item
+            )
         }
     }
 
@@ -37,13 +35,12 @@ fun StaticCards(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(contents) { item ->
-            ShadowCard {
-                StaticCard(
-                    title = item,
-                    action = action
-                )
-            }
+        items(contents, key = { it }) { item ->
+            StaticCard(
+                title = item,
+                action = action
+            )
+
         }
     }
 
