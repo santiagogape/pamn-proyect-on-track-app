@@ -17,10 +17,12 @@ fun CardListContainer(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(contents) { item ->
-            ExpandableCardItem(
-                title = item,
-                content = item
-            )
+            ShadowCard {
+                ExpandableCardItem(
+                    title = item,
+                    content = item
+                )
+            }
         }
     }
 

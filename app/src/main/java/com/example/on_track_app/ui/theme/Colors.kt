@@ -10,4 +10,6 @@ val DarkPink =  Color(0xFFA35B88)
 
 val LightPink =  Color(0xFFFAEAF4)
 
+val Bourbon = Color(0xFF1C0316)
+
 // Colores que se usan: blanco, negro, darkPink, lightPink
