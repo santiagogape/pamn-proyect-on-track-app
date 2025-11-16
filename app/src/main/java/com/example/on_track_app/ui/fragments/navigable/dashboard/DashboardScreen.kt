@@ -8,18 +8,24 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.ui.fragments.reusable.CardListContainer
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel()
 ) {
     val text by viewModel.text.collectAsStateWithLifecycle()
+    val items by viewModel.items.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = text, style = MaterialTheme.typography.headlineSmall)
+        if (items.isEmpty()){
+            Text(text = text, style = MaterialTheme.typography.headlineSmall)
+        } else {
+            CardListContainer(items)
+        }
     }
 }

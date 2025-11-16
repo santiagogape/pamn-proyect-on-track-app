@@ -8,4 +8,7 @@ class DashboardViewModel : ViewModel() {
 
     private val _text = MutableStateFlow("This is dashboard screen")
     val text: StateFlow<String> = _text
+
+    private val _items = MutableStateFlow(listOf("task1","task2","task3"))
+    val items: StateFlow<List<String>> = _items
 }
