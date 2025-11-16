@@ -76,7 +76,7 @@ fun ExpandableCardItem(
 @Preview(showBackground = true)
 @Composable
 fun ExpandableCardItemPreview() {
-    OnTrackAppTheme(darkTheme = false) {
+    OnTrackAppTheme(darkTheme = true) {
         ShadowCard { ExpandableCardItem(
             title = "Título de ejemplo",
             content = "Este es el contenido que aparece al expandir la tarjeta. "
