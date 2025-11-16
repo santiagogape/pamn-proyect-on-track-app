@@ -10,7 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.on_track_app.ui.fragments.reusable.CardListContainer
+import com.example.on_track_app.ui.fragments.reusable.StaticCards
+import com.example.on_track_app.viewModels.NotificationsViewModel
 
 
 @Composable
@@ -28,7 +29,7 @@ fun NotificationsScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            CardListContainer(items)
+            StaticCards(items){}//todo -> create activity logic
         }
     }
 }

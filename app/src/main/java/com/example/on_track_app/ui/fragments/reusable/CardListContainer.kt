@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CardListContainer(
+fun ExpandableCards(
     contents: List<String>
 ) {
     LazyColumn(
@@ -21,6 +21,27 @@ fun CardListContainer(
                 ExpandableCardItem(
                     title = item,
                     content = item
+                )
+            }
+        }
+    }
+
+}
+
+@Composable
+fun StaticCards(
+    contents: List<String>,
+    action: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(contents) { item ->
+            ShadowCard {
+                StaticCard(
+                    title = item,
+                    action = action
                 )
             }
         }

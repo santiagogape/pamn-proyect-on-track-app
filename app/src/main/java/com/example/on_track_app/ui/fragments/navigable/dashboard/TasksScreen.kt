@@ -8,11 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
-import com.example.on_track_app.ui.fragments.reusable.CardListContainer
+import com.example.on_track_app.ui.fragments.reusable.ExpandableCards
+import com.example.on_track_app.viewModels.TasksViewModel
 
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardViewModel = viewModel()
+    viewModel: TasksViewModel = viewModel()
 ) {
     val text by viewModel.text.collectAsStateWithLifecycle()
     val items by viewModel.items.collectAsStateWithLifecycle()
@@ -25,7 +26,7 @@ fun DashboardScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            CardListContainer(items)
+            ExpandableCards(items)
         }
     }
 }

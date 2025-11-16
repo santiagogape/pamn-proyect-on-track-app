@@ -1,22 +1,27 @@
-package com.example.on_track_app.ui.fragments.navigable.home
+package com.example.on_track_app.ui.fragments.navigable.projects
 
+
+
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.on_track_app.ui.fragments.reusable.ExpandableCards
-import com.example.on_track_app.ui.theme.OnTrackAppTheme
-import com.example.on_track_app.viewModels.HomeViewModel
+import com.example.on_track_app.ui.activities.ProjectActivity
+import com.example.on_track_app.ui.fragments.reusable.StaticCards
+import com.example.on_track_app.viewModels.ProjectsViewModel
+
 
 @Composable
-fun HomeScreen(
-    viewModel: HomeViewModel = viewModel()
+fun ProjectsScreen(
+    viewModel: ProjectsViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val items by viewModel.items.collectAsStateWithLifecycle()
     Box(
@@ -28,15 +33,13 @@ fun HomeScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            ExpandableCards(items)
-        }
-    }
-}
+            StaticCards(items) { projectName ->
+                val intent = Intent(context, ProjectActivity::class.java)
+                intent.putExtra("PROJECT", projectName)
+                intent.putExtra("PROJECT_ID", projectName) //todo: name -> id
+                context.startActivity(intent)
+            }
 
-@Preview(showBackground = true)
-@Composable
-fun ExpandableCardItemPreview() {
-    OnTrackAppTheme(darkTheme = false) {
-        HomeScreen()
+        }
     }
 }
