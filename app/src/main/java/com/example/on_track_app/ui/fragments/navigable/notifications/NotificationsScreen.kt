@@ -10,16 +10,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.on_track_app.ui.fragments.reusable.StaticCards
-import com.example.on_track_app.viewModels.NotificationsViewModel
+import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
+import com.example.on_track_app.viewModels.main.NotificationsViewModel
 
 
 @Composable
 fun NotificationsScreen(
-    viewModel: NotificationsViewModel = viewModel()
+    viewModel: NotificationsViewModel = viewModel(),
+    projectId: String? = null
 ) {
     val text by viewModel.text.collectAsStateWithLifecycle()
-    val items by viewModel.items.collectAsStateWithLifecycle()
+    val sourceFlow = remember(projectId) {
+        projectId?.let { viewModel.project(it) } ?: viewModel.items
+    }
+    val items by sourceFlow.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .fillMaxSize()

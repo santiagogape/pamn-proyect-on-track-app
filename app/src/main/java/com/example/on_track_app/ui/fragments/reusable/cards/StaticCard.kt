@@ -1,4 +1,4 @@
-package com.example.on_track_app.ui.fragments.reusable
+package com.example.on_track_app.ui.fragments.reusable.cards
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth

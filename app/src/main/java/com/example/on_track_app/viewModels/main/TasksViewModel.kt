@@ -1,4 +1,4 @@
-package com.example.on_track_app.viewModels
+package com.example.on_track_app.viewModels.main
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,4 +17,8 @@ class TasksViewModel : ViewModel() {
     fun project(id: String): StateFlow<List<String>>{
         return _projectItems
     }
+
+
+
+
 }

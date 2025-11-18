@@ -83,8 +83,8 @@ fun ProjectNavigation(navHostController: NavHostController, projectId: String){
         navController = navHostController,
         startDestination = Destinations.TASKS
     ) {
-        composable(Destinations.TASKS) { DashboardScreen() }
-        composable(Destinations.NOTIFICATIONS) { NotificationsScreen() }
-        composable(Destinations.CALENDAR) { CalendarScreen() }
+        composable(Destinations.TASKS) { DashboardScreen(projectId = projectId) }
+        composable(Destinations.NOTIFICATIONS) { NotificationsScreen(projectId = projectId) }
+        composable(Destinations.CALENDAR) { CalendarScreen(projectId = projectId) }
     }
 }
