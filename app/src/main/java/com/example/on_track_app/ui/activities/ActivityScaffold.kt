@@ -5,11 +5,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +31,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,6 +47,8 @@ import com.example.on_track_app.navigation.NavItem
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScaffold(label: String? = null, navigable:List<NavItem>, controller: NavHostController, darkTheme: Boolean, themeToggle: ()-> Unit, navigationTarget: @Composable (()-> Unit)) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -43,7 +57,7 @@ fun ActivityScaffold(label: String? = null, navigable:List<NavItem>, controller:
                     val navBackStackEntry by controller.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
                     val currentItem = navigable.find { currentDestination.isOnDestination(it.route) }
-                    val activity =LocalActivity.current
+                    val activity = LocalActivity.current
 
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         if (label != null) {
@@ -77,6 +91,42 @@ fun ActivityScaffold(label: String? = null, navigable:List<NavItem>, controller:
                 )
             )
         },
+
+        floatingActionButton = {
+            Box {
+                FloatingActionButton(
+                    onClick = { showMenu = true },
+                    shape = CircleShape,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add New")
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("NEW TASK") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.List, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("NEW EVENT") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("NEW REMINDER") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
+                    )
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.primary
