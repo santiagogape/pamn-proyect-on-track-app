@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.on_track_app.ui.activities.ProjectActivity
-import com.example.on_track_app.ui.fragments.reusable.StaticCards
-import com.example.on_track_app.viewModels.ProjectsViewModel
+import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
+import com.example.on_track_app.viewModels.main.ProjectsViewModel
 
 
 @Composable

@@ -1,4 +1,4 @@
-package com.example.on_track_app.ui.fragments.reusable
+package com.example.on_track_app.ui.fragments.reusable.cards
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column

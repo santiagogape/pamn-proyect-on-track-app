@@ -8,15 +8,20 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
-import com.example.on_track_app.ui.fragments.reusable.ExpandableCards
-import com.example.on_track_app.viewModels.TasksViewModel
+import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
+import com.example.on_track_app.viewModels.main.TasksViewModel
 
 @Composable
 fun DashboardScreen(
-    viewModel: TasksViewModel = viewModel()
+    viewModel: TasksViewModel = viewModel(),
+    projectId: String? = null
 ) {
     val text by viewModel.text.collectAsStateWithLifecycle()
-    val items by viewModel.items.collectAsStateWithLifecycle()
+    val sourceFlow = remember(projectId) {
+        projectId?.let { viewModel.project(it) } ?: viewModel.items
+    }
+    val items by sourceFlow.collectAsStateWithLifecycle()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
