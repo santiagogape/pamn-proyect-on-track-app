@@ -4,6 +4,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
@@ -98,14 +100,16 @@ fun ActivityScaffold(label: String? = null, navigable:List<NavItem>, controller:
                     onClick = { showMenu = true },
                     shape = CircleShape,
                     containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                    modifier = Modifier.offset(y = 45.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add New")
                 }
 
                 DropdownMenu(
                     expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier.offset(y = (-20).dp)
                 ) {
                     DropdownMenuItem(
                         text = { Text("NEW TASK") },
