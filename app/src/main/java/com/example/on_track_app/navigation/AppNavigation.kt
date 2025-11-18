@@ -13,7 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.on_track_app.ui.fragments.navigable.calendar.CalendarScreen
 import com.example.on_track_app.ui.fragments.navigable.dashboard.DashboardScreen
-import com.example.on_track_app.ui.fragments.navigable.home.HomeScreen
+import com.example.on_track_app.ui.fragments.navigable.home.TestHomeScreen
 import com.example.on_track_app.ui.fragments.navigable.notifications.NotificationsScreen
 import com.example.on_track_app.ui.fragments.navigable.projects.ProjectsScreen
 
@@ -70,7 +70,7 @@ fun AppNavigation(navController: NavHostController) {
         navController = navController,
         startDestination = Destinations.HOME
     ) {
-        composable(Destinations.HOME) { HomeScreen() }
+        composable(Destinations.HOME) { TestHomeScreen() }
         composable(Destinations.TASKS) { DashboardScreen() }
         composable(Destinations.PROJECTS) { ProjectsScreen() }
         composable(Destinations.CALENDAR) { CalendarScreen() }

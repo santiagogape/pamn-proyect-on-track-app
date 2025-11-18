@@ -10,6 +10,7 @@ import com.example.on_track_app.navigation.Routes
 @Composable
 fun OnTrackApp(darkTheme: Boolean,
                onToggleTheme: () -> Unit) {
+
     OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()
 
