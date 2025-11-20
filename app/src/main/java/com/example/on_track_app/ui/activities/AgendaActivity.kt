@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,59 +18,68 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.R
-import com.example.on_track_app.navigation.Destinations
-import com.example.on_track_app.navigation.ProjectNavigation
-import com.example.on_track_app.navigation.routes
+import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.viewModels.main.CalendarViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDate.now
 
-class ProjectActivity : ComponentActivity() {
+class AgendaActivity : ComponentActivity() {
     private val settings by lazy { SettingsDataStore(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val project = intent.getStringExtra("PROJECT")!!
-            val projectId = intent.getStringExtra("PROJECT_ID")!!
+            val date = LocalDate.parse(intent.getStringExtra("LOCAL_DATE")!!)
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
-            Project(project = project, projectId = projectId,darkTheme = darkTheme,
-                onToggleTheme = {
-                    lifecycleScope.launch {
-                        settings.setDarkTheme(!darkTheme)
-                    }
-                })
+            Agenda(darkTheme = darkTheme,{
+                lifecycleScope.launch {
+                    settings.setDarkTheme(!darkTheme)
+                }
+            }, date = date)
+
         }
     }
 }
 
 @Composable
-fun Project(
+fun Agenda(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    project: String,
-    projectId: String
-) {
+    date: LocalDate = now(),
+    viewModel: CalendarViewModel = viewModel()
+){
+    var currentDate by remember { mutableStateOf(date) }
+
+    val tasksToday by viewModel.tasksFor(currentDate)
+        .collectAsStateWithLifecycle()
+
     OnTrackAppTheme(darkTheme = darkTheme) {
-        val navController = rememberNavController()
-
-        // Bottom navigation items
-        val items = routes(listOf(
-            Destinations.TASKS,
-            Destinations.NOTIFICATIONS
-        ))
-
         ActivityScaffold(
-            header = {Header(project,onToggleTheme,darkTheme)},
-            footer = { NavBar(navController,items) }
+            header = { Header(currentDate,onToggleTheme,darkTheme) },
+            footer = { NextPrev(
+                { currentDate = currentDate.minusDays(1) },
+                { currentDate = currentDate.plusDays(1) }
+            ) }
         ){
-            ProjectNavigation(navController,projectId)
+            if (tasksToday.isEmpty()){
+                Text(text = stringResource(R.string.no_tasks_today), style = MaterialTheme.typography.headlineSmall)
+            } else {
+                ExpandableCards(tasksToday)
+            }
         }
 
 
@@ -80,7 +90,7 @@ fun Project(
 
 @Composable
 private fun Header(
-    label: String,
+    date: LocalDate,
     themeToggle: () -> Unit,
     darkTheme: Boolean
 ) {
@@ -96,11 +106,16 @@ private fun Header(
                 contentDescription = stringResource(R.string.get_back)
             )
         }
-
-        Text(
-            text = label,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = date.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() },
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = date.toString().split("-").reversed().joinToString("/"),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
         IconButton(
             onClick = themeToggle,
             modifier = Modifier.align(Alignment.CenterEnd)
@@ -110,5 +125,14 @@ private fun Header(
                 contentDescription = stringResource(R.string.theme_toggle)
             )
         }
+    }
+}
+
+
+@Preview
+@Composable
+fun Prev(){
+    OnTrackAppTheme(darkTheme = false) {
+           Agenda(false,{})
     }
 }

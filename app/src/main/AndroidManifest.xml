@@ -23,6 +23,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.activities.ProjectActivity" android:exported="false" />
+        <activity android:name=".ui.activities.AgendaActivity" android:exported="false" />
     </application>
 
 </manifest>

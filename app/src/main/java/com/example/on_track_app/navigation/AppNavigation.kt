@@ -1,6 +1,8 @@
 package com.example.on_track_app.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowLeft
+import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Event
@@ -8,6 +10,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,6 +34,8 @@ object Destinations {
 
     const val CALENDAR = "calendar"
     const val PROJECTS = "Projects"
+    const val NEXT = "next"
+    const val PREV = "previous"
 }
 
 val NavItems = mapOf(
@@ -57,11 +63,25 @@ val NavItems = mapOf(
         route = Destinations.CALENDAR,
         label = "Calendar",
         icon = Icons.Filled.Event
+    ),
+    Destinations.NEXT to NavItem(
+        route = Destinations.NEXT,
+        label = Destinations.NEXT,
+        icon = Icons.AutoMirrored.Filled.ArrowRight
+    ),
+    Destinations.PREV to NavItem(
+        route = Destinations.PREV,
+        label = Destinations.PREV,
+        icon = Icons.AutoMirrored.Filled.ArrowLeft
     )
 )
 
-fun Routes(names:List<String>):List<NavItem>  = names.mapNotNull { NavItems[it] }.toList()
+fun routes(names:List<String>):List<NavItem>  = names.mapNotNull { NavItems[it] }.toList()
 
+@Composable
+fun NavDestination?.isOnDestination(route: String): Boolean {
+    return this?.hierarchy?.any { it.route == route } == true
+}
 
 // --- BottomNavigation principal de la app ---
 @Composable

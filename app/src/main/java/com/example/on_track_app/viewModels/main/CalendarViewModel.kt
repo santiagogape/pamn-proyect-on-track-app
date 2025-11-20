@@ -32,4 +32,16 @@ class CalendarViewModel : ViewModel() {
             SharingStarted.Eagerly,
             emptyMap()
         )
+
+    fun tasksFor(date: LocalDate): StateFlow<List<String>> {
+        return taskByDates
+            .map { map -> map[date].orEmpty() }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                emptyList()
+            )
+    }
+
+
 }
