@@ -42,6 +42,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.on_track_app.navigation.NavItem
 import com.example.on_track_app.navigation.isOnDestination
+import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +52,8 @@ fun ActivityScaffold(
     navigationTarget: @Composable (() -> Unit)
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var taskDialogVisible by remember { mutableStateOf(false) }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -73,15 +76,15 @@ fun ActivityScaffold(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add New")
                 }
-
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
-                    modifier = Modifier.offset(y = (-20).dp)
+                    modifier = Modifier.offset(y = (-20).dp).padding(top=2.dp)
                 ) {
                     DropdownMenuItem(
                         text = { Text("NEW TASK") },
-                        onClick = { showMenu = false },
+                        onClick = { showMenu = false
+                            taskDialogVisible = true},
                         leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
                     )
                     DropdownMenuItem(
@@ -109,6 +112,14 @@ fun ActivityScaffold(
             contentAlignment = Alignment.Center
         ) {
             navigationTarget()
+            if (taskDialogVisible) {
+                TaskCreation(
+                    onDismiss = { taskDialogVisible = false },
+                    onSubmit = { name, description, project, date ->
+                        taskDialogVisible = false
+                    }
+                )
+            }
         }
     }
 }
