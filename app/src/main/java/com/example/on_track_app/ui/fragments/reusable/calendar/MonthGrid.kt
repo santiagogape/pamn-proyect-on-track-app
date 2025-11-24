@@ -90,7 +90,7 @@ fun MonthGrid(
     month: YearMonth,
     today: LocalDate,
     tasksByDate: Map<LocalDate, List<String>>,
-    onDayClick: (LocalDate) -> Unit
+    onDayClick: (LocalDate) -> Unit,
 ) {
 
     val days =  daysOfMonthGrid(month)
@@ -99,20 +99,21 @@ fun MonthGrid(
         items(days) { date ->
             DayCell(
                 date = date,
-                hasEvents = !tasksByDate[date.date].isNullOrEmpty(),
                 isToday = date == today,
-                onClick = onDayClick
+                onClick = onDayClick,
+                hasEvents = !tasksByDate[date.date].isNullOrEmpty()
             )
         }
     }
 }
 
+
 @Composable
 fun DayCell(
     date: CalendarDay,
-    hasEvents: Boolean,
     isToday: Boolean,
-    onClick: (LocalDate) -> Unit
+    onClick: (LocalDate) -> Unit,
+    hasEvents: Boolean
 ) {
     Box(
         modifier = Modifier
@@ -127,8 +128,12 @@ fun DayCell(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("${date.date.dayOfMonth}", color = if (date.isFromCurrentMonth) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
-
+            Text(
+                "${date.date.dayOfMonth}",
+                color =
+                    if (date.isFromCurrentMonth) MaterialTheme.colorScheme.onBackground
+                    else MaterialTheme.colorScheme.onPrimary
+            )
             if (hasEvents) {
                 Spacer(Modifier.height(2.dp))
                 Box(

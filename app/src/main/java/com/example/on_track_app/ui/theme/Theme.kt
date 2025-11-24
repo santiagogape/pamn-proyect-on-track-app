@@ -2,6 +2,7 @@ package com.example.on_track_app.ui.theme
 
 import android.os.Build
 import androidx.compose.material3.*
+import androidx.compose.material3.OutlinedTextFieldDefaults.colors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
@@ -16,7 +17,8 @@ private val LightColorScheme = lightColorScheme(
     onBackground = Black,
     surface = White,
     onSurface = Black,
-    onSurfaceVariant = Black
+    outline = DarkPink,
+    surfaceVariant = LightPink.copy(alpha = 0.4f)
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -26,7 +28,39 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = DarkPink,
     surface = Black,
     onSurface = DarkPink,
+    outline = LightPink,
+    surfaceVariant = Bourbon.copy(alpha = 0.4f)
 )
+
+
+@Composable
+fun OutlinedTextFieldColors(
+    textField: @Composable ((TextFieldColors)->Unit),
+    ){
+    val colors = colors(
+            focusedBorderColor = MaterialTheme.colorScheme.outline,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            cursorColor = MaterialTheme.colorScheme.onSurface,
+            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface
+        )
+    textField(colors)
+}
+
+@Composable
+fun ButtonColors(
+    button: @Composable ((ButtonColors)->Unit)
+){
+    val buttonColors = ButtonColors(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        disabledContainerColor = MaterialTheme.colorScheme.background,
+        disabledContentColor = MaterialTheme.colorScheme.onBackground
+    )
+    button(buttonColors)
+}
 
 // ============================================================
 // Composable global

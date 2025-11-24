@@ -115,7 +115,7 @@ fun ActivityScaffold(
             if (taskDialogVisible) {
                 TaskCreation(
                     onDismiss = { taskDialogVisible = false },
-                    onSubmit = { name, description, project, date ->
+                    onSubmit = { name, description, project, date, hour, minute ->
                         taskDialogVisible = false
                     }
                 )
