@@ -42,6 +42,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.on_track_app.navigation.NavItem
 import com.example.on_track_app.navigation.isOnDestination
+import com.example.on_track_app.ui.fragments.dialogs.EventCreation
 import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +54,7 @@ fun ActivityScaffold(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var taskDialogVisible by remember { mutableStateOf(false) }
+    var eventDialogVisible by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -89,7 +91,7 @@ fun ActivityScaffold(
                     )
                     DropdownMenuItem(
                         text = { Text("NEW EVENT") },
-                        onClick = { showMenu = false },
+                        onClick = { showMenu = false; eventDialogVisible = true },
                         leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
                     )
                     DropdownMenuItem(
@@ -116,6 +118,13 @@ fun ActivityScaffold(
                 TaskCreation(
                     onDismiss = { taskDialogVisible = false },
                     onSubmit = { name, description, project, date, hour, minute ->
+                        taskDialogVisible = false
+                    }
+                )
+            } else if (eventDialogVisible) {
+                EventCreation(
+                    onDismiss = { eventDialogVisible = false },
+                    onSubmit = { name, description, project, startDateTime, endDateTime ->
                         taskDialogVisible = false
                     }
                 )

@@ -54,10 +54,23 @@ fun ButtonColors(
     button: @Composable ((ButtonColors)->Unit)
 ){
     val buttonColors = ButtonColors(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
+        containerColor = MaterialTheme.colorScheme.onPrimary,
+        contentColor = MaterialTheme.colorScheme.background,
         disabledContainerColor = MaterialTheme.colorScheme.background,
         disabledContentColor = MaterialTheme.colorScheme.onBackground
+    )
+    button(buttonColors)
+}
+
+@Composable
+fun ButtonColorsReverse(
+    button: @Composable ((ButtonColors)->Unit)
+){
+    val buttonColors = ButtonColors(
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        disabledContainerColor = MaterialTheme.colorScheme.primary,
+        disabledContentColor = MaterialTheme.colorScheme.onPrimary,
     )
     button(buttonColors)
 }

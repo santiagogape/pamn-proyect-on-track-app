@@ -13,8 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddAlarm
-import androidx.compose.material.icons.filled.AlarmOff
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,15 +30,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
-import com.example.on_track_app.ui.fragments.reusable.time.TimePickerField
-import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
+import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
 import java.time.LocalDate
 import java.time.LocalDate.now
+import java.time.LocalTime
 
 @Composable
 fun TaskCreation(
@@ -133,18 +132,15 @@ fun TaskCreation(
 
 
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        IconButton({pickHour = !pickHour}) {
-                            if (!pickHour) Icon(Icons.Filled.AddAlarm,null)
-                            else Icon(Icons.Filled.AlarmOff,null)
-                        }
-                        if (pickHour){
-                            TimePickerField(
-                                onDismiss = {hour = -1; minute = -1; pickHour = false}
-                            )
-                            { h,m -> hour = h; minute = m }
-                        }
+                        DateTimeField(
+                            onOpenCalendar = { deadlineOpen = true },
+                            onTime = { h, m -> hour=h; minute = m },
+                            withTime = pickHour,
+                            label = "Deadline\n" + date.toString().split("-").reversed().joinToString("/")
+                        )
                     }
 
 
@@ -157,18 +153,17 @@ fun TaskCreation(
                         horizontalArrangement = Arrangement.SpaceBetween
                     )
                     {
-                        // DEADLINE
-                        Button(
-                            onClick = {
-                                deadlineOpen = true
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.background,
-                                contentColor = MaterialTheme.colorScheme.onBackground
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Deadline\n"+date.toString().split("-").reversed().joinToString("/"))
+                        ButtonColors {
+                                colors ->
+                            Button(
+                                onClick = {pickHour = !pickHour},
+                                colors = colors,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("with time")
+                                if (pickHour) Icon(Icons.Filled.Check,null)
+                                else Icon(Icons.Filled.Close,null)
+                            }
                         }
 
                         // SUBMIT
@@ -201,14 +196,4 @@ fun TaskCreation(
 
         }
     }
-}
-
-
-@Preview
-@Composable
-fun Prev(){
-    OnTrackAppTheme(false) { TaskCreation(
-        {},
-        { a, b, c, d, e,f -> {} }
-    ) }
 }
