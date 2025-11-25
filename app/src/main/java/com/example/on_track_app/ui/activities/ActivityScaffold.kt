@@ -68,37 +68,29 @@ fun ActivityScaffold(
         },
 
         floatingActionButton = {
-            Box {
+            Box (
+                modifier = Modifier.offset(y = 45.dp),
+                contentAlignment = Alignment.Center
+            ){
                 FloatingActionButton(
-                    onClick = { showMenu = true },
+                    onClick = { showMenu = !showMenu },
                     shape = CircleShape,
                     containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary,
-                    modifier = Modifier.offset(y = 45.dp)
+                    contentColor = MaterialTheme.colorScheme.onTertiary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add New")
                 }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false },
-                    modifier = Modifier.offset(y = (-20).dp).padding(top=2.dp)
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("NEW TASK") },
-                        onClick = { showMenu = false
-                            taskDialogVisible = true},
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("NEW EVENT") },
-                        onClick = { showMenu = false; eventDialogVisible = true },
-                        leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("NEW REMINDER") },
-                        onClick = { showMenu = false },
-                        leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
-                    )
+                if (showMenu){
+                    androidx.compose.ui.window.Popup(
+                        alignment = Alignment.TopCenter,
+                        onDismissRequest = {showMenu = false}
+                    ) {
+                        Box (
+                            modifier = Modifier.offset(y = (-210).dp)
+                        ){
+
+                        }
+                    }
                 }
             }
         },
