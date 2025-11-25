@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
@@ -15,7 +17,6 @@ import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -27,6 +28,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -38,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.on_track_app.navigation.NavItem
@@ -68,10 +72,10 @@ fun ActivityScaffold(
         },
 
         floatingActionButton = {
-            Box (
+            Box(
                 modifier = Modifier.offset(y = 45.dp),
                 contentAlignment = Alignment.Center
-            ){
+            ) {
                 FloatingActionButton(
                     onClick = { showMenu = !showMenu },
                     shape = CircleShape,
@@ -79,18 +83,6 @@ fun ActivityScaffold(
                     contentColor = MaterialTheme.colorScheme.onTertiary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add New")
-                }
-                if (showMenu){
-                    androidx.compose.ui.window.Popup(
-                        alignment = Alignment.TopCenter,
-                        onDismissRequest = {showMenu = false}
-                    ) {
-                        Box (
-                            modifier = Modifier.offset(y = (-210).dp)
-                        ){
-
-                        }
-                    }
                 }
             }
         },
@@ -106,20 +98,60 @@ fun ActivityScaffold(
             contentAlignment = Alignment.Center
         ) {
             navigationTarget()
+
             if (taskDialogVisible) {
                 TaskCreation(
                     onDismiss = { taskDialogVisible = false },
-                    onSubmit = { name, description, project, date, hour, minute ->
-                        taskDialogVisible = false
-                    }
+                    onSubmit = { _, _, _, _, _, _ -> taskDialogVisible = false }
                 )
             } else if (eventDialogVisible) {
                 EventCreation(
                     onDismiss = { eventDialogVisible = false },
-                    onSubmit = { name, description, project, startDateTime, endDateTime ->
-                        taskDialogVisible = false
-                    }
+                    onSubmit = { _, _, _, _, _ -> eventDialogVisible = false }
                 )
+            }
+
+            if (showMenu) {
+                Popup(
+                    alignment = Alignment.BottomCenter,
+                    onDismissRequest = { showMenu = false },
+                    properties = PopupProperties(clippingEnabled = false)
+                ) {
+                    Box(modifier = Modifier.offset(y = (-40).dp)) {
+                        Surface(
+                            modifier = Modifier.width(280.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 6.dp
+                        ) {
+                            androidx.compose.foundation.layout.Column(
+                                modifier = Modifier.padding(top = 30.dp, bottom = 16.dp)
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("NEW TASK") },
+                                    onClick = {
+                                        showMenu = false
+                                        taskDialogVisible = true
+                                    },
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("NEW EVENT") },
+                                    onClick = {
+                                        showMenu = false
+                                        eventDialogVisible = true
+                                    },
+                                    leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("NEW REMINDER") },
+                                    onClick = { showMenu = false },
+                                    leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -161,7 +193,6 @@ fun NavBar(
     }
 }
 
-
 @Composable
 fun NextPrev(onPreviousDay: () -> Unit, onNextDay: () -> Unit) {
     Row(
@@ -179,4 +210,3 @@ fun NextPrev(onPreviousDay: () -> Unit, onNextDay: () -> Unit) {
         }
     }
 }
-
