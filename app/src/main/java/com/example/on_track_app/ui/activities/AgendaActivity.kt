@@ -2,19 +2,10 @@ package com.example.on_track_app.ui.activities
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.R
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
+import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.SettingsDataStore
 import com.example.on_track_app.viewModels.main.CalendarViewModel
@@ -72,7 +64,9 @@ fun Agenda(
 
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
-            header = { Header(currentDate,onToggleTheme,darkTheme) },
+            header = {
+                AgendaHeader(currentDate,darkTheme,onToggleTheme,null)
+                     },
             footer = { NextPrev(
                 { currentDate = currentDate.minusDays(1) },
                 { currentDate = currentDate.plusDays(1) }
@@ -96,49 +90,6 @@ fun Agenda(
 
     }
 }
-
-
-
-@Composable
-private fun Header(
-    date: LocalDate,
-    themeToggle: () -> Unit,
-    darkTheme: Boolean
-) {
-    val activity = LocalActivity.current
-
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        IconButton(
-            onClick = { activity?.finish() },
-            modifier = Modifier.align(Alignment.CenterStart)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.get_back)
-            )
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = date.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() },
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = date.toString().split("-").reversed().joinToString("/"),
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
-        IconButton(
-            onClick = themeToggle,
-            modifier = Modifier.align(Alignment.CenterEnd)
-        ) {
-            Icon(
-                imageVector = if (darkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                contentDescription = stringResource(R.string.theme_toggle)
-            )
-        }
-    }
-}
-
 
 @Preview
 @Composable
