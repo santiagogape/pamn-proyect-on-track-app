@@ -57,11 +57,10 @@ fun MainHeader(
     label: String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pfpUrl: String?,
-    onOpenReminders: () -> Unit
+    pfpUrl: String?
 ) {
     Header(
-        startContent = {  OpenRemindersIconButton { onOpenReminders() } },
+        startContent = { OpenRemindersIconButton() },
         centerContent = {
             Text(
                 text = label,
@@ -80,11 +79,13 @@ fun ProjectsHeader(
     label: String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pfpUrl: String? = null,
-    onOpenReminders: () -> Unit
+    pfpUrl: String? = null
 ) {
     Header(
-        startContent = { BackButton(); OpenRemindersIconButton { onOpenReminders() } },
+        startContent = {
+            BackButton()
+            OpenRemindersIconButton()
+        },
         centerContent = {
             Text(
                 text = label,
@@ -104,11 +105,13 @@ fun AgendaHeader(
     date: LocalDate,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pfpUrl: String?,
-    onOpenReminders: () -> Unit
+    pfpUrl: String?
 ) {
     Header(
-        startContent = { BackButton(); OpenRemindersIconButton { onOpenReminders() } },
+        startContent = {
+            BackButton()
+            OpenRemindersIconButton()
+        },
         centerContent = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(

@@ -53,7 +53,7 @@ fun Project(
 
         ActivityScaffold(
             header = {
-                ProjectsHeader(project,darkTheme,onToggleTheme,null, {})
+                ProjectsHeader(project,darkTheme,onToggleTheme,null)
                 },
             footer = { NavBar(navController,items) }
         ){

@@ -34,7 +34,7 @@ fun OnTrackApp(darkTheme: Boolean,
 
         ActivityScaffold(
             header = {
-                MainHeader(label,darkTheme,onToggleTheme,null, {})
+                MainHeader(label,darkTheme,onToggleTheme,null)
                      },
             footer = { NavBar(navController,items) }
         ){

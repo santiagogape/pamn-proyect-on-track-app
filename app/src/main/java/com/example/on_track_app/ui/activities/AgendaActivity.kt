@@ -65,7 +65,7 @@ fun Agenda(
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
             header = {
-                AgendaHeader(currentDate,darkTheme,onToggleTheme,null, {})
+                AgendaHeader(currentDate,darkTheme,onToggleTheme,null)
                      },
             footer = { NextPrev(
                 { currentDate = currentDate.minusDays(1) },
