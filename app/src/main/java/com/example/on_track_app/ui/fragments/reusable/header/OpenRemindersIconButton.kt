@@ -14,13 +14,12 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OpenRemindersIconButton(
-    modifier: Modifier = Modifier, // Ahora acepta modificadores de posición/tamaño
-    tint: Color = LocalContentColor.current // Ahora acepta un color personalizado (opcional)
+    modifier: Modifier = Modifier,
+    tint: Color = LocalContentColor.current
 ) {
 
     var showPopup by remember { mutableStateOf(false) }
 
-    // Pasamos el 'modifier' al IconButton para que el padre (Header) pueda controlarlo si es necesario
     IconButton(
         onClick = { showPopup = true },
         modifier = modifier
@@ -28,7 +27,7 @@ fun OpenRemindersIconButton(
         Icon(
             imageVector = Icons.Filled.AccessAlarm,
             contentDescription = "Open reminders",
-            tint = tint // Usamos el color pasado como argumento
+            tint = tint
         )
     }
 
@@ -39,7 +38,7 @@ fun OpenRemindersIconButton(
             Column(modifier = Modifier.padding(16.dp)) {
 
                 Text(
-                    text = "Recordatorios",
+                    text = "Reminders",
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
