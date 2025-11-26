@@ -9,6 +9,7 @@ import com.example.on_track_app.navigation.Destinations
 import com.example.on_track_app.navigation.isOnDestination
 import com.example.on_track_app.navigation.routes
 import com.example.on_track_app.ui.fragments.reusable.header.MainHeader
+import com.example.on_track_app.ui.fragments.reusable.header.OpenRemindersIconButton
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 
 @Composable
@@ -33,7 +34,7 @@ fun OnTrackApp(darkTheme: Boolean,
 
         ActivityScaffold(
             header = {
-                MainHeader(label,darkTheme,onToggleTheme,null)
+                MainHeader(label,darkTheme,onToggleTheme,null, {})
                      },
             footer = { NavBar(navController,items) }
         ){
