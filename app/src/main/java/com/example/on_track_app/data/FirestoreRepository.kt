@@ -5,39 +5,83 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.example.on_track_app.model.User
 import com.example.on_track_app.model.Task
 import com.example.on_track_app.model.Group
+import com.example.on_track_app.model.Reminder
+import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.Event
 
-class FirestoreRepository(
-    private val db: FirebaseFirestore
+class FirestoreRepository<T: Any>(
+    private val db: FirebaseFirestore,
+    private val collectionName: String,
+    private val clazz: Class<T>
 ) {
-    fun addUser(username: String, email: String, onResult: (Boolean) -> Unit, groups: List<Group>? = null) {
-        val data = hashMapOf(
+    fun getElementById(id: String, onResult: (T?) -> Unit) {
+        db.collection(collectionName)
+            .document(id)
+            .get()
+            .addOnSuccessListener { doc ->
+                val obj = doc.toObject(clazz)
+                if (obj != null) {
+                    val field = clazz.declaredFields.find { it.name == "id" }
+                    field?.isAccessible = true
+                    field?.set(obj, doc.id)
+                }
+                onResult(obj)
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+
+    }
+
+    fun deleteElement(id: String, onResult: (Boolean) -> Unit) {
+        db.collection(collectionName)
+            .document(id)
+            .delete()
+            .addOnSuccessListener {
+                onResult(true)
+            }
+            .addOnFailureListener {
+                onResult(false)
+            }
+    }
+
+    fun getElements(onResult: (List<T>) -> Unit) {
+        db.collection(collectionName)
+            .get()
+            .addOnSuccessListener { result ->
+                val list = result.documents.mapNotNull { doc ->
+                    doc.toObject(clazz)?.apply {
+                        val field = clazz.declaredFields.find { it.name == "id" }
+                        field?.isAccessible = true
+                        field?.set(this, doc.id)
+                    }
+                }
+                onResult(list)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    fun addUser(
+        username: String,
+        email: String,
+        onResult: (Boolean) -> Unit,
+        groups: List<Group>? = null
+    ) {
+        val data = mutableMapOf<String,Any>(
             "username" to username,
-            "email" to email,
-            "group" to groups
+            "email" to email
         )
 
-        db.collection("users")
+        groups?.let { data["group"] = it }
+
+        db.collection(collectionName)
             .add(data)
             .addOnSuccessListener { onResult(true) }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Error adding document (user)", e)
                 onResult(false)
-            }
-    }
-
-    fun getUsers(onResult: (List<User>) -> Unit) {
-        db.collection("users")
-            .get()
-            .addOnSuccessListener { result ->
-                val list = result.documents.mapNotNull { doc ->
-                    val user = doc.toObject(User::class.java)
-                    user?.copy(id = doc.id)
-                }
-                onResult(list)
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error fetching users", e)
-                onResult(emptyList())
             }
     }
 
@@ -48,55 +92,39 @@ class FirestoreRepository(
         email: String? = null,
         groups: List<Group>? = null
     ) {
-        val user = hashMapOf(
-            "username" to username,
-            "email" to email,
-            "groups" to groups
-        )
+        val user = mutableMapOf<String, Any>()
 
-        db.collection("users")
+        username?.let { user["name"] }
+        email?.let { user["email"] }
+        groups?.let { user["groups"] }
+
+        if (user.isEmpty()) {
+            onResult(false)
+            return
+        }
+
+        db.collection(collectionName)
             .document(userId)
             .set(user)
             .addOnSuccessListener { onResult(true) }
             .addOnFailureListener { e ->
-                Log.e("Firestore", String.format("Error updating user by ID=%d", userId), e)
+                Log.e("Firestore", String.format("Error updating user by ID (%s)", userId), e)
             }
     }
 
-    fun getUserById(userId: String, onResult: (User?) -> Unit) {
-        db.collection("users")
-            .document(userId)
-            .get()
-            .addOnSuccessListener { doc ->
-                val user = doc.toObject(User::class.java)
-                user?.copy(id = doc.id)
-                onResult(user)
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error fetching user by ID", e)
-                onResult(User())
-            }
-    }
-
-    fun deleteUser(userId: String, onResult: (Boolean) -> Unit) {
-        db.collection("users")
-            .document(userId)
-            .delete()
-            .addOnSuccessListener { onResult(true) }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error deleting user by ID", e)
-                onResult(false)
-            }
-    }
-
-    fun addTask(name: String, description: String, date: String, onResult: (Boolean) -> Unit) {
-        val data = hashMapOf(
+    fun addTask(
+        name: String,
+        description: String,
+        date: String,
+        onResult: (Boolean) -> Unit
+    ) {
+        val data = hashMapOf<String, Any>(
             "name" to name,
             "description" to description,
             "date" to date
         )
 
-        db.collection("tasks")
+        db.collection(collectionName)
             .add(data)
             .addOnSuccessListener { onResult(true) }
             .addOnFailureListener { e ->
@@ -105,19 +133,236 @@ class FirestoreRepository(
             }
     }
 
-    fun getTasks(onResult: (List<Task>) -> Unit) {
-        db.collection("tasks")
-            .get()
-            .addOnSuccessListener { result ->
-                val list = result.documents.mapNotNull { doc ->
-                    val task = doc.toObject(Task::class.java)
-                    task?.copy(id = doc.id)
-                }
-                onResult(list)
-            }
+    fun updateTask(
+        taskId: String,
+        onResult: (Boolean) -> Unit,
+        name: String? = null,
+        date: String? = null,
+        description: String? = null,
+        reminders: List<Reminder>? = null,
+        project: Project? = null
+    ) {
+        val task = mutableMapOf<String, Any>()
+
+        name?.let { task["name"] = it }
+        date?.let { task["date"] = it }
+        description?.let { task["description"] = it }
+        reminders?.let { task["reminders"] = it }
+        project?.let { task["project"] = it }
+
+        if (task.isEmpty()) {
+            onResult(false)
+            return
+        }
+
+        db.collection(collectionName)
+            .document(taskId)
+            .set(task)
+            .addOnSuccessListener { onResult(true) }
             .addOnFailureListener { e ->
-                Log.e("Firestore", "Error fetching tasks", e)
-                onResult(emptyList())
+                Log.e("Firestore", String.format("Error updating task by ID (%s)", taskId))
             }
     }
+
+    fun addEvent(
+        name: String,
+        description: String,
+        startDate: String,
+        onResult: (Boolean) -> Unit,
+        project: Project? = null,
+        startTime: String? = null,
+        endTime: String? = null,
+        endDate: String? = null
+    ) {
+        val data = mutableMapOf<String, Any>(
+            "name" to name,
+            "description" to description,
+            "startDate" to startDate,
+        )
+
+        project?.let { data["project"] = it }
+        startTime?.let{ data["startTime"] = it }
+        endTime?.let{ data["endTime"] = it }
+        endDate?.let{ data["endDate"] = it }
+
+        db.collection(collectionName)
+            .add(data)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", String.format("Error adding document (%s)", collectionName), e)
+                onResult(false)
+            }
+    }
+
+    fun updateEvents(
+        eventId: String,
+        name: String? = null,
+        description: String? = null,
+        startDate: String? = null,
+        onResult: (Boolean) -> Unit,
+        project: Project? = null,
+        startTime: String? = null,
+        endTime: String? = null,
+        endDate: String? = null
+    ) {
+        val event = mutableMapOf<String, Any>()
+
+        name?.let { event["name"] = it }
+        description?.let { event["description"] = it }
+        startDate?.let { event["startDate"] = it }
+        project?.let { event["project"] = it }
+        startTime?.let { event["startTime"] = it }
+        endTime?.let { event["endTime"] = it }
+        endDate?.let { event["endDate"] = it }
+
+        if (event.isEmpty()) {
+            onResult(true)
+            return
+        }
+
+        db.collection(collectionName)
+            .document(eventId)
+            .set(event)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", String.format("Error updating event by ID (%s)", eventId), e)
+            }
+    }
+
+    fun addProject(
+        id: String,
+        name: String,
+        onResult: (Boolean) -> Unit,
+        members: List<User>? = null
+    ) {
+        val data = mutableMapOf<String, Any>(
+            "name" to name,
+        )
+
+        members?.let { data["members"] }
+
+        db.collection(collectionName)
+            .add(data)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Error adding document (project)", e)
+                onResult(true)
+            }
+    }
+
+    fun updateProject(
+        projectId: String,
+        onResult: (Boolean) -> Unit,
+        name: String? = null,
+        members: List<User>? = null
+    ) {
+        val project = mutableMapOf<String, Any>()
+
+        name?.let { project["name"] }
+        members?.let { project["members"] }
+
+        if (project.isEmpty()) {
+            onResult(true)
+            return
+        }
+
+        db.collection(collectionName)
+            .document(projectId)
+            .set(project)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", String.format("Error updating project by ID (%s)", projectId), e)
+            }
+    }
+
+    fun addReminder(
+        date: String,
+        time: String,
+        onResult: (Boolean) -> Unit,
+        tasks: List<Task>? = null
+    ) {
+        val data = hashMapOf<String, Any>(
+            "date" to date,
+            "time" to time
+        )
+
+        tasks?.let { data["tasks"] }
+
+        db.collection(collectionName)
+            .add(data)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Error adding document (reminder)", e)
+                onResult(false)
+            }
+
+    }
+
+    fun updateReminder(
+        reminderId: String,
+        onResult: (Boolean) -> Unit,
+        date: String? = null,
+        time: String? = null,
+        tasks: List<Task>? = null
+    ) {
+        val reminder = mutableMapOf<String, Any>()
+
+        date?.let { reminder["date"] }
+        time?.let { reminder["time"] }
+        tasks?.let { reminder["tasks"] }
+
+        if (reminder.isEmpty()) {
+            onResult(false)
+            return
+        }
+
+        db.collection(collectionName)
+            .document(reminderId)
+            .set(reminder)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", String.format("Error updating reminder by ID (%s)", reminderId), e)
+            }
+    }
+
+    fun addGroup(
+        members: List<User>,
+        onResult: (Boolean) -> Unit
+    ) {
+        val data = mutableMapOf<String, Any>(
+            "members" to members
+        )
+
+        db.collection(collectionName)
+            .add(data)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Error adding document (group)", e)
+                onResult(false)
+            }
+    }
+
+    fun updateGroup(
+        groupId: String,
+        members: List<User>,
+        onResult: (Boolean) -> Unit
+    ) {
+        val group = mutableMapOf<String, Any>(
+            "members" to members
+        )
+
+        if (group.isEmpty()) {
+            onResult(false)
+            return
+        }
+
+        db.collection(collectionName)
+            .document(groupId)
+            .set(group)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", String.format("Error updating group by ID (%s)", groupId), e)
+            }
+    }
+
 }

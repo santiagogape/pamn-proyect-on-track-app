@@ -5,6 +5,6 @@ data class Task (
     val name: String = "",
     val date: String = "",
     val description: String = "",
-    val reminder: List<Reminder>? = null,
+    val reminders: List<Reminder>? = null,
     val project: Project? = null
 )
