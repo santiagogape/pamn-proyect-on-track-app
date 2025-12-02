@@ -94,9 +94,9 @@ class FirestoreRepository<T: Any>(
     ) {
         val user = mutableMapOf<String, Any>()
 
-        username?.let { user["name"] }
-        email?.let { user["email"] }
-        groups?.let { user["groups"] }
+        username?.let { user["name"] = it }
+        email?.let { user["email"] = it }
+        groups?.let { user["groups"] = it }
 
         if (user.isEmpty()) {
             onResult(false)
@@ -258,8 +258,8 @@ class FirestoreRepository<T: Any>(
     ) {
         val project = mutableMapOf<String, Any>()
 
-        name?.let { project["name"] }
-        members?.let { project["members"] }
+        name?.let { project["name"] = it }
+        members?.let { project["members"] = it }
 
         if (project.isEmpty()) {
             onResult(true)
@@ -286,7 +286,7 @@ class FirestoreRepository<T: Any>(
             "time" to time
         )
 
-        tasks?.let { data["tasks"] }
+        tasks?.let { data["tasks"] = it }
 
         db.collection(collectionName)
             .add(data)
@@ -307,9 +307,9 @@ class FirestoreRepository<T: Any>(
     ) {
         val reminder = mutableMapOf<String, Any>()
 
-        date?.let { reminder["date"] }
-        time?.let { reminder["time"] }
-        tasks?.let { reminder["tasks"] }
+        date?.let { reminder["date"] = it }
+        time?.let { reminder["time"] = it }
+        tasks?.let { reminder["tasks"] = it }
 
         if (reminder.isEmpty()) {
             onResult(false)
@@ -345,11 +345,14 @@ class FirestoreRepository<T: Any>(
     fun updateGroup(
         groupId: String,
         members: List<User>,
-        onResult: (Boolean) -> Unit
+        onResult: (Boolean) -> Unit,
+        name: String? = null
     ) {
         val group = mutableMapOf<String, Any>(
             "members" to members
         )
+
+        name?.let { group["name"] = it }
 
         if (group.isEmpty()) {
             onResult(false)

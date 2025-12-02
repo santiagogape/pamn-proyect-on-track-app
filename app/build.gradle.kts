@@ -44,6 +44,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     // Firebase dependencies: Firestore
     implementation("com.google.firebase:firebase-firestore")
+    // Authentication
+    implementation("com.google.firebase:firebase-auth")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
