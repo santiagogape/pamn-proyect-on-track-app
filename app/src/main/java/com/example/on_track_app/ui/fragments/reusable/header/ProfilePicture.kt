@@ -74,7 +74,7 @@ fun ProfilePicture(
             onDismissRequest = { showMenu = false },
         ) {
             DropdownMenuItem(
-                text = { Text("Configuración") },
+                text = { Text("Settings") },
                 onClick = {
                     showMenu = false
                     onSettingsClick()
@@ -82,7 +82,7 @@ fun ProfilePicture(
                 leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) }
             )
             DropdownMenuItem(
-                text = { Text("Cerrar Sesión") },
+                text = { Text("Sign out") },
                 onClick = {
                     showMenu = false
                     onLogoutClick()
