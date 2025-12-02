@@ -69,7 +69,7 @@ fun MainHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            if (pfpUrl != null) ProfilePicture(pfpUrl)
+            ProfilePicture(url = pfpUrl)
         }
     )
 }
