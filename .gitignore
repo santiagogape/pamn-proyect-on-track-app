@@ -16,3 +16,4 @@ local.properties
 
 /app/build
 /app/google-services.json
+/memory-notes/.obsidian
