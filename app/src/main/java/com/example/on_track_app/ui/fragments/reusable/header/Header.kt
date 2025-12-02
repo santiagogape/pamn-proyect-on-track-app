@@ -79,7 +79,7 @@ fun ProjectsHeader(
     label: String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pfpUrl: String? = null
+    pfpUrl: String?
 ) {
     Header(
         startContent = {
@@ -94,7 +94,7 @@ fun ProjectsHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            if (pfpUrl != null) ProfilePicture(pfpUrl)
+            ProfilePicture(url = pfpUrl)
         }
     )
 }
@@ -126,7 +126,7 @@ fun AgendaHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            if (pfpUrl != null) ProfilePicture(pfpUrl)
+            ProfilePicture(url = pfpUrl)
         }
     )
 }
