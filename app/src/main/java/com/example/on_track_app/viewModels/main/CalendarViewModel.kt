@@ -11,9 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalDate.now
 
 class CalendarViewModel(
     private val projectRepository: FirestoreRepository<Project>,
@@ -24,19 +22,24 @@ class CalendarViewModel(
     private val _text = MutableStateFlow("This is calendar screen")
     val text: StateFlow<String> = _text
 
-    private val _projects = MutableStateFlow<List<Project>>(emptyList())
-    val projects: StateFlow<List<Project>> = _projects
+    val projects: StateFlow<List<Project>> = projectRepository.getElements()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
 
-    // Las tareas y eventos son de un proyecto específico o no?
+    // TODO: Tasks and events from a specific project or not? Fix this
     private val _projectEvents = MutableStateFlow<List<Event>>(emptyList())
     private val _projectTasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _projectTasks
 
-    val taskByDates: StateFlow<Map<String, List<Task>>> =
+    val taskByDates: StateFlow<Map<LocalDate, List<Task>>> =
         tasks.map {
                 list -> list.groupBy {  task -> task.date }.toSortedMap()}.stateIn(
             viewModelScope,
-            SharingStarted.Eagerly,
+            // Stop calculation 5s after UI disappears to save battery
+            SharingStarted.WhileSubscribed(5000),
             emptyMap()
         )
 
@@ -53,24 +56,5 @@ class CalendarViewModel(
     fun project(id: String): StateFlow<List<Event>>{
         return _projectEvents
     }
-
-    init {
-        loadProjectInfo()
-    }
-
-    fun loadProjectInfo() {
-        viewModelScope.launch {
-            projectRepository.getElements { list ->
-                _projects.value = list
-            }
-            taskRepository.getElements { list ->
-                _projectTasks.value = list
-            }
-            eventRepository.getElements { list ->
-                _projectEvents.value = list
-            }
-        }
-    }
-
 
 }
