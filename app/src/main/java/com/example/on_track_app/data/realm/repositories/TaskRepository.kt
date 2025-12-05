@@ -1,7 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.realm.RealmDatabase
-import com.example.on_track_app.data.realm.entities.CloudIdField
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.TemporalDataField
 import com.example.on_track_app.data.realm.entities.toDomain
@@ -44,7 +43,7 @@ class TaskRepository {
             this.project = projectId
             this.temporalData = TemporalDataField(date.date.toRealmInstant(), date.timed)
             this.reminders = remindersId.toRealmList()
-            this.cloudIdField = CloudIdField(cloudId)
+            this.cloudId = cloudId
         }
 
         return db.write {

@@ -1,7 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.realm.RealmDatabase
-import com.example.on_track_app.data.realm.entities.CloudIdField
 import com.example.on_track_app.data.realm.entities.ProjectRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.utils.toRealmList
@@ -35,7 +34,7 @@ class ProjectRepository {
         val project = ProjectRealmEntity().apply {
             this.name = name
             this.members = membersId.toRealmList()
-            this.cloudIdField = CloudIdField(cloudId)
+            this.cloudId = cloudId
         }
 
         return db.write {

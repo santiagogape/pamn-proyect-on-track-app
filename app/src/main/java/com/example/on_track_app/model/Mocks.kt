@@ -23,6 +23,12 @@ fun MockTimeField.toTime(): LocalTime? {
     }
 }
 
+
+data class MockObjectRemindersResume(
+    val id: String,
+    val remindersId: List<String> = listOf(),
+)
+
 data class MockReminder(
     val id: String,
     val time: MockTimeField,

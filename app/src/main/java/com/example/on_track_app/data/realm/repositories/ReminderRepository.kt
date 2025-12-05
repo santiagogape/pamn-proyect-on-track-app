@@ -1,7 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.realm.RealmDatabase
-import com.example.on_track_app.data.realm.entities.CloudIdField
 import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
 import com.example.on_track_app.data.realm.entities.TemporalDataField
 import com.example.on_track_app.data.realm.entities.toDomain
@@ -51,7 +50,7 @@ class ReminderRepository() {
                 withTime = true
             )
             owner = ownerId
-            cloudIdField = CloudIdField(cloudId)
+            this.cloudId = cloudId
             this.type = type.name
             this.label = label
         }

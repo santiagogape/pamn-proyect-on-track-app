@@ -10,7 +10,6 @@ object RealmDatabase {
     private val configuration = RealmConfiguration.create(
         schema = setOf(
             // Common
-            CloudIdField::class,
             TemporalDataField::class,
             //entities
             ReminderRealmEntity::class,

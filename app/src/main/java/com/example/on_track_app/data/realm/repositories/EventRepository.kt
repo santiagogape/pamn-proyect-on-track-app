@@ -1,7 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.realm.RealmDatabase
-import com.example.on_track_app.data.realm.entities.CloudIdField
 import com.example.on_track_app.data.realm.entities.EventRealmEntity
 import com.example.on_track_app.data.realm.entities.TemporalDataField
 import com.example.on_track_app.data.realm.entities.toDomain
@@ -45,7 +44,7 @@ class EventRepository {
             this.project = projectId
             this.start = TemporalDataField(start.date.toRealmInstant(), start.timed)
             this.end = TemporalDataField(end.date.toRealmInstant(), end.timed)
-            this.cloudIdField = CloudIdField(cloudId)
+            this.cloudId = cloudId
         }
 
         return db.write {

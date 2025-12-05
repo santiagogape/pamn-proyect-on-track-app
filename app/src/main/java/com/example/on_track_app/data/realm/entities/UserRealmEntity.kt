@@ -15,7 +15,7 @@ class UserRealmEntity : RealmObject {
     var username: String = ""
     var email: String = ""
     var groups: RealmList<String> = realmListOf()
-    var cloudIdField: CloudIdField = CloudIdField()
+    var cloudId: String? = null
     var defaultProjectId: String = ""
     var projectsId: RealmList<String> = realmListOf()
 }
@@ -26,7 +26,7 @@ fun UserRealmEntity.toDomain(): MockUser {
         username = username,
         email = email,
         groups = groups,
-        cloudId = cloudIdField.cloudId,
+        cloudId = cloudId,
         defaultProjectId = defaultProjectId,
         projectsId = projectsId
     )
@@ -38,7 +38,7 @@ fun MockUser.toEntity(): UserRealmEntity {
         username = this@toEntity.username
         email = this@toEntity.email
         groups = this@toEntity.groups.toRealmList()
-        cloudIdField = CloudIdField(this@toEntity.cloudId)
+        cloudId = this@toEntity.cloudId
         defaultProjectId = this@toEntity.defaultProjectId
         projectsId = this@toEntity.projectsId.toRealmList()
     }

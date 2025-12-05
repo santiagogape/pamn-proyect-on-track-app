@@ -13,7 +13,7 @@ class GroupRealmEntity : RealmObject {
 
     var name: String = ""
     var members: RealmList<String> = realmListOf()
-    var cloudIdField: CloudIdField = CloudIdField()
+    var cloudId: String? = null
     var defaultProjectId: String = ""
     var projectsId: RealmList<String> = realmListOf()
     var ownerId: String = ""
@@ -24,7 +24,7 @@ fun GroupRealmEntity.toDomain(): MockGroup {
         id = id.toHexString(),
         name = name,
         membersId = members,
-        cloudId = cloudIdField.cloudId,
+        cloudId = cloudId,
         defaultProjectId = defaultProjectId,
         projectsId = projectsId,
         ownerId = ownerId
@@ -36,7 +36,7 @@ fun MockGroup.toEntity(): GroupRealmEntity {
         id = ObjectId(this@toEntity.id)
         name = this@toEntity.name
         members = this@toEntity.membersId.toRealmList()
-        cloudIdField = CloudIdField(this@toEntity.cloudId)
+        cloudId = this@toEntity.cloudId
         defaultProjectId = this@toEntity.defaultProjectId
         projectsId = this@toEntity.projectsId.toRealmList()
         ownerId = this@toEntity.ownerId

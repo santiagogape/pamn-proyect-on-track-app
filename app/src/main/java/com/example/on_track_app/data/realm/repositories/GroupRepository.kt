@@ -1,7 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.realm.RealmDatabase
-import com.example.on_track_app.data.realm.entities.CloudIdField
 import com.example.on_track_app.data.realm.entities.GroupRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.utils.toRealmList
@@ -39,7 +38,7 @@ class GroupRepository {
             this.members = membersId.toRealmList()
             this.defaultProjectId = defaultProjectId
             this.projectsId = projectsId.toRealmList()
-            this.cloudIdField = CloudIdField(cloudId)
+            this.cloudId = cloudId
         }
 
         return db.write {

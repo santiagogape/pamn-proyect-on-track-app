@@ -6,6 +6,7 @@ import com.example.on_track_app.model.ProjectOwner
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmList
 import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 class ProjectRealmEntity : RealmObject {
@@ -13,10 +14,13 @@ class ProjectRealmEntity : RealmObject {
     var id: ObjectId = ObjectId()
 
     var name: String = ""
+
+    @Index
     var ownerType: String = ""
+    @Index
     var ownerId: String = ""
     var members: RealmList<String> = realmListOf()
-    var cloudIdField: CloudIdField = CloudIdField()
+    var cloudId: String? = null
     var tasksId: RealmList<String> = realmListOf()
     var eventsId: RealmList<String> = realmListOf()
 }
@@ -26,7 +30,7 @@ fun ProjectRealmEntity.toDomain(): MockProject {
         id = id.toHexString(),
         name = name,
         membersId = members,
-        cloudId = cloudIdField.cloudId,
+        cloudId = cloudId,
         ownerType = ProjectOwner.valueOf(ownerType),
         ownerId = ownerId,
         tasksId = tasksId,
@@ -39,7 +43,7 @@ fun MockProject.toEntity(): ProjectRealmEntity {
         id = ObjectId(this@toEntity.id)
         name = this@toEntity.name
         members = this@toEntity.membersId.toRealmList()
-        cloudIdField = CloudIdField(this@toEntity.cloudId)
+        cloudId = this@toEntity.cloudId
         ownerType = this@toEntity.ownerType.name
         ownerId = this@toEntity.ownerId
         tasksId = this@toEntity.tasksId.toRealmList()

@@ -8,6 +8,7 @@ import com.example.on_track_app.model.MockTimeField
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmList
 import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
@@ -17,10 +18,12 @@ class EventRealmEntity : RealmObject {
 
     var name: String = ""
     var description: String = ""
+
+    @Index
     var project: String = ""
     var start: TemporalDataField = TemporalDataField()
     var end: TemporalDataField = TemporalDataField()
-    var cloudIdField: CloudIdField = CloudIdField()
+    var cloudId: String? = null
     var remindersId: RealmList<String> = realmListOf()
 }
 
@@ -33,7 +36,7 @@ fun EventRealmEntity.toDomain(): MockEvent {
         projectId = project,
         start = MockTimeField(start.date.toInstant(), start.withTime),
         end = MockTimeField(end.date.toInstant(), end.withTime),
-        cloudId = cloudIdField.cloudId,
+        cloudId = cloudId,
         remindersId = remindersId
     )
 }
@@ -53,7 +56,7 @@ fun MockEvent.toEntity(): EventRealmEntity {
             date = this@toEntity.end.date.toRealmInstant(),
             withTime = this@toEntity.end.timed
         )
-        cloudIdField = CloudIdField(this@toEntity.cloudId)
+        cloudId = this@toEntity.cloudId
         remindersId = this@toEntity.remindersId.toRealmList()
     }
 }

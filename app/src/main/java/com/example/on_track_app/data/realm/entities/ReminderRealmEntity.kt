@@ -6,6 +6,7 @@ import com.example.on_track_app.model.MockReminder
 import com.example.on_track_app.model.MockTimeField
 import com.example.on_track_app.model.ReminderOwner
 import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
@@ -15,8 +16,9 @@ class ReminderRealmEntity : RealmObject {
 
     var temporalData: TemporalDataField = TemporalDataField()
     var type: String = ""
+    @Index
     var owner: String = ""
-    var cloudIdField: CloudIdField = CloudIdField()
+    var cloudId: String? = null
     var label: String = ""
 }
 
@@ -29,7 +31,7 @@ fun ReminderRealmEntity.toDomain(): MockReminder {
             timed = this.temporalData.withTime
         ),
         ownerId = this.owner,
-        cloudId = this.cloudIdField.cloudId,
+        cloudId = this.cloudId,
         ownerType = ReminderOwner.valueOf(this.type),
         label = this.label
     )
@@ -45,7 +47,7 @@ fun MockReminder.toEntity(): ReminderRealmEntity {
         )
         type = ownerType.name
         owner = ownerId
-        cloudIdField = CloudIdField(cloudId)
+        cloudId = this@toEntity.cloudId
         label = this@toEntity.label
     }
 }
