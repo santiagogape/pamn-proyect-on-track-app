@@ -4,5 +4,7 @@ data class User (
     val id: String = "",
     val username: String = "",
     val email: String = "",
-    val groups: List<Group>? = null
+    val taskIds: List<String> = emptyList(),
+    val projectIds: List<String> = emptyList(),
+    val groupIds: List<String>? = null
 )

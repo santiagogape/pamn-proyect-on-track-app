@@ -4,5 +4,5 @@ data class Reminder(
     val id: String,
     val date: String,
     val time: String,
-    val tasks: List<Task>? = null
+    val taskIds: List<String>? = null
 )

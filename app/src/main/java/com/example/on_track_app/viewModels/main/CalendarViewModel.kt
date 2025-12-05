@@ -2,30 +2,34 @@ package com.example.on_track_app.viewModels.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.on_track_app.data.FirestoreRepository
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDate.now
 
-class CalendarViewModel : ViewModel() {
+class CalendarViewModel(
+    private val projectRepository: FirestoreRepository<Project>,
+    private val taskRepository: FirestoreRepository<Task>
+) : ViewModel() {
 
     private val _text = MutableStateFlow("This is calendar screen")
     val text: StateFlow<String> = _text
 
-    private val _items = MutableStateFlow(listOf("project1", "project2", "project3"))
-    val items: StateFlow<List<String>> = _items
-    private val _projectItems = MutableStateFlow(listOf("event1", "event2"))
+    private val _projects = MutableStateFlow<List<Project>>(emptyList())
+    val projects: StateFlow<List<Project>> = _projects
+    private val _projectEvents = MutableStateFlow<List<Event>>(emptyList())
+    private val _projectTasks = MutableStateFlow<List<Task>>(emptyList())
+    val tasks: StateFlow<List<Task>> = _projectTasks
 
-    fun project(id: String): StateFlow<List<String>>{
-        return _projectItems
-    }
-
-    val tasks: StateFlow<List<String>> = _items
-
-    val taskByDates: StateFlow<Map<LocalDate, List<String>>> =
+    val taskByDates: StateFlow<Map<LocalDate, List<Task>>> =
         tasks.map {
                 list -> list.groupBy {  now().plusDays(list.indexOf(it).toLong()) }}.stateIn(
             viewModelScope,
@@ -33,7 +37,7 @@ class CalendarViewModel : ViewModel() {
             emptyMap()
         )
 
-    fun tasksFor(date: LocalDate): StateFlow<List<String>> {
+    fun tasksFor(date: LocalDate): StateFlow<List<Task>> {
         return taskByDates
             .map { map -> map[date].orEmpty() }
             .stateIn(
@@ -41,6 +45,26 @@ class CalendarViewModel : ViewModel() {
                 SharingStarted.Eagerly,
                 emptyList()
             )
+    }
+
+    fun project(id: String): StateFlow<List<Event>>{
+        return _projectEvents
+    }
+
+    init {
+        loadProjects()
+    }
+
+    fun loadProjects() {
+        viewModelScope.launch {
+            projectRepository.getElements { list ->
+                _projects.value = list
+            }
+            taskRepository.getElements { list ->
+
+
+            }
+        }
     }
 
 
