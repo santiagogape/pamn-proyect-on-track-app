@@ -110,7 +110,7 @@ class FirestoreRepository<T: Any>(
             }
     }
 
-    fun getTasksByProject(
+    fun getTasksByProjectId(
         projectId: String,
         onResult: (List<Task>) -> Unit
     ) {

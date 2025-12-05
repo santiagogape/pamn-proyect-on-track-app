@@ -17,7 +17,8 @@ import java.time.LocalDate.now
 
 class CalendarViewModel(
     private val projectRepository: FirestoreRepository<Project>,
-    private val taskRepository: FirestoreRepository<Task>
+    private val taskRepository: FirestoreRepository<Task>,
+    private val eventRepository: FirestoreRepository<Event>
 ) : ViewModel() {
 
     private val _text = MutableStateFlow("This is calendar screen")
@@ -25,13 +26,15 @@ class CalendarViewModel(
 
     private val _projects = MutableStateFlow<List<Project>>(emptyList())
     val projects: StateFlow<List<Project>> = _projects
+
+    // Las tareas y eventos son de un proyecto específico o no?
     private val _projectEvents = MutableStateFlow<List<Event>>(emptyList())
     private val _projectTasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _projectTasks
 
-    val taskByDates: StateFlow<Map<LocalDate, List<Task>>> =
+    val taskByDates: StateFlow<Map<String, List<Task>>> =
         tasks.map {
-                list -> list.groupBy {  now().plusDays(list.indexOf(it).toLong()) }}.stateIn(
+                list -> list.groupBy {  task -> task.date }.toSortedMap()}.stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
             emptyMap()
@@ -52,17 +55,19 @@ class CalendarViewModel(
     }
 
     init {
-        loadProjects()
+        loadProjectInfo()
     }
 
-    fun loadProjects() {
+    fun loadProjectInfo() {
         viewModelScope.launch {
             projectRepository.getElements { list ->
                 _projects.value = list
             }
             taskRepository.getElements { list ->
-
-
+                _projectTasks.value = list
+            }
+            eventRepository.getElements { list ->
+                _projectEvents.value = list
             }
         }
     }
