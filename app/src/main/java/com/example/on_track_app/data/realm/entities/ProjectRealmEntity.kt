@@ -1,44 +1,49 @@
 package com.example.on_track_app.data.realm.entities
 
 import com.example.on_track_app.data.realm.utils.toRealmList
-import com.example.on_track_app.model.MockGroup
+import com.example.on_track_app.model.MockProject
+import com.example.on_track_app.model.ProjectOwner
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmList
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
-class GroupRealmEntity : RealmObject {
+class ProjectRealmEntity : RealmObject {
     @PrimaryKey
     var id: ObjectId = ObjectId()
 
     var name: String = ""
+    var ownerType: String = ""
+    var ownerId: String = ""
     var members: RealmList<String> = realmListOf()
     var cloudIdField: CloudIdField = CloudIdField()
-    var defaultProjectId: String = ""
-    var projectsId: RealmList<String> = realmListOf()
-    var ownerId: String = ""
+    var tasksId: RealmList<String> = realmListOf()
+    var eventsId: RealmList<String> = realmListOf()
 }
 
-fun GroupRealmEntity.toDomain(): MockGroup {
-    return MockGroup(
+fun ProjectRealmEntity.toDomain(): MockProject {
+    return MockProject(
         id = id.toHexString(),
         name = name,
         membersId = members,
         cloudId = cloudIdField.cloudId,
-        defaultProjectId = defaultProjectId,
-        projectsId = projectsId,
-        ownerId = ownerId
+        ownerType = ProjectOwner.valueOf(ownerType),
+        ownerId = ownerId,
+        tasksId = tasksId,
+        eventsId = eventsId
     )
 }
 
-fun MockGroup.toEntity(): GroupRealmEntity {
-    return GroupRealmEntity().apply {
+fun MockProject.toEntity(): ProjectRealmEntity {
+    return ProjectRealmEntity().apply {
         id = ObjectId(this@toEntity.id)
         name = this@toEntity.name
         members = this@toEntity.membersId.toRealmList()
         cloudIdField = CloudIdField(this@toEntity.cloudId)
-        defaultProjectId = this@toEntity.defaultProjectId
-        projectsId = this@toEntity.projectsId.toRealmList()
+        ownerType = this@toEntity.ownerType.name
         ownerId = this@toEntity.ownerId
+        tasksId = this@toEntity.tasksId.toRealmList()
+        eventsId = this@toEntity.eventsId.toRealmList()
     }
 }
+

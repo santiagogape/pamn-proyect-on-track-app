@@ -1,7 +1,7 @@
 package com.example.on_track_app.data.realm
 
-import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
-import com.example.on_track_app.data.realm.entities.TemporizedRealmEntity
+import com.example.on_track_app.data.realm.entities.*
+
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 
@@ -9,9 +9,16 @@ import io.realm.kotlin.RealmConfiguration
 object RealmDatabase {
     private val configuration = RealmConfiguration.create(
         schema = setOf(
+            // Common
+            CloudIdField::class,
+            TemporalDataField::class,
+            //entities
             ReminderRealmEntity::class,
-            TemporizedRealmEntity::class
-            // Añade aquí el resto de tus clases de Realm
+            GroupRealmEntity::class,
+            ProjectRealmEntity::class,
+            TaskRealmEntity::class,
+            EventRealmEntity::class,
+            UserRealmEntity::class
         )
     )
 

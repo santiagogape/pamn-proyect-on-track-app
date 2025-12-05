@@ -15,12 +15,21 @@ fun Instant.toRealmInstant(): RealmInstant {
 }
 
 
+fun Instant.toLocalDate(): LocalDate {
+    return this.atZone(ZoneId.systemDefault()).toLocalDate()
+}
+
+fun Instant.toLocalTime(): LocalTime {
+    return this.atZone(ZoneId.systemDefault()).toLocalTime()
+}
+
+
 fun RealmInstant.toSystemLocalDate(): LocalDate {
-    return this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+    return this.toInstant().toLocalDate()
 }
 
 fun RealmInstant.toSystemLocalTime(): LocalTime {
-    return this.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    return this.toInstant().toLocalTime()
 }
 
 fun RealmInstant.toSyncString(): String {

@@ -8,11 +8,11 @@ import io.realm.kotlin.types.annotations.Ignore
 import java.time.LocalDate
 import java.time.LocalTime
 
-class TemporizedRealmEntity: EmbeddedRealmObject {
+class CloudIdField(var cloudId: String? = null): EmbeddedRealmObject
 
-    var date: RealmInstant = RealmInstant.now()
-
-    var withTime: Boolean = false
+class TemporalDataField(var date: RealmInstant = RealmInstant.now(),
+                        var withTime: Boolean = false
+): EmbeddedRealmObject {
 
     @Ignore
     val localDate: LocalDate

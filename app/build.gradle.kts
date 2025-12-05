@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "1.9.0"
-    id("io.realm.kotlin") version "2.1.0"
+    alias(libs.plugins.realm)
 
 }
 

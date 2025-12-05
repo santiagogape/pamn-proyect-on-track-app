@@ -1,11 +1,13 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.realm.RealmDatabase
+import com.example.on_track_app.data.realm.entities.CloudIdField
 import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
-import com.example.on_track_app.data.realm.entities.TemporizedRealmEntity
+import com.example.on_track_app.data.realm.entities.TemporalDataField
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.utils.toRealmInstant
-import com.example.on_track_app.model.realmMocks.Reminder
+import com.example.on_track_app.model.MockReminder
+import com.example.on_track_app.model.ReminderOwner
 import io.realm.kotlin.Realm
 import io.realm.kotlin.notifications.InitialResults
 import io.realm.kotlin.notifications.UpdatedResults
@@ -21,7 +23,7 @@ class ReminderRepository() {
     /**
      * Obtiene un flujo de todos los recordatorios como objetos de dominio.
      */
-    fun getAllReminders(): Flow<List<Reminder>> {
+    fun getAllReminders(): Flow<List<MockReminder>> {
         return db.query(ReminderRealmEntity::class).asFlow()
             .map { results ->
                 when (results) {
@@ -33,7 +35,7 @@ class ReminderRepository() {
     /**
      * Obtiene un recordatorio específico por su ID y lo devuelve como objeto de dominio.
      */
-    fun getReminderById(id: String): Reminder? {
+    fun getReminderById(id: String): MockReminder? {
         val entity = db.query(ReminderRealmEntity::class, "id == $0", ObjectId(id)).first().find()
         // Devuelve el objeto de dominio o null si la entidad no fue encontrada
         return entity?.toDomain()
@@ -42,13 +44,20 @@ class ReminderRepository() {
     /**
      * Añade un nuevo recordatorio a la base de datos.
      */
-    suspend fun addReminder(date: LocalDate, time: LocalTime) {
-        db.write {
-            val newReminder = ReminderRealmEntity(TemporizedRealmEntity().apply {
-                this.date = date.toRealmInstant(time)
-                this.withTime = true
-            })
-            copyToRealm(newReminder)
+    suspend fun addReminder(ownerId: String, label:String, date: LocalDate, time: LocalTime, cloudId: String?, type: ReminderOwner): String {
+        val newReminder = ReminderRealmEntity().apply {
+            temporalData = TemporalDataField(
+                date = date.toRealmInstant(time),
+                withTime = true
+            )
+            owner = ownerId
+            cloudIdField = CloudIdField(cloudId)
+            this.type = type.name
+            this.label = label
+        }
+
+        return db.write {
+            copyToRealm(newReminder).id.toHexString()
         }
     }
 

@@ -6,14 +6,14 @@ junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 material = "1.13.0"
-activityCompose = "1.12.0"
-composeBom = "2025.11.01"
+activityCompose = "1.12.1"
+composeBom = "2025.12.00"
 lifecycle = "2.10.0"
 navigationCompose = "2.9.6"
 material3 = "1.4.0"
 datastore = "1.2.0"
 coil = "2.7.0"
-realm = "2.1.0"
+realm = "3.0.0"
 
 
 [libraries]
@@ -45,3 +45,4 @@ realm-kotlin = { module = "io.realm.kotlin:library-base", version.ref = "realm" 
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+realm = { id = "io.realm.kotlin", version.ref = "realm" }
