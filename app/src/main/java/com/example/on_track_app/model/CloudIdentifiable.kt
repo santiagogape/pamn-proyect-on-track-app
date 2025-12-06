@@ -1,5 +1,5 @@
 package com.example.on_track_app.model
 
-interface CloudId {
+interface CloudIdentifiable {
     val cloudId: String?
 }

@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.realm.entities
 
+import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.realm.utils.toInstant
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockTimeField
@@ -11,27 +12,26 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class TaskRealmEntity : RealmObject {
+class TaskRealmEntity : RealmObject, SynchronizableEntity, ProjectOwnership {
     @PrimaryKey
     var id: ObjectId = ObjectId()
-
     var name: String = ""
     var date: RealmInstant = RealmInstant.now()
     var withTime: Boolean = false
     var description: String = ""
-    @Index
-    var status: String = ""
     var reminders: RealmList<String> = realmListOf()
     @Index
-    var projectId: String = ""
-    // cloud
+    var status: String = ""
+
     @Index
-    var cloudId: String? = null
-    // versions
+    override var projectId: ObjectId = ObjectId()
+
     @Index
-    var version: RealmInstant = RealmInstant.now()
+    override var cloudId: String? = null
     @Index
-    var synchronized: Boolean = false
+    override var version: RealmInstant = RealmInstant.now()
+    @Index
+    override var synchronizationStatus: String = SynchronizationState.CREATED.name
 
 }
 
@@ -45,7 +45,7 @@ fun TaskRealmEntity.toDomain(): MockTask {
         ),
         description = description,
         remindersId = reminders.toList(),
-        projectId = projectId,
+        projectId = projectId.toHexString(),
         cloudId = cloudId
     )
 }

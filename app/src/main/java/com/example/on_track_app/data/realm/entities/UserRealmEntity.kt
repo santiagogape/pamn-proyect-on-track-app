@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.realm.entities
 
+import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.model.MockUser
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmInstant
@@ -9,7 +10,7 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class UserRealmEntity : RealmObject {
+class UserRealmEntity : RealmObject, SynchronizableEntity {
     @PrimaryKey
     var id: ObjectId = ObjectId()
 
@@ -18,14 +19,13 @@ class UserRealmEntity : RealmObject {
     var groups: RealmList<String> = realmListOf()
     var defaultProjectId: String = ""
     var projectsId: RealmList<String> = realmListOf()
-    // cloud
+
     @Index
-    var cloudId: String? = null
-    // versions
+    override var cloudId: String? = null
     @Index
-    var version: RealmInstant = RealmInstant.now()
+    override var version: RealmInstant = RealmInstant.now()
     @Index
-    var synchronized: Boolean = false
+    override var synchronizationStatus: String = SynchronizationState.CREATED.name
 }
 
 fun UserRealmEntity.toDomain(): MockUser {

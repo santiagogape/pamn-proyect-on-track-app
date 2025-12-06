@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.realm.entities
 
+import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.realm.utils.toInstant
 import com.example.on_track_app.model.MockReminder
 import com.example.on_track_app.model.MockTimeField
@@ -10,24 +11,24 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class ReminderRealmEntity : RealmObject {
+class ReminderRealmEntity : RealmObject, SynchronizableEntity, Owned {
     @PrimaryKey
     var id: ObjectId = ObjectId()
 
     var date: RealmInstant = RealmInstant.now()
     var withTime: Boolean = false
-    var type: String = ""
-    @Index
-    var owner: String = ""
     var label: String = ""
-    // cloud
+
     @Index
-    var cloudId: String? = null
-    // versions
+    override var ownerId: ObjectId = ObjectId()
+    override var ownerType: String = ""
+
     @Index
-    var version: RealmInstant = RealmInstant.now()
+    override var cloudId: String? = null
     @Index
-    var synchronized: Boolean = false
+    override var version: RealmInstant = RealmInstant.now()
+    @Index
+    override var synchronizationStatus: String = SynchronizationState.CREATED.name
 }
 
 
@@ -38,9 +39,9 @@ fun ReminderRealmEntity.toDomain(): MockReminder {
             date = this.date.toInstant(),
             timed = this.withTime
         ),
-        ownerId = this.owner,
+        ownerId = this.ownerId.toHexString(),
         cloudId = this.cloudId,
-        ownerType = ReminderOwner.valueOf(this.type),
+        ownerType = ReminderOwner.valueOf(this.ownerType),
         label = this.label
     )
 }

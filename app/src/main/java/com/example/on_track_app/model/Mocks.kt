@@ -24,22 +24,26 @@ fun MockTimeField.toTime(): LocalTime? {
 }
 
 
+interface Identifiable {
+    val id: String
+}
+
 data class MockObjectRemindersResume(
     val id: String,
     val remindersId: List<String> = listOf(),
 )
 
 data class MockReminder(
-    val id: String,
+    override val id: String,
     val time: MockTimeField,
     val ownerId: String,
     val ownerType: ReminderOwner,
     val label: String,
     override val cloudId: String? = null
-): CloudId
+): CloudIdentifiable, Identifiable
 
 data class MockEvent(
-    val id: String = "",
+    override val id: String = "",
     val name: String = "",
     val description: String = "",
     val projectId: String,
@@ -47,46 +51,44 @@ data class MockEvent(
     val end: MockTimeField,
     override val cloudId: String? = null,
     val remindersId: List<String> = emptyList()
-): CloudId
+): CloudIdentifiable, Identifiable
 
 data class MockTask (
-    val id: String = "",
+    override val id: String = "",
     val name: String = "",
     val date: MockTimeField,
     val description: String = "",
     val remindersId: List<String> = listOf(),
     val projectId: String,
     override val cloudId: String? = null
-): CloudId
+): CloudIdentifiable, Identifiable
 
 data class MockGroup (
-    val id: String = "",
+    override val id: String = "",
     val name: String = "",
     val ownerId: String = "",
     val membersId: List<String> = emptyList(),
     val defaultProjectId: String,
     val projectsId: List<String> = emptyList(),
     override val cloudId: String? = null
-): CloudId
+): CloudIdentifiable, Identifiable
 
 data class MockProject (
-    val id: String = "",
+    override val id: String = "",
     val name: String = "",
     val membersId: List<String> = emptyList(),
     override val cloudId: String? = null,
     val ownerType: ProjectOwner = ProjectOwner.USER,
-    val ownerId: String = "",
-    val tasksId: List<String> = emptyList(),
-    val eventsId: List<String> = emptyList()
-): CloudId
+    val ownerId: String = ""
+): CloudIdentifiable, Identifiable
 
 
 data class MockUser (
-    val id: String = "",
+    override val id: String = "",
     val username: String = "",
     val email: String = "",
     val groups: List<String> = listOf(),
     val defaultProjectId: String,
     val projectsId: List<String> = emptyList(),
     override val cloudId: String? = null
-): CloudId
+): CloudIdentifiable, Identifiable
