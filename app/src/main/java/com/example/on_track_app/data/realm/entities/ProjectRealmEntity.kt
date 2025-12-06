@@ -1,9 +1,9 @@
 package com.example.on_track_app.data.realm.entities
 
-import com.example.on_track_app.data.realm.utils.toRealmList
 import com.example.on_track_app.model.MockProject
 import com.example.on_track_app.model.ProjectOwner
 import io.realm.kotlin.ext.realmListOf
+import io.realm.kotlin.types.RealmInstant
 import io.realm.kotlin.types.RealmList
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Index
@@ -20,34 +20,26 @@ class ProjectRealmEntity : RealmObject {
     @Index
     var ownerId: String = ""
     var members: RealmList<String> = realmListOf()
+    // cloud
+    @Index
     var cloudId: String? = null
-    var tasksId: RealmList<String> = realmListOf()
-    var eventsId: RealmList<String> = realmListOf()
+    // versions
+    @Index
+    var version: RealmInstant = RealmInstant.now()
+    @Index
+    var synchronized: Boolean = false
 }
 
 fun ProjectRealmEntity.toDomain(): MockProject {
     return MockProject(
         id = id.toHexString(),
         name = name,
-        membersId = members,
+        membersId = members.toList(),
         cloudId = cloudId,
         ownerType = ProjectOwner.valueOf(ownerType),
-        ownerId = ownerId,
-        tasksId = tasksId,
-        eventsId = eventsId
+        ownerId = ownerId
     )
 }
 
-fun MockProject.toEntity(): ProjectRealmEntity {
-    return ProjectRealmEntity().apply {
-        id = ObjectId(this@toEntity.id)
-        name = this@toEntity.name
-        members = this@toEntity.membersId.toRealmList()
-        cloudId = this@toEntity.cloudId
-        ownerType = this@toEntity.ownerType.name
-        ownerId = this@toEntity.ownerId
-        tasksId = this@toEntity.tasksId.toRealmList()
-        eventsId = this@toEntity.eventsId.toRealmList()
-    }
-}
+
 

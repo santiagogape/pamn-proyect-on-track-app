@@ -1,11 +1,10 @@
 package com.example.on_track_app.data.realm.entities
 
 import com.example.on_track_app.data.realm.utils.toInstant
-import com.example.on_track_app.data.realm.utils.toRealmInstant
-import com.example.on_track_app.data.realm.utils.toRealmList
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockTimeField
 import io.realm.kotlin.ext.realmListOf
+import io.realm.kotlin.types.RealmInstant
 import io.realm.kotlin.types.RealmList
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Index
@@ -17,14 +16,22 @@ class TaskRealmEntity : RealmObject {
     var id: ObjectId = ObjectId()
 
     var name: String = ""
-    var temporalData: TemporalDataField = TemporalDataField()
+    var date: RealmInstant = RealmInstant.now()
+    var withTime: Boolean = false
     var description: String = ""
     @Index
     var status: String = ""
     var reminders: RealmList<String> = realmListOf()
     @Index
-    var project: String = ""
+    var projectId: String = ""
+    // cloud
+    @Index
     var cloudId: String? = null
+    // versions
+    @Index
+    var version: RealmInstant = RealmInstant.now()
+    @Index
+    var synchronized: Boolean = false
 
 }
 
@@ -33,27 +40,14 @@ fun TaskRealmEntity.toDomain(): MockTask {
         id = id.toHexString(),
         name = name,
         date = MockTimeField(
-            date = temporalData.date.toInstant(),
-            timed = temporalData.withTime
+            date = date.toInstant(),
+            timed = withTime
         ),
         description = description,
         remindersId = reminders.toList(),
-        projectId = project,
+        projectId = projectId,
         cloudId = cloudId
     )
 }
 
-fun MockTask.toEntity(): TaskRealmEntity {
-    return TaskRealmEntity().apply {
-        id = ObjectId(this@toEntity.id)
-        name = this@toEntity.name
-        description = this@toEntity.description
-        reminders = this@toEntity.remindersId.toRealmList()
-        project = this@toEntity.projectId
-        temporalData = TemporalDataField(
-            date = this@toEntity.date.date.toRealmInstant(),
-            withTime = this@toEntity.date.timed
-        )
-        cloudId = this@toEntity.cloudId
-    }
-}
+

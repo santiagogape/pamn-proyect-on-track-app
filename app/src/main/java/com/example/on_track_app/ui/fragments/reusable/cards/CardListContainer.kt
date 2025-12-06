@@ -7,10 +7,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.model.Expandable
 
 @Composable
-fun ExpandableCards(
-    contents: List<String>
+fun <T: Expandable> ExpandableCards (
+    contents: List<T>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -18,8 +19,8 @@ fun ExpandableCards(
     ) {
         items(contents, key = { it }) { item ->
             ExpandableCardItem(
-                title = item,
-                content = item
+                title = item.name,
+                content = item.description
             )
         }
     }

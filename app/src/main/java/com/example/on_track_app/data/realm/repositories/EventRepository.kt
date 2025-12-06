@@ -1,8 +1,8 @@
 package com.example.on_track_app.data.realm.repositories
 
+import com.example.on_track_app.data.abstractions.repositories.EventRepository
 import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.EventRealmEntity
-import com.example.on_track_app.data.realm.entities.TemporalDataField
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.utils.toRealmInstant
 import com.example.on_track_app.model.MockEvent
@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
 
-class EventRepository {
+class RealmEventRepository: EventRepository {
 
     private val db = RealmDatabase.realm
 
-    fun getAllEvents(): Flow<List<MockEvent>> {
+    override fun getAllEvents(): Flow<List<MockEvent>> {
         return db.query(EventRealmEntity::class)
             .asFlow()
             .map { results ->
@@ -23,14 +23,14 @@ class EventRepository {
             }
     }
 
-    fun getEventById(id: String): MockEvent? {
+    override fun getEventById(id: String): MockEvent? {
         val entity = db.query(EventRealmEntity::class, "id == $0", ObjectId(id))
             .first()
             .find()
         return entity?.toDomain()
     }
 
-    suspend fun addEvent(
+    override suspend fun addEvent(
         name: String,
         description: String,
         projectId: String,
@@ -41,9 +41,11 @@ class EventRepository {
         val event = EventRealmEntity().apply {
             this.name = name
             this.description = description
-            this.project = projectId
-            this.start = TemporalDataField(start.date.toRealmInstant(), start.timed)
-            this.end = TemporalDataField(end.date.toRealmInstant(), end.timed)
+            this.projectId = projectId
+            this.startDate = start.date.toRealmInstant()
+            this.startWithTime = start.timed
+            this.endDate = end.date.toRealmInstant()
+            this.endWithTime = end.timed
             this.cloudId = cloudId
         }
 
@@ -52,7 +54,7 @@ class EventRepository {
         }
     }
 
-    suspend fun updateEvent(
+    override suspend fun updateEvent(
         id: String,
         newName: String,
         newDescription: String
@@ -69,7 +71,7 @@ class EventRepository {
         }
     }
 
-    suspend fun deleteEvent(id: String) {
+    override suspend fun deleteEvent(id: String) {
         db.write {
             val entity = query(EventRealmEntity::class, "id == $0", ObjectId(id))
                 .first()

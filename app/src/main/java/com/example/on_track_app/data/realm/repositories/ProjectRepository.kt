@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
+import com.example.on_track_app.data.abstractions.repositories.ProjectRepository
 import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.ProjectRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
@@ -9,24 +10,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
 
-class ProjectRepository {
+class RealmProjectRepository: ProjectRepository {
 
     private val db = RealmDatabase.realm
 
-    fun getAllProjects(): Flow<List<MockProject>> {
+    override fun getAllProjects(): Flow<List<MockProject>> {
         return db.query(ProjectRealmEntity::class)
             .asFlow()
             .map { it.list.map { e -> e.toDomain() } }
     }
 
-    fun getProjectById(id: String): MockProject? {
+    override fun getProjectById(id: String): MockProject? {
         return db.query(ProjectRealmEntity::class, "id == $0", ObjectId(id))
             .first()
             .find()
             ?.toDomain()
     }
 
-    suspend fun addProject(
+    override suspend fun addProject(
         name: String,
         membersId: List<String>,
         cloudId: String?
@@ -42,7 +43,7 @@ class ProjectRepository {
         }
     }
 
-    suspend fun updateProject(id: String, newName: String) {
+    override suspend fun updateProject(id: String, newName: String) {
         db.write {
             val project = query(ProjectRealmEntity::class, "id == $0", ObjectId(id))
                 .first()
@@ -52,7 +53,7 @@ class ProjectRepository {
         }
     }
 
-    suspend fun deleteProject(id: String) {
+    override suspend fun deleteProject(id: String) {
         db.write {
             val project = query(ProjectRealmEntity::class, "id == $0", ObjectId(id))
                 .first()

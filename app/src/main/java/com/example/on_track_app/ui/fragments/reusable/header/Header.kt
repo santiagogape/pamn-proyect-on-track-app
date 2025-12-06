@@ -60,7 +60,7 @@ fun MainHeader(
     pfpUrl: String?
 ) {
     Header(
-        startContent = {  OpenRemindersIconButton {  } },
+        startContent = { OpenRemindersIconButton() },
         centerContent = {
             Text(
                 text = label,
@@ -82,7 +82,10 @@ fun ProjectsHeader(
     pfpUrl: String? = null
 ) {
     Header(
-        startContent = { BackButton(); OpenRemindersIconButton {  } },
+        startContent = {
+            BackButton()
+            OpenRemindersIconButton()
+        },
         centerContent = {
             Text(
                 text = label,
@@ -105,7 +108,10 @@ fun AgendaHeader(
     pfpUrl: String?
 ) {
     Header(
-        startContent = { BackButton(); OpenRemindersIconButton {  } },
+        startContent = {
+            BackButton()
+            OpenRemindersIconButton()
+        },
         centerContent = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(

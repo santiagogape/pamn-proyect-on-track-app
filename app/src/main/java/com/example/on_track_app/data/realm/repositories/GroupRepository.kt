@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
+import com.example.on_track_app.data.abstractions.repositories.GroupRepository
 import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.GroupRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
@@ -9,24 +10,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
 
-class GroupRepository {
+class RealmGroupRepository: GroupRepository {
 
     private val db = RealmDatabase.realm
 
-    fun getAllGroups(): Flow<List<MockGroup>> {
+    override fun getAllGroups(): Flow<List<MockGroup>> {
         return db.query(GroupRealmEntity::class)
             .asFlow()
             .map { it.list.map { e -> e.toDomain() } }
     }
 
-    fun getGroupById(id: String): MockGroup? {
+        override fun getGroupById(id: String): MockGroup? {
         return db.query(GroupRealmEntity::class, "id == $0", ObjectId(id))
             .first()
             .find()
             ?.toDomain()
     }
 
-    suspend fun addGroup(
+    override suspend fun addGroup(
         name: String,
         membersId: List<String>,
         defaultProjectId: String,
@@ -46,7 +47,7 @@ class GroupRepository {
         }
     }
 
-    suspend fun updateGroup(id: String, newName: String) {
+    override suspend fun updateGroup(id: String, newName: String) {
         db.write {
             val group = query(GroupRealmEntity::class, "id == $0", ObjectId(id))
                 .first()
@@ -56,7 +57,7 @@ class GroupRepository {
         }
     }
 
-    suspend fun deleteGroup(id: String) {
+    override suspend fun deleteGroup(id: String) {
         db.write {
             val group = query(GroupRealmEntity::class, "id == $0", ObjectId(id))
                 .first()

@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.realm.repositories
 
+import com.example.on_track_app.data.abstractions.repositories.UserRepository
 import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.UserRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
@@ -9,24 +10,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
 
-class UserRepository {
+class RealmUserRepository: UserRepository {
 
     private val db = RealmDatabase.realm
 
-    fun getAllUsers(): Flow<List<MockUser>> {
+    override fun getAllUsers(): Flow<List<MockUser>> {
         return db.query(UserRealmEntity::class)
             .asFlow()
             .map { it.list.map { e -> e.toDomain() } }
     }
 
-    fun getUserById(id: String): MockUser? {
+    override fun getUserById(id: String): MockUser? {
         return db.query(UserRealmEntity::class, "id == $0", ObjectId(id))
             .first()
             .find()
             ?.toDomain()
     }
 
-    suspend fun addUser(
+    override suspend fun addUser(
         username: String,
         email: String,
         groupsId: List<String>,
@@ -48,7 +49,7 @@ class UserRepository {
         }
     }
 
-    suspend fun updateUser(id: String, newEmail: String) {
+    override suspend fun updateUser(id: String, newEmail: String) {
         db.write {
             val user = query(UserRealmEntity::class, "id == $0", ObjectId(id))
                 .first()
@@ -58,7 +59,7 @@ class UserRepository {
         }
     }
 
-    suspend fun deleteUser(id: String) {
+    override suspend fun deleteUser(id: String) {
         db.write {
             val user = query(UserRealmEntity::class, "id == $0", ObjectId(id))
                 .first()
