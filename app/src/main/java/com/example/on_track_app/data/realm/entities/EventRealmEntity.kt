@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.realm.entities
 
+import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.realm.utils.toInstant
 import com.example.on_track_app.model.MockEvent
 import com.example.on_track_app.model.MockTimeField
@@ -11,31 +12,28 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class EventRealmEntity : RealmObject {
+class EventRealmEntity : RealmObject, SynchronizableEntity, ProjectOwnership {
     @PrimaryKey
     var id: ObjectId = ObjectId()
-
     var name: String = ""
     var description: String = ""
-
-    @Index
-    var projectId: String = ""
 
     @Index
     var startDate: RealmInstant = RealmInstant.now()
     var startWithTime: Boolean = false
     var endDate: RealmInstant = RealmInstant.now()
-    var remindersId: RealmList<String> = realmListOf()
     var endWithTime: Boolean = false
+    var remindersId: RealmList<String> = realmListOf()
 
-    // cloud
     @Index
-    var cloudId: String? = null
-        // versions
+    override var projectId: ObjectId = ObjectId()
+
     @Index
-    var version: RealmInstant = RealmInstant.now()
+    override var cloudId: String? = null
     @Index
-    var synchronized: Boolean = false
+    override var version: RealmInstant = RealmInstant.now()
+    @Index
+    override var synchronizationStatus: String = SynchronizationState.CREATED.name
 }
 
 
@@ -44,7 +42,7 @@ fun EventRealmEntity.toDomain(): MockEvent {
         id = id.toHexString(),
         name = name,
         description = description,
-        projectId = projectId,
+        projectId = projectId.toHexString(),
         start = MockTimeField(startDate.toInstant(), startWithTime),
         end = MockTimeField(endDate.toInstant(), endWithTime),
         cloudId = cloudId,

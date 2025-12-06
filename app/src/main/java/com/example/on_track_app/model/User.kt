@@ -6,4 +6,4 @@ data class User (
     val email: String = "",
     val groups: List<Group> = listOf(),
     override val cloudId: String? = null
-): CloudId
+): CloudIdentifiable

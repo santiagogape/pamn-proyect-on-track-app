@@ -5,4 +5,4 @@ data class Group (
     val name: String = "",
     val members: List<User> = emptyList(),
     override val cloudId: String? = null
-): CloudId
+): CloudIdentifiable

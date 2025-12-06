@@ -3,27 +3,30 @@ package com.example.on_track_app.data.realm.repositories
 import com.example.on_track_app.data.abstractions.repositories.TaskRepository
 import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
+import com.example.on_track_app.data.realm.entities.delete
 import com.example.on_track_app.data.realm.entities.toDomain
+import com.example.on_track_app.data.realm.entities.update
+import com.example.on_track_app.data.synchronization.toObjectId
 import com.example.on_track_app.data.realm.utils.toRealmInstant
 import com.example.on_track_app.data.realm.utils.toRealmList
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockTimeField
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.mongodb.kbson.ObjectId
+import kotlin.collections.map
 
 class RealmTaskRepository: TaskRepository {
 
     private val db = RealmDatabase.realm
 
-    override fun getAllTasks(): Flow<List<MockTask>> {
+    override fun getAll(): Flow<List<MockTask>> {
         return db.query(TaskRealmEntity::class)
             .asFlow()
             .map { it.list.map { e -> e.toDomain() } }
     }
 
-    override fun getTaskById(id: String): MockTask? {
-        return db.query(TaskRealmEntity::class, "id == $0", ObjectId(id))
+    override fun getById(id: String): MockTask? {
+        return db.query(TaskRealmEntity::class, "id == $0", id.toObjectId())
             .first()
             .find()
             ?.toDomain()
@@ -40,7 +43,7 @@ class RealmTaskRepository: TaskRepository {
         val task = TaskRealmEntity().apply {
             this.name = name
             this.description = description
-            this.projectId = projectId
+            this.projectId = projectId.toObjectId()
             this.date = date.date.toRealmInstant()
             this.withTime = date.timed
             this.reminders = remindersId.toRealmList()
@@ -58,24 +61,34 @@ class RealmTaskRepository: TaskRepository {
         newDescription: String
     ) {
         db.write {
-            val task = query(TaskRealmEntity::class, "id == $0", ObjectId(id))
-                .first()
-                .find()
-
-            task?.let {
+            val entity: TaskRealmEntity? = entity(id)
+            entity?.let {
                 it.name = newName
                 it.description = newDescription
+                it.update()
             }
         }
     }
 
-    override suspend fun deleteTask(id: String) {
+    override suspend fun delete(id: String) {
         db.write {
-            val task = query(TaskRealmEntity::class, "id == $0", ObjectId(id))
-                .first()
-                .find()
-
-            task?.let { delete(findLatest(it)!!) }
+            val entity: TaskRealmEntity? = entity(id)
+            entity?.let { delete(findLatest(it)!!) }
         }
+    }
+
+    override suspend fun markAsDeleted(id: String) {
+        db.write {
+            val entity: TaskRealmEntity? = entity(id)
+            entity?.delete()
+        }
+    }
+
+    override fun byProject(id: String): Flow<List<MockTask>> {
+        return db.query(TaskRealmEntity::class, "projectId == $0", id.toObjectId())
+            .asFlow()
+            .map { results ->
+                results.list.map { it.toDomain() }
+            }
     }
 }

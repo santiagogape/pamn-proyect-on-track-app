@@ -2,13 +2,10 @@ package com.example.on_track_app.data.abstractions.repositories
 
 import com.example.on_track_app.model.MockReminder
 import com.example.on_track_app.model.ReminderOwner
-import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.LocalTime
 
-interface ReminderRepository {
-    fun getAllReminders(): Flow<List<MockReminder>>
-    fun getReminderById(id: String): MockReminder?
+interface ReminderRepository: BasicById<MockReminder>, IndexedByOwner<MockReminder> {
     suspend fun addReminder(
         ownerId: String,
         label: String,
@@ -24,5 +21,4 @@ interface ReminderRepository {
         newTime: LocalTime,
         withTime: Boolean
     )
-    suspend fun deleteReminder(id: String)
 }

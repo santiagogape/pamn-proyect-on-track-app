@@ -2,14 +2,16 @@ package com.example.on_track_app.data.firebase
 
 
 import android.util.Log
+import com.example.on_track_app.model.CloudIdentifiable
 import com.example.on_track_app.model.Task
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class FirestoreRepository<T : Any>(
+class FirestoreRepository<T : CloudIdentifiable>(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val collectionName: String,
     private val clazz: Class<T>
@@ -18,11 +20,7 @@ class FirestoreRepository<T : Any>(
     suspend fun getElementById(id: String): T? {
         return try {
             val doc = db.collection(collectionName).document(id).get().await()
-            val obj = doc.toObject(clazz)
-            if (obj != null) {
-                injectId(obj, doc.id)
-            }
-            obj
+            doc.toObject(clazz)
         } catch (e: Exception) {
             Log.e("Firestore", "Error getting element $id", e)
             null
@@ -48,9 +46,7 @@ class FirestoreRepository<T : Any>(
                 }
 
                 val list = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(clazz)?.apply {
-                        injectId(this, doc.id)
-                    }
+                    doc.toObject(clazz)
                 } ?: emptyList()
 
                 trySend(list) // Emit the list to the collector
@@ -61,9 +57,12 @@ class FirestoreRepository<T : Any>(
     }
 
     suspend fun addElement(element: T): Boolean {
-        val data = elementToMap(element)
+        val data = elementToMap(element).toMutableMap()
         return try {
-            db.collection(collectionName).add(data).await()
+            val ref = db.collection(collectionName).document()
+            val cloudId = ref.id
+            data["cloudId"] = cloudId
+            ref.set(data).await()
             true
         } catch (e: Exception) {
             Log.e("Firestore", "Error adding document", e)
@@ -72,17 +71,20 @@ class FirestoreRepository<T : Any>(
     }
 
     suspend fun updateElement(id: String, element: T): Boolean {
-        val data = elementToMap(element)
-        if (data.isEmpty()) return false
-
         return try {
-            db.collection(collectionName).document(id).set(data).await()
+            val data = elementToMap(element)
+            db.collection(collectionName)
+                .document(id)
+                .set(data, SetOptions.merge())
+                .await()
             true
+
         } catch (e: Exception) {
             Log.e("Firestore", "Error updating document ($id)", e)
             false
         }
     }
+
 
     fun getTasksByProjectId(projectId: String): Flow<List<Task>> = callbackFlow {
         val listenerRegistration = db.collection(collectionName)
@@ -101,16 +103,6 @@ class FirestoreRepository<T : Any>(
         awaitClose { listenerRegistration.remove() }
     }
 
-    private fun injectId(obj: T, id: String) {
-        try {
-            val field = clazz.declaredFields.find { it.name == "id" }
-            field?.isAccessible = true
-            field?.set(obj, id)
-        } catch (e: Exception) {
-            Log.e("Firestore", "Reflection error injecting ID", e)
-        }
-    }
-
     private fun elementToMap(element: T): Map<String, Any> {
         val map = mutableMapOf<String, Any>()
         try {
@@ -120,6 +112,8 @@ class FirestoreRepository<T : Any>(
                 if (value != null) {
                     map[field.name] = value
                 }
+
+
             }
         } catch (e: Exception) {
             Log.e("Firestore", "Reflection error mapping object", e)

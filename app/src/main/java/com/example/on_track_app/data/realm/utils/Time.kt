@@ -23,25 +23,12 @@ fun Instant.toLocalTime(): LocalTime {
     return this.atZone(ZoneId.systemDefault()).toLocalTime()
 }
 
-
-fun RealmInstant.toSystemLocalDate(): LocalDate {
-    return this.toInstant().toLocalDate()
-}
-
-fun RealmInstant.toSystemLocalTime(): LocalTime {
-    return this.toInstant().toLocalTime()
-}
-
-fun RealmInstant.toSyncString(): String {
-    // ISO 8601 (UTC)
-    return this.toInstant().toString()
-}
-
-fun String.toRealmInstant(): RealmInstant {
-    return Instant.parse(this).toRealmInstant()
-}
-
 fun LocalDate.toRealmInstant(time: LocalTime? = null): RealmInstant {
     val dateTime = this.atTime(time ?: LocalTime.MIN)
     return dateTime.atZone(ZoneId.systemDefault()).toInstant().toRealmInstant()
 }
+
+
+fun RealmInstant.toMillis(): Long = this.toInstant().toEpochMilli()
+fun Long.toRealmInstant(): RealmInstant =
+    Instant.ofEpochMilli(this).toRealmInstant()
