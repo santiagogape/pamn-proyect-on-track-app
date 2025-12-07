@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
 import com.example.on_track_app.viewModels.main.ProjectsViewModel
@@ -19,8 +20,10 @@ import com.example.on_track_app.viewModels.main.ProjectsViewModel
 
 @Composable
 fun ProjectsScreen(
-    viewModel: ProjectsViewModel = viewModel()
+    factory: AppViewModelFactory
 ) {
+    val viewModel: ProjectsViewModel = viewModel(factory = factory)
+
     val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val items by viewModel.items.collectAsStateWithLifecycle()

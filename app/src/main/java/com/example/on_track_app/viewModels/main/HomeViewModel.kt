@@ -20,7 +20,7 @@ class HomeViewModel(
     val tasks: StateFlow<List<Task>> = taskRepository.getElements()
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
+            SharingStarted.Eagerly,
             emptyList()
         )
 }

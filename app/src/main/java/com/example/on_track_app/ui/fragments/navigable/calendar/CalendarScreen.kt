@@ -11,6 +11,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.di.AppViewModelFactory
+import com.example.on_track_app.di.DummyFactory
 import com.example.on_track_app.ui.activities.AgendaActivity
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
@@ -18,9 +20,11 @@ import com.example.on_track_app.viewModels.main.CalendarViewModel
 
 @Composable
 fun CalendarScreen(
-    viewModel: CalendarViewModel = viewModel(),
+    factory: AppViewModelFactory,
     projectId: String? = null
 ) {
+    val viewModel: CalendarViewModel = viewModel(factory = factory)
+
     val text by viewModel.text.collectAsStateWithLifecycle()
     val items by viewModel.taskByDates.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -45,11 +49,10 @@ fun CalendarScreen(
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun ExpandableCardItemPreview() {
     OnTrackAppTheme(darkTheme = false) {
-        CalendarScreen()
+        CalendarScreen(factory = DummyFactory as AppViewModelFactory)
     }
 }

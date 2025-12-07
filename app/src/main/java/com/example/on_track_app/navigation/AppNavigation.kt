@@ -15,6 +15,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.ui.fragments.navigable.calendar.CalendarScreen
 import com.example.on_track_app.ui.fragments.navigable.dashboard.DashboardScreen
 import com.example.on_track_app.ui.fragments.navigable.home.HomeScreen
@@ -85,26 +86,29 @@ fun NavDestination?.isOnDestination(route: String): Boolean {
 
 // --- BottomNavigation principal de la app ---
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(
+    navController: NavHostController,
+    factory: AppViewModelFactory
+) {
     NavHost(
         navController = navController,
         startDestination = Destinations.HOME
     ) {
-        composable(Destinations.HOME) { HomeScreen() }
-        composable(Destinations.TASKS) { DashboardScreen() }
-        composable(Destinations.PROJECTS) { ProjectsScreen() }
-        composable(Destinations.CALENDAR) { CalendarScreen() }
+        composable(Destinations.HOME) { HomeScreen(factory = factory) }
+        composable(Destinations.TASKS) { DashboardScreen(factory = factory) }
+        composable(Destinations.PROJECTS) { ProjectsScreen(factory = factory) }
+        composable(Destinations.CALENDAR) { CalendarScreen(factory = factory) }
     }
 }
 
 @Composable
-fun ProjectNavigation(navHostController: NavHostController, projectId: String){
+fun ProjectNavigation(navHostController: NavHostController, projectId: String, factory: AppViewModelFactory){
     NavHost(
         navController = navHostController,
         startDestination = Destinations.TASKS
     ) {
-        composable(Destinations.TASKS) { DashboardScreen(projectId = projectId) }
+        composable(Destinations.TASKS) { DashboardScreen(projectId = projectId, factory = factory) }
         composable(Destinations.NOTIFICATIONS) { NotificationsScreen(projectId = projectId) }
-        composable(Destinations.CALENDAR) { CalendarScreen(projectId = projectId) }
+        composable(Destinations.CALENDAR) { CalendarScreen(projectId = projectId, factory = factory) }
     }
 }

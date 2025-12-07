@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.navigation.AppNavigation
 import com.example.on_track_app.navigation.Destinations
 import com.example.on_track_app.navigation.isOnDestination
@@ -13,8 +14,11 @@ import com.example.on_track_app.ui.fragments.reusable.header.OpenRemindersIconBu
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 
 @Composable
-fun OnTrackApp(darkTheme: Boolean,
-               onToggleTheme: () -> Unit) {
+fun OnTrackApp(
+    darkTheme: Boolean,
+    onToggleTheme: () -> Unit,
+    factory: AppViewModelFactory
+) {
 
     OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()
@@ -38,7 +42,7 @@ fun OnTrackApp(darkTheme: Boolean,
                      },
             footer = { NavBar(navController,items) }
         ){
-            AppNavigation(navController = navController)
+            AppNavigation(navController = navController, factory = factory)
         }
 
 
