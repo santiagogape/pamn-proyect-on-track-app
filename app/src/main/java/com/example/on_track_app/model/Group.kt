@@ -6,5 +6,5 @@ data class Group (
     @DocumentId
     val id: String = "",
     val name: String = "",
-    val members: List<User> = emptyList()
+    val membersIds: List<String> = emptyList()
 )

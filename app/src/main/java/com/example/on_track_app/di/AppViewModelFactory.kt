@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.on_track_app.data.FirestoreRepository
 import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.fragments.navigable.notifications.NotificationsScreen
+import com.example.on_track_app.viewModels.login.LoginViewModel
 import com.example.on_track_app.viewModels.main.CalendarViewModel
 import com.example.on_track_app.viewModels.main.HomeViewModel
 import com.example.on_track_app.viewModels.main.NotificationsViewModel
@@ -36,6 +37,10 @@ class AppViewModelFactory(
             modelClass.isAssignableFrom(ProjectsViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
                 ProjectsViewModel(container.projectRepository) as T
+            }
+            modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
+                @Suppress("UNCHECKED_CAST")
+                LoginViewModel(container.googleAuthClient) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

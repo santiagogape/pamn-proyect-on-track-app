@@ -39,6 +39,7 @@ class FirestoreRepository<T : Any>(
         }
     }
 
+    // TODO: Add parameter userId: String and add whereEqualTo() in the query to the DB
     fun getElements(): Flow<List<T>> = callbackFlow {
         val listenerRegistration = db.collection(collectionName)
             .addSnapshotListener { snapshot, error ->
@@ -62,6 +63,9 @@ class FirestoreRepository<T : Any>(
 
     suspend fun addElement(element: T): Boolean {
         val data = elementToMap(element)
+
+        // TODO: Ensure userId property is set BEFORE calling this function
+
         return try {
             db.collection(collectionName).add(data).await()
             true
