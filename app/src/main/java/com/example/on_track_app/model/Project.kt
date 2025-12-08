@@ -1,6 +1,9 @@
 package com.example.on_track_app.model
 
+import com.google.firebase.firestore.DocumentId
+
 data class Project (
+    @DocumentId
     val id: String = "",
     override val name: String = "",
     override val description: String = "",

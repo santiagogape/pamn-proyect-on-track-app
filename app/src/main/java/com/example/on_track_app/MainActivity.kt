@@ -15,14 +15,15 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val settings by lazy { SettingsDataStore(this) }
-    private val appContainer
-        get() = (application as App).container
-    private val appViewModelFactory = AppViewModelFactory(appContainer)
+    private val appContainer by lazy {
+        (application as App).container
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
+            val appViewModelFactory = appContainer.viewModelFactory
             OnTrackApp(
                 darkTheme = darkTheme,
                 onToggleTheme = {

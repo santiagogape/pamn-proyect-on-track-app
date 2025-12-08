@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.example.on_track_app.App
 import com.example.on_track_app.di.AppContainer
 import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.navigation.Destinations
@@ -21,7 +22,9 @@ import kotlinx.coroutines.launch
 class ProjectActivity : ComponentActivity() {
     private val settings by lazy { SettingsDataStore(this) }
 
-    private val appViewmodelFactory: AppViewModelFactory = AppContainer.viewModelFactory
+    private val appContainer by lazy {
+        (application as App).container
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +32,7 @@ class ProjectActivity : ComponentActivity() {
             val project = intent.getStringExtra("PROJECT")!!
             val projectId = intent.getStringExtra("PROJECT_ID")!!
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
+            val appViewModelFactory = appContainer.viewModelFactory
             Project(
                 project = project,
                 projectId = projectId,
@@ -38,7 +42,7 @@ class ProjectActivity : ComponentActivity() {
                         settings.setDarkTheme(!darkTheme)
                     }
                 },
-                factory = appViewmodelFactory
+                factory = appViewModelFactory
             )
         }
     }
