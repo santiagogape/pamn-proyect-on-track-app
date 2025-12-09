@@ -2,10 +2,12 @@ package com.example.on_track_app.data.realm.entities
 
 import com.example.on_track_app.data.realm.utils.SynchronizationState
 import io.realm.kotlin.types.RealmInstant
-import io.realm.kotlin.types.RealmObject
 import org.mongodb.kbson.ObjectId
 
 
+interface Entity {
+    val id: ObjectId
+}
 
 interface Owned {
     val ownerId: ObjectId
@@ -16,7 +18,7 @@ interface ProjectOwnership {
     val projectId: ObjectId
 }
 
-interface SynchronizableEntity: RealmObject {
+interface SynchronizableEntity {
     var cloudId: String?
     var version: RealmInstant
     var synchronizationStatus: String

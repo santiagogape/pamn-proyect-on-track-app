@@ -31,7 +31,7 @@ fun EventRealmEntity.toDTO(): EventDTO =
         remindersId = remindersId.toList(),
 
         version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name
+        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
     )
 
 
@@ -50,7 +50,6 @@ fun EventDTO.toRealm(entity: EventRealmEntity) {
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -67,7 +66,7 @@ fun GroupRealmEntity.toDTO(): GroupDTO =
         ownerId = ownerId,
 
         version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name
+        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
     )
 
 
@@ -80,7 +79,7 @@ fun GroupDTO.toRealm(entity: GroupRealmEntity) {
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-
+    
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -97,7 +96,8 @@ fun ProjectRealmEntity.toDTO(): ProjectDTO =
         ownerId = ownerId.toHexString(),
 
         version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name
+        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
+        
     )
 
 fun ProjectDTO.toRealm(entity: ProjectRealmEntity) {
@@ -109,7 +109,7 @@ fun ProjectDTO.toRealm(entity: ProjectRealmEntity) {
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-
+    
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -127,7 +127,8 @@ fun ReminderRealmEntity.toDTO(): ReminderDTO =
         ownerType = ownerType,
 
         version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name
+        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
+        
     )
 
 fun ReminderDTO.toRealm(entity: ReminderRealmEntity) {
@@ -140,7 +141,7 @@ fun ReminderDTO.toRealm(entity: ReminderRealmEntity) {
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-
+    
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -160,7 +161,8 @@ fun TaskRealmEntity.toDTO(): TaskDTO =
         projectId = projectId.toHexString(),
 
         version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name
+        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
+        
     )
 
 fun TaskDTO.toRealm(entity: TaskRealmEntity) {
@@ -175,7 +177,7 @@ fun TaskDTO.toRealm(entity: TaskRealmEntity) {
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-
+    
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -191,7 +193,8 @@ fun UserRealmEntity.toDTO(): UserDTO =
         projectsId = projectsId.toList(),
 
         version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name
+        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
+        
     )
 
 fun UserDTO.toRealm(entity: UserRealmEntity) {
@@ -203,7 +206,7 @@ fun UserDTO.toRealm(entity: UserRealmEntity) {
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-
+    
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name

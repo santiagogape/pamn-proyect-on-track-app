@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.R
+import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
@@ -81,7 +82,14 @@ fun Agenda(
                 if (tasksToday.isEmpty()){
                     Text(text = stringResource(R.string.no_tasks_today), style = MaterialTheme.typography.headlineSmall)
                 } else {
-                    ExpandableCards(tasksToday)
+                    ExpandableCards(tasksToday.map { val expandable = object: Expandable {
+                        override val name: String
+                            get() = it
+                        override val description: String
+                            get() = it
+                    }
+                        expandable
+                    })
                 }
             }
 

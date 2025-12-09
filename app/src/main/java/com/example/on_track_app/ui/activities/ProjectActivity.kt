@@ -8,9 +8,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.example.on_track_app.navigation.Destinations
-import com.example.on_track_app.navigation.ProjectNavigation
-import com.example.on_track_app.navigation.routes
+import com.example.on_track_app.ui.navigation.Destinations
+import com.example.on_track_app.ui.navigation.ProjectNavigation
+import com.example.on_track_app.ui.navigation.routes
 import com.example.on_track_app.ui.fragments.reusable.header.ProjectsHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.SettingsDataStore

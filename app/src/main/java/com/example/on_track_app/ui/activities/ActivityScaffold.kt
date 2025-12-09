@@ -42,12 +42,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.on_track_app.navigation.NavItem
-import com.example.on_track_app.navigation.isOnDestination
+import com.example.on_track_app.ui.navigation.NavItem
+import com.example.on_track_app.ui.navigation.isOnDestination
 import com.example.on_track_app.ui.fragments.dialogs.EventCreation
 import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
+import com.example.on_track_app.ui.fragments.dialogs.ProjectCreation
+import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.viewModels.CreationViewModel
+
+enum class Dialogs {
+    TASK, EVENT, PROJECT, NONE
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,9 +64,12 @@ fun ActivityScaffold(
     footer: @Composable (()-> Unit),
     navigationTarget: @Composable (() -> Unit)
 ) {
+    val viewModelFactory = LocalViewModelFactory.current
+    val creator: CreationViewModel = viewModel(factory = viewModelFactory)
     var showMenu by remember { mutableStateOf(false) }
-    var taskDialogVisible by remember { mutableStateOf(false) }
-    var eventDialogVisible by remember { mutableStateOf(false) }
+
+    var dialog by remember {mutableStateOf(Dialogs.NONE)}
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -98,21 +109,35 @@ fun ActivityScaffold(
             contentAlignment = Alignment.Center
         ) {
             navigationTarget()
-            if (taskDialogVisible) {
-                TaskCreation(
-                    onDismiss = { taskDialogVisible = false },
-                    onSubmit = { name, description, project, date, hour, minute ->
-                        taskDialogVisible = false
-                    }
-                )
-            } else if (eventDialogVisible) {
-                EventCreation(
-                    onDismiss = { eventDialogVisible = false },
-                    onSubmit = { name, description, project, startDateTime, endDateTime ->
-                        taskDialogVisible = false
-                    }
-                )
+
+            when (dialog) {
+                Dialogs.TASK -> {
+                    TaskCreation(
+                        onDismiss = { dialog = Dialogs.NONE },
+                        onSubmit = { name, description, project, date, hour, minute ->
+                            dialog = Dialogs.NONE
+                        }
+                    )
+                }
+                Dialogs.EVENT -> {
+                    EventCreation(
+                        onDismiss = { dialog = Dialogs.NONE },
+                        onSubmit = { name, description, project, startDateTime, endDateTime ->
+                            dialog = Dialogs.NONE
+                        }
+                    )
+                }
+                Dialogs.PROJECT -> {
+                    ProjectCreation(
+                        onDismiss = {dialog = Dialogs.NONE}
+                    ) { name ->
+
+                        creator.addNewProject(name)
+                        dialog = Dialogs.NONE }
+                }
+                Dialogs.NONE -> {}
             }
+
             if (showMenu) {
                 Popup(
                     alignment = Alignment.BottomCenter,
@@ -133,7 +158,7 @@ fun ActivityScaffold(
                                     text = { Text("NEW TASK") },
                                     onClick = {
                                         showMenu = false
-                                        taskDialogVisible = true
+                                        dialog = Dialogs.TASK
                                     },
                                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
                                 )
@@ -141,13 +166,13 @@ fun ActivityScaffold(
                                     text = { Text("NEW EVENT") },
                                     onClick = {
                                         showMenu = false
-                                        eventDialogVisible = true
+                                        dialog = Dialogs.EVENT
                                     },
                                     leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("NEW REMINDER") },
-                                    onClick = { showMenu = false },
+                                    text = { Text("NEW PROJECT") },
+                                    onClick = { showMenu = false; dialog = Dialogs.PROJECT },
                                     leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
                                 )
                             }

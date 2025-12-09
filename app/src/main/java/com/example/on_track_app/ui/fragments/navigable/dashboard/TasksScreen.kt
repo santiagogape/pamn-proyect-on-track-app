@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.viewModels.main.TasksViewModel
 
@@ -31,7 +32,14 @@ fun DashboardScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            ExpandableCards(items)
+            ExpandableCards(items.map { val expandable = object: Expandable {
+                override val name: String
+                    get() = it
+                override val description: String
+                    get() = it
+            }
+                expandable
+            })
         }
     }
 }

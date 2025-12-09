@@ -9,6 +9,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.viewModels.main.HomeViewModel
@@ -28,7 +29,14 @@ fun HomeScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            ExpandableCards(items)
+            ExpandableCards(items.map { val expandable = object: Expandable {
+                override val name: String
+                    get() = it
+                override val description: String
+                    get() = it
+            }
+                expandable
+            })
         }
     }
 }

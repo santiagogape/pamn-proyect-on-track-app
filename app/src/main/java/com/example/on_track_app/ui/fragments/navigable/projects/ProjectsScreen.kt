@@ -14,16 +14,23 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
+import com.example.on_track_app.utils.DebugLogcatLogger
+import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.ProjectsViewModel
 
 
 @Composable
 fun ProjectsScreen(
-    viewModel: ProjectsViewModel = viewModel()
 ) {
+    val viewModelFactory = LocalViewModelFactory.current
+
+    val viewModel: ProjectsViewModel = viewModel(factory = viewModelFactory)
+
     val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val items by viewModel.items.collectAsStateWithLifecycle()
+    val projects by viewModel.projects.collectAsStateWithLifecycle()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -33,7 +40,9 @@ fun ProjectsScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            StaticCards(items) { projectName ->
+            projects.forEach { DebugLogcatLogger.logMockProject(it) }
+            val mapped = projects.map { it.name }
+            StaticCards(mapped) { projectName ->
                 val intent = Intent(context, ProjectActivity::class.java)
                 intent.putExtra("PROJECT", projectName)
                 intent.putExtra("PROJECT_ID", projectName) //todo: name -> id

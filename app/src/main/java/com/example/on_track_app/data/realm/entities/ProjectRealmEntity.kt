@@ -10,9 +10,9 @@ import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
-class ProjectRealmEntity : RealmObject, SynchronizableEntity, Owned {
+class ProjectRealmEntity : RealmObject, SynchronizableEntity, Owned, Entity {
     @PrimaryKey
-    var id: ObjectId = ObjectId()
+    override var id: ObjectId = ObjectId()
     var name: String = ""
     var members: RealmList<String> = realmListOf()
 

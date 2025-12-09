@@ -8,6 +8,7 @@ plugins {
 
 }
 
+
 android {
     namespace = "com.example.on_track_app"
     compileSdk = 36
@@ -38,6 +39,10 @@ android {
     buildFeatures {
         compose = true
     }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
 }
 
 dependencies {

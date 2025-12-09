@@ -4,16 +4,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.on_track_app.navigation.AppNavigation
-import com.example.on_track_app.navigation.Destinations
-import com.example.on_track_app.navigation.isOnDestination
-import com.example.on_track_app.navigation.routes
+import com.example.on_track_app.ui.navigation.AppNavigation
+import com.example.on_track_app.ui.navigation.Destinations
+import com.example.on_track_app.ui.navigation.isOnDestination
+import com.example.on_track_app.ui.navigation.routes
 import com.example.on_track_app.ui.fragments.reusable.header.MainHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 
 @Composable
-fun OnTrackApp(darkTheme: Boolean,
-               onToggleTheme: () -> Unit) {
+fun Main(darkTheme: Boolean,
+         onToggleTheme: () -> Unit,
+         ) {
 
     OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()

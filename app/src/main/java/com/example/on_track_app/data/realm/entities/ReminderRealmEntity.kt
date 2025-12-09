@@ -11,9 +11,9 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class ReminderRealmEntity : RealmObject, SynchronizableEntity, Owned {
+class ReminderRealmEntity : RealmObject, SynchronizableEntity, Owned, Entity {
     @PrimaryKey
-    var id: ObjectId = ObjectId()
+    override var id: ObjectId = ObjectId()
 
     var date: RealmInstant = RealmInstant.now()
     var withTime: Boolean = false

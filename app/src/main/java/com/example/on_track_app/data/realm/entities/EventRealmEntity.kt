@@ -12,9 +12,9 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class EventRealmEntity : RealmObject, SynchronizableEntity, ProjectOwnership {
+class EventRealmEntity : RealmObject, SynchronizableEntity, ProjectOwnership, Entity {
     @PrimaryKey
-    var id: ObjectId = ObjectId()
+    override var id: ObjectId = ObjectId()
     var name: String = ""
     var description: String = ""
 

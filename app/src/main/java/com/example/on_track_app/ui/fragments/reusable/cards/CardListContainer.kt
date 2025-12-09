@@ -17,7 +17,7 @@ fun <T: Expandable> ExpandableCards (
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(contents, key = { it }) { item ->
+        items(contents, key = { it.name }) { item ->
             ExpandableCardItem(
                 title = item.name,
                 content = item.description

@@ -1,4 +1,4 @@
-package com.example.on_track_app.navigation
+package com.example.on_track_app.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowLeft

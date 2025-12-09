@@ -10,9 +10,9 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class UserRealmEntity : RealmObject, SynchronizableEntity {
+class UserRealmEntity : RealmObject, SynchronizableEntity, Entity {
     @PrimaryKey
-    var id: ObjectId = ObjectId()
+    override var id: ObjectId = ObjectId()
 
     var username: String = ""
     var email: String = ""
