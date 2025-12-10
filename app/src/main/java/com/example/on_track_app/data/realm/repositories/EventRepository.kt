@@ -1,10 +1,8 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.abstractions.repositories.EventRepository
-import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.EventRealmEntity
 import com.example.on_track_app.data.realm.entities.SyncMapper
-import com.example.on_track_app.data.realm.entities.delete
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.entities.update
 import com.example.on_track_app.data.synchronization.toObjectId

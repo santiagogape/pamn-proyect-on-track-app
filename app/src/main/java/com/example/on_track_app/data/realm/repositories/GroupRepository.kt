@@ -1,19 +1,13 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.abstractions.repositories.GroupRepository
-import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.GroupRealmEntity
 import com.example.on_track_app.data.realm.entities.SyncMapper
-import com.example.on_track_app.data.realm.entities.delete
-import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.entities.update
-import com.example.on_track_app.data.synchronization.toObjectId
 import com.example.on_track_app.data.realm.utils.toRealmList
 import com.example.on_track_app.data.synchronization.GroupDTO
 import com.example.on_track_app.model.MockGroup
 import io.realm.kotlin.Realm
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlin.reflect.KClass
 
 class RealmGroupRepository (

@@ -14,15 +14,10 @@ class TasksViewModel(private val repo: TaskRepository) : ViewModel() {
     private val _text = MutableStateFlow("This is dashboard screen")
     val text: StateFlow<String> = _text
 
-
     val tasks: StateFlow<List<MockTask>> = this.repo.getAll()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun byProject(id: String): StateFlow<List<MockTask>> = this.repo.byProject(id)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-
-
-
 
 }

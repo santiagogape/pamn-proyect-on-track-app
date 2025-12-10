@@ -19,18 +19,6 @@ import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
 import kotlin.reflect.KClass
 
-inline fun <reified T : TypedRealmObject> MutableRealm.entity(id: String): T? {
-    return query(T::class, "id == $0", ObjectId(id))
-        .first()
-        .find()
-}
-
-inline fun <reified T : TypedRealmObject> MutableRealm.entityByCloudId(id: String): T? {
-    return query(T::class, "cloudId == $0", ObjectId(id))
-        .first()
-        .find()
-}
-
 abstract class RealmRepository<K> where K : TypedRealmObject, K : Entity {
 
     abstract val klass: KClass<K>

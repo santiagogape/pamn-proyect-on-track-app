@@ -38,7 +38,6 @@ import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
 import java.time.LocalDate
 import java.time.LocalDate.now
-import java.time.LocalTime
 
 @Composable
 fun TaskCreation(

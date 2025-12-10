@@ -1,10 +1,8 @@
 package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.abstractions.repositories.ReminderRepository
-import com.example.on_track_app.data.realm.RealmDatabase
 import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
 import com.example.on_track_app.data.realm.entities.SyncMapper
-import com.example.on_track_app.data.realm.entities.delete
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.entities.update
 import com.example.on_track_app.data.synchronization.toObjectId
@@ -14,8 +12,6 @@ import com.example.on_track_app.model.MockReminder
 import com.example.on_track_app.model.ReminderOwner
 import com.example.on_track_app.utils.DebugLogcatLogger
 import io.realm.kotlin.Realm
-import io.realm.kotlin.notifications.InitialResults
-import io.realm.kotlin.notifications.UpdatedResults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate

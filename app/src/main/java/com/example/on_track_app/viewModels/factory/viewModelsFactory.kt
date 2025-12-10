@@ -16,7 +16,7 @@ class ViewModelsFactoryMock(
     //makers
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        val entry = factoryMap[modelClass.kotlin]
+        val entry = this.factoryMap[modelClass.kotlin]
             ?: throw IllegalArgumentException()
         return entry.creator() as T
     }
