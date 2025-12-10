@@ -1,20 +1,23 @@
 package com.example.on_track_app.viewModels.main
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.on_track_app.data.abstractions.repositories.EventRepository
+import com.example.on_track_app.model.MockEvent
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 
-class NotificationsViewModel : ViewModel() {
+class NotificationsViewModel(private val repo: EventRepository) : ViewModel() {
 
     private val _text = MutableStateFlow("This is notifications screen")
     val text: StateFlow<String> = _text
 
-    private val _items = MutableStateFlow(listOf("project1", "project2", "project3"))
-    val items: StateFlow<List<String>> = _items
+    val events: StateFlow<List<MockEvent>> = this.repo.getAll()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    private val _projectItems = MutableStateFlow(listOf("notice1", "notice2"))
+    fun byProject(id: String): StateFlow<List<MockEvent>> = this.repo.byProject(id)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    fun project(id: String): StateFlow<List<String>>{
-        return _projectItems
-    }
 }

@@ -19,7 +19,7 @@ fun DashboardScreen(
 ) {
     val text by viewModel.text.collectAsStateWithLifecycle()
     val sourceFlow = remember(projectId) {
-        projectId?.let { viewModel.project(it) } ?: viewModel.items
+        projectId?.let { viewModel.byProject(it) } ?: viewModel.tasks
     }
     val items by sourceFlow.collectAsStateWithLifecycle()
 
@@ -32,13 +32,12 @@ fun DashboardScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            ExpandableCards(items.map { val expandable = object: Expandable {
-                override val name: String
-                    get() = it
-                override val description: String
-                    get() = it
-            }
-                expandable
+            ExpandableCards(items.map { object: Expandable {
+                    override val name: String
+                        get() = it.name
+                    override val description: String
+                        get() = it.description
+                }
             })
         }
     }

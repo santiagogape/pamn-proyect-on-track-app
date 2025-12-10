@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
 import com.example.on_track_app.viewModels.main.NotificationsViewModel
 
@@ -21,7 +22,7 @@ fun NotificationsScreen(
 ) {
     val text by viewModel.text.collectAsStateWithLifecycle()
     val sourceFlow = remember(projectId) {
-        projectId?.let { viewModel.project(it) } ?: viewModel.items
+        projectId?.let { viewModel.byProject(it) } ?: viewModel.events
     }
     val items by sourceFlow.collectAsStateWithLifecycle()
     Box(
@@ -33,7 +34,7 @@ fun NotificationsScreen(
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
-            StaticCards(items){}//todo -> create activity logic
+            StaticCards(items.map { it.name}){}//todo -> create activity logic
         }
     }
 }

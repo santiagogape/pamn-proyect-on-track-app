@@ -2,6 +2,7 @@ package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.abstractions.repositories.TaskRepository
 import com.example.on_track_app.data.realm.RealmDatabase
+import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.delete
 import com.example.on_track_app.data.realm.entities.toDomain
@@ -9,28 +10,23 @@ import com.example.on_track_app.data.realm.entities.update
 import com.example.on_track_app.data.synchronization.toObjectId
 import com.example.on_track_app.data.realm.utils.toRealmInstant
 import com.example.on_track_app.data.realm.utils.toRealmList
+import com.example.on_track_app.data.synchronization.TaskDTO
+import com.example.on_track_app.data.synchronization.toDTO
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.utils.DebugLogcatLogger
+import io.realm.kotlin.Realm
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.collections.map
+import kotlin.reflect.KClass
 
-class RealmTaskRepository: TaskRepository {
-
-    private val db = RealmDatabase.realm
-
-    override fun getAll(): Flow<List<MockTask>> {
-        return db.query(TaskRealmEntity::class)
-            .asFlow()
-            .map { it.list.map { e -> e.toDomain() } }
-    }
-
-    override fun getById(id: String): MockTask? {
-        return db.query(TaskRealmEntity::class, "id == $0", id.toObjectId())
-            .first()
-            .find()
-            ?.toDomain()
-    }
+class RealmTaskRepository(
+    db: Realm,
+    mapper: SyncMapper<TaskRealmEntity, TaskDTO , MockTask>,
+    maker: () ->TaskRealmEntity,
+    klass: KClass<TaskRealmEntity> = TaskRealmEntity::class
+) : TaskRepository, RealmSynchronizableRepository<TaskRealmEntity, TaskDTO , MockTask>(db,mapper,maker,klass) {
 
     override suspend fun addTask(
         name: String,
@@ -40,19 +36,31 @@ class RealmTaskRepository: TaskRepository {
         projectId: String,
         cloudId: String?
     ): String {
-        val task = TaskRealmEntity().apply {
-            this.name = name
-            this.description = description
-            this.projectId = projectId.toObjectId()
-            this.date = date.date.toRealmInstant()
-            this.withTime = date.timed
-            this.reminders = remindersId.toRealmList()
-            this.cloudId = cloudId
-        }
+        var dto: TaskDTO? = null
+        var id = ""
 
-        return db.write {
-            copyToRealm(task).id.toHexString()
+        db.write {
+            val task = TaskRealmEntity().apply {
+                this.name = name
+                this.description = description
+                this.projectId = projectId.toObjectId()
+                this.date = date.date.toRealmInstant()
+                this.withTime = date.timed
+                this.reminders = remindersId.toRealmList()
+                this.cloudId = cloudId
+            }
+
+            val saved = copyToRealm(task)
+            id = saved.id.toHexString()
+
+            dto = saved.toDTO()
+
+            DebugLogcatLogger.logRealmSaved(saved)
+
         }
+        dto?.let { syncEngine?.onLocalChange(id, it)}
+
+        return id
     }
 
     override suspend fun updateTask(
@@ -60,6 +68,7 @@ class RealmTaskRepository: TaskRepository {
         newName: String,
         newDescription: String
     ) {
+        var dto: TaskDTO? = null
         db.write {
             val entity: TaskRealmEntity? = entity(id)
             entity?.let {
@@ -67,21 +76,11 @@ class RealmTaskRepository: TaskRepository {
                 it.description = newDescription
                 it.update()
             }
+            dto = entity?.toDTO()
         }
-    }
 
-    override suspend fun delete(id: String) {
-        db.write {
-            val entity: TaskRealmEntity? = entity(id)
-            entity?.let { delete(findLatest(it)!!) }
-        }
-    }
+        dto?.let { syncEngine?.onLocalChange(id,it) }
 
-    override suspend fun markAsDeleted(id: String) {
-        db.write {
-            val entity: TaskRealmEntity? = entity(id)
-            entity?.delete()
-        }
     }
 
     override fun byProject(id: String): Flow<List<MockTask>> {

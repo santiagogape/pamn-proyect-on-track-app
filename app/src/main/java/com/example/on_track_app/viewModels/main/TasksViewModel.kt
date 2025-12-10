@@ -1,22 +1,26 @@
 package com.example.on_track_app.viewModels.main
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.on_track_app.data.abstractions.repositories.TaskRepository
+import com.example.on_track_app.model.MockTask
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 
-class TasksViewModel : ViewModel() {
+class TasksViewModel(private val repo: TaskRepository) : ViewModel() {
 
     private val _text = MutableStateFlow("This is dashboard screen")
     val text: StateFlow<String> = _text
 
-    private val _items = MutableStateFlow(listOf("task1", "task2", "task3"))
-    val items: StateFlow<List<String>> = _items
 
-    private val _projectItems = MutableStateFlow(listOf("task1", "task2"))
+    val tasks: StateFlow<List<MockTask>> = this.repo.getAll()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    fun project(id: String): StateFlow<List<String>>{
-        return _projectItems
-    }
+    fun byProject(id: String): StateFlow<List<MockTask>> = this.repo.byProject(id)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
 
 
 

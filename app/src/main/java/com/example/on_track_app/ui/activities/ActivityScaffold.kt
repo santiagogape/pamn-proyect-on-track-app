@@ -116,6 +116,7 @@ fun ActivityScaffold(
                         onDismiss = { dialog = Dialogs.NONE },
                         onSubmit = { name, description, project, date, hour, minute ->
                             dialog = Dialogs.NONE
+                            creator.addNewTask(name, description, project ?: "DEFAULT", date, hour, minute)
                         }
                     )
                 }
@@ -124,6 +125,7 @@ fun ActivityScaffold(
                         onDismiss = { dialog = Dialogs.NONE },
                         onSubmit = { name, description, project, startDateTime, endDateTime ->
                             dialog = Dialogs.NONE
+                            creator.addNewEvent(name, description, project ?: "DEFAULT", startDateTime, endDateTime) //todo: correct hardcoded "DEFAULT" projectID
                         }
                     )
                 }
