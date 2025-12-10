@@ -20,10 +20,10 @@ fun DashboardScreen(
     val viewModel: TasksViewModel = viewModel(factory = factory)
 
     val text by viewModel.text.collectAsStateWithLifecycle()
-    val sourceFlow = remember(projectId) {
-        projectId?.let { viewModel.project(it) } ?: viewModel.items
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
     }
-    val items by sourceFlow.collectAsStateWithLifecycle()
+    val items by viewModel.tasks.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier

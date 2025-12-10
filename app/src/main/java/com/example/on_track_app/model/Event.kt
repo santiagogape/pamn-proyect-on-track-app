@@ -10,9 +10,9 @@ import java.util.Date
 
 data class Event(
     @DocumentId
-    val id: String = "",
-    val name: String = "",
-    val description: String = "",
+    override val id: String = "",
+    override val name: String = "",
+    override val description: String = "",
     val projectId: String? = null,
     @get:PropertyName("startDate")
     val startDateIso: String = LocalDate.now().toString(),
@@ -22,7 +22,7 @@ data class Event(
     val endTimeIso: String? = null,
     @get:PropertyName("endDate")
     val endDateIso: String? = null
-) {
+) : Expandable {
     @get:Exclude
     val startDate: LocalDate
         get() = LocalDate.parse(startDateIso)

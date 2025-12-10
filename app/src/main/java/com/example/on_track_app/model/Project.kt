@@ -4,9 +4,9 @@ import com.google.firebase.firestore.DocumentId
 
 data class Project (
     @DocumentId
-    val id: String = "",
+    override val id: String = "",
     val ownerId: String = "",
-    val name: String = "",
-    val description: String = "",
+    override val name: String = "",
+    override val description: String = "",
     val membersIds: List<String> = emptyList()
-)
+) : Expandable
