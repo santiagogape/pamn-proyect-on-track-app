@@ -31,7 +31,7 @@ class UserRealmEntity : RealmObject, SynchronizableEntity, Entity {
 fun UserRealmEntity.toDomain(): MockUser {
     return MockUser(
         id = id.toHexString(),
-        username = username,
+        name = username,
         email = email,
         groups = groups.toList(),
         cloudId = cloudId,

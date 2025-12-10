@@ -28,6 +28,7 @@ class ProjectRealmEntity : RealmObject, SynchronizableEntity, Owned, Entity {
     override var version: RealmInstant = RealmInstant.now()
     @Index
     override var synchronizationStatus: String = SynchronizationState.CREATED.name
+
 }
 
 fun ProjectRealmEntity.toDomain(): MockProject {

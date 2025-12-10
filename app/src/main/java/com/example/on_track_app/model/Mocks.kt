@@ -26,6 +26,7 @@ fun MockTimeField.toTime(): LocalTime? {
 
 interface Identifiable {
     val id: String
+    val name: String
 }
 
 data class MockObjectRemindersResume(
@@ -38,13 +39,13 @@ data class MockReminder(
     val time: MockTimeField,
     val ownerId: String,
     val ownerType: ReminderOwner,
-    val label: String,
+    override val name: String,
     override val cloudId: String? = null
 ): CloudIdentifiable, Identifiable
 
 data class MockEvent(
     override val id: String = "",
-    val name: String = "",
+    override val name: String = "",
     val description: String = "",
     val projectId: String,
     val start: MockTimeField,
@@ -55,7 +56,7 @@ data class MockEvent(
 
 data class MockTask (
     override val id: String = "",
-    val name: String = "",
+    override val name: String = "",
     val date: MockTimeField,
     val description: String = "",
     val remindersId: List<String> = listOf(),
@@ -65,7 +66,7 @@ data class MockTask (
 
 data class MockGroup (
     override val id: String = "",
-    val name: String = "",
+    override val name: String = "",
     val ownerId: String = "",
     val membersId: List<String> = emptyList(),
     val defaultProjectId: String,
@@ -75,7 +76,7 @@ data class MockGroup (
 
 data class MockProject (
     override val id: String = "",
-    val name: String = "",
+    override val name: String = "",
     val membersId: List<String> = emptyList(),
     override val cloudId: String? = null,
     val ownerType: ProjectOwner = ProjectOwner.USER,
@@ -85,7 +86,7 @@ data class MockProject (
 
 data class MockUser (
     override val id: String = "",
-    val username: String = "",
+    override val name: String = "",
     val email: String = "",
     val groups: List<String> = listOf(),
     val defaultProjectId: String,

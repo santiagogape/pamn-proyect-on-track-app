@@ -42,7 +42,7 @@ fun ReminderRealmEntity.toDomain(): MockReminder {
         ownerId = this.ownerId.toHexString(),
         cloudId = this.cloudId,
         ownerType = ReminderOwner.valueOf(this.ownerType),
-        label = this.label
+        name = this.label
     )
 }
 
