@@ -50,6 +50,7 @@ import com.example.on_track_app.ui.navigation.isOnDestination
 import com.example.on_track_app.ui.fragments.dialogs.EventCreation
 import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
 import com.example.on_track_app.ui.fragments.dialogs.ProjectCreation
+import com.example.on_track_app.utils.LocalConfig
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.CreationViewModel
 
@@ -65,6 +66,7 @@ fun ActivityScaffold(
     navigationTarget: @Composable (() -> Unit)
 ) {
     val viewModelFactory = LocalViewModelFactory.current
+    val localConfig = LocalConfig.current
     val creator: CreationViewModel = viewModel(factory = viewModelFactory)
     var showMenu by remember { mutableStateOf(false) }
 
@@ -116,7 +118,7 @@ fun ActivityScaffold(
                         onDismiss = { dialog = Dialogs.NONE },
                         onSubmit = { name, description, project, date, hour, minute ->
                             dialog = Dialogs.NONE
-                            creator.addNewTask(name, description, project ?: "DEFAULT", date, hour, minute)
+                            creator.addNewTask(name, description, project ?: localConfig.defaultProjectID, date, hour, minute)
                         }
                     )
                 }
@@ -125,7 +127,7 @@ fun ActivityScaffold(
                         onDismiss = { dialog = Dialogs.NONE },
                         onSubmit = { name, description, project, startDateTime, endDateTime ->
                             dialog = Dialogs.NONE
-                            creator.addNewEvent(name, description, project ?: "DEFAULT", startDateTime, endDateTime) //todo: correct hardcoded "DEFAULT" projectID
+                            creator.addNewEvent(name, description, project ?: localConfig.defaultProjectID, startDateTime, endDateTime) //todo: correct hardcoded "DEFAULT" projectID
                         }
                     )
                 }
@@ -133,8 +135,7 @@ fun ActivityScaffold(
                     ProjectCreation(
                         onDismiss = {dialog = Dialogs.NONE}
                     ) { name ->
-
-                        creator.addNewProject(name)
+                        creator.addNewProject(name, localConfig.userID)
                         dialog = Dialogs.NONE }
                 }
                 Dialogs.NONE -> {}

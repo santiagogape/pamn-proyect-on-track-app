@@ -10,13 +10,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
 import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
+import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.TasksViewModel
 
 @Composable
 fun DashboardScreen(
-    viewModel: TasksViewModel = viewModel(),
     projectId: String? = null
 ) {
+    val viewModelFactory = LocalViewModelFactory.current
+
+    val viewModel: TasksViewModel = viewModel(factory = viewModelFactory)
     val text by viewModel.text.collectAsStateWithLifecycle()
     val sourceFlow = remember(projectId) {
         projectId?.let { viewModel.byProject(it) } ?: viewModel.tasks

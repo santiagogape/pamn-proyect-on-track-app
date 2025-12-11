@@ -8,7 +8,6 @@ import com.example.on_track_app.data.abstractions.repositories.TaskRepository
 import com.example.on_track_app.data.realm.utils.toInstant
 import com.example.on_track_app.model.MockTimeField
 import kotlinx.coroutines.launch
-import org.mongodb.kbson.ObjectId
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -16,13 +15,13 @@ import java.time.LocalDateTime
 class CreationViewModel(val projectRepository: ProjectRepository, val eventRepository: EventRepository, val taskRepository: TaskRepository
 ): ViewModel() {
     //todo -> clean this, use local User id
-    fun addNewProject(name: String) {
+    fun addNewProject(name: String, owner: String ) {
         viewModelScope.launch {
             projectRepository.addProject(
                 name,
                 emptyList(),
                 null,
-                ObjectId().toHexString(),
+                owner,
                 "USER"
             )
         }

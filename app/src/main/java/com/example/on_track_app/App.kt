@@ -2,6 +2,7 @@ package com.example.on_track_app
 
 
 import android.app.Application
+import com.example.on_track_app.data.abstractions.repositories.UniqueRepository
 import com.example.on_track_app.data.firebase.FirestoreService
 import com.example.on_track_app.data.firebase.FirestoreSyncRepository
 import com.example.on_track_app.data.realm.RealmDatabase
@@ -13,6 +14,7 @@ import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.UserRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
+import com.example.on_track_app.data.realm.repositories.LocalConfigRepository
 import com.example.on_track_app.data.realm.repositories.RealmEventRepository
 import com.example.on_track_app.data.realm.repositories.RealmGroupRepository
 import com.example.on_track_app.data.realm.repositories.RealmProjectRepository
@@ -30,12 +32,14 @@ import com.example.on_track_app.data.synchronization.TaskDTO
 import com.example.on_track_app.data.synchronization.UserDTO
 import com.example.on_track_app.data.synchronization.toDTO
 import com.example.on_track_app.data.synchronization.toRealm
+import com.example.on_track_app.model.LocalConfigurations
 import com.example.on_track_app.model.MockEvent
 import com.example.on_track_app.model.MockGroup
 import com.example.on_track_app.model.MockProject
 import com.example.on_track_app.model.MockReminder
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockUser
+import com.example.on_track_app.utils.DebugLogcatLogger
 import com.example.on_track_app.viewModels.CreationViewModel
 import com.example.on_track_app.viewModels.factory.ViewModelsFactoryMock
 import com.example.on_track_app.viewModels.main.NotificationsViewModel
@@ -49,9 +53,23 @@ class OnTrackApp : Application() {
     lateinit var viewModelsFactory: ViewModelsFactoryMock
     lateinit var applicationScope: CoroutineScope
 
+    lateinit var localConfig: UniqueRepository<LocalConfigurations>
+
 
     override fun onCreate() {
         super.onCreate()
+
+
+        // coroutine scope for global services and coroutines
+        applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        //init
+        val localConfigRepo = LocalConfigRepository(RealmDatabase.realm)
+        runBlocking(Dispatchers.IO) {
+            localConfigRepo.init()
+        }
+        localConfig = localConfigRepo
+        localConfig.get()?.let { DebugLogcatLogger.logConfig(it, "app") }
 
 
 
@@ -120,7 +138,7 @@ class OnTrackApp : Application() {
                 ),
                 ProjectsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = ProjectsViewModel::class.java,
-                    creator = { ProjectsViewModel(repoProject) }
+                    creator = { ProjectsViewModel(repoProject, localConfigRepo) }
                 ),
                 TasksViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = TasksViewModel::class.java,
@@ -133,8 +151,6 @@ class OnTrackApp : Application() {
             )
         )
 
-        // coroutine scope for global services and coroutines
-        applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 
 

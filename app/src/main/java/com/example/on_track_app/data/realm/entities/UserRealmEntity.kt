@@ -17,8 +17,8 @@ class UserRealmEntity : RealmObject, SynchronizableEntity, Entity {
     var username: String = ""
     var email: String = ""
     var groups: RealmList<String> = realmListOf()
-    var defaultProjectId: String = ""
-    var projectsId: RealmList<String> = realmListOf()
+    var defaultProjectId: ObjectId = ObjectId()
+    var projectsId: RealmList<ObjectId> = realmListOf()
 
     @Index
     override var cloudId: String? = null
@@ -35,8 +35,8 @@ fun UserRealmEntity.toDomain(): MockUser {
         email = email,
         groups = groups.toList(),
         cloudId = cloudId,
-        defaultProjectId = defaultProjectId,
-        projectsId = projectsId.toList()
+        defaultProjectId = defaultProjectId.toHexString(),
+        projectsId = projectsId.map { it.toHexString() }.toList()
     )
 }
 

@@ -2,6 +2,7 @@ package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.abstractions.repositories.BasicById
 import com.example.on_track_app.data.realm.entities.Entity
+import com.example.on_track_app.data.realm.entities.LocalConfig
 import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.realm.entities.delete
@@ -22,6 +23,8 @@ import kotlin.reflect.KClass
 abstract class RealmRepository<K> where K : TypedRealmObject, K : Entity {
 
     abstract val klass: KClass<K>
+
+    protected fun Realm.config(): LocalConfig? = query(LocalConfig::class,"name == $0", "LOCAL_CONFIG").first().find()
 
     protected fun Realm.entity(id:String): K? =
         query(klass, "id == $0", ObjectId(id))

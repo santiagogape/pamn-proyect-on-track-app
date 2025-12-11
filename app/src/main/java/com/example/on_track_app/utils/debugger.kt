@@ -6,10 +6,22 @@ import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.model.CloudIdentifiable
 import com.example.on_track_app.model.Identifiable
+import com.example.on_track_app.model.LocalConfigurations
 
 object DebugLogcatLogger {
 
     private const val TAG = "SyncDebug"
+
+    fun logConfig(conf: LocalConfigurations, where: String){
+        Log.d(
+            TAG,
+            """
+            ---- LOCAL CONFIG at $where ----
+            userID: ${conf.userID}
+            defaultProjectID: ${conf.defaultProjectID}
+            --------------------------------
+            """)
+    }
 
     // ---------------------------------------------------------------------
     // MOCK PROJECT CREATED
@@ -18,7 +30,7 @@ object DebugLogcatLogger {
         Log.d(
             TAG,
             """
-            ---- MOCK PROJECT CREATED ----
+            ---- MOCK  CREATED ----
             id: ${project.id}
             name: ${project.name}
             --------------------------------
@@ -33,7 +45,7 @@ object DebugLogcatLogger {
         Log.d(
             TAG,
             """
-            ---- PROJECT SAVED IN REALM ----
+            ----  SAVED IN REALM ----
             id: ${project.id.toHexString()}
             cloudId: ${project.cloudId}
             version: ${project.version}

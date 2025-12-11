@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,11 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.OnTrackApp
 import com.example.on_track_app.R
 import com.example.on_track_app.model.Expandable
+import com.example.on_track_app.model.LocalConfigurations
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.utils.LocalConfig
+import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
 import com.example.on_track_app.viewModels.main.CalendarViewModel
 import kotlinx.coroutines.launch
@@ -35,17 +40,30 @@ import java.time.LocalDate.now
 
 class AgendaActivity : ComponentActivity() {
     private val settings by lazy { SettingsDataStore(this) }
+    private val factory by lazy {
+        (application as OnTrackApp).viewModelsFactory
+    }
+
+    private val config by lazy {
+        (application as OnTrackApp).localConfig
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val date = LocalDate.parse(intent.getStringExtra("LOCAL_DATE")!!)
+            val projectId = intent.getStringExtra("PROJECT_ID")
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
-            Agenda(darkTheme = darkTheme,{
-                lifecycleScope.launch {
-                    settings.setDarkTheme(!darkTheme)
-                }
-            }, date = date)
+            val conf = config.get()!!
+            val context =
+                projectId?.let { LocalConfigurations(conf.userID,it) } ?: conf
+            CompositionLocalProvider(LocalViewModelFactory provides factory, LocalConfig provides context) {
+                Agenda(darkTheme = darkTheme, {
+                    lifecycleScope.launch {
+                        settings.setDarkTheme(!darkTheme)
+                    }
+                }, date = date)
+            }
 
         }
     }
@@ -58,6 +76,7 @@ fun Agenda(
     date: LocalDate = now(),
     viewModel: CalendarViewModel = viewModel()
 ){
+    //todo modify calendar viewmodel
     var currentDate by remember { mutableStateOf(date) }
 
     val tasksToday by viewModel.tasksFor(currentDate)

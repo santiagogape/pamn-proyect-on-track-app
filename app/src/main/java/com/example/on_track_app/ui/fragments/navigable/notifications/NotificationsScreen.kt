@@ -11,14 +11,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
+import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.NotificationsViewModel
 
 
 @Composable
 fun NotificationsScreen(
-    viewModel: NotificationsViewModel = viewModel(),
     projectId: String? = null
 ) {
+    val viewModelFactory = LocalViewModelFactory.current
+
+    val viewModel: NotificationsViewModel = viewModel(factory = viewModelFactory)
     val text by viewModel.text.collectAsStateWithLifecycle()
     val sourceFlow = remember(projectId) {
         projectId?.let { viewModel.byProject(it) } ?: viewModel.events

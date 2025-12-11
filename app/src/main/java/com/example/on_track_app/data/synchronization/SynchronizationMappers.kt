@@ -189,8 +189,8 @@ fun UserRealmEntity.toDTO(): UserDTO =
         username = username,
         email = email,
         groups = groups.toList(),
-        defaultProjectId = defaultProjectId,
-        projectsId = projectsId.toList(),
+        defaultProjectId = defaultProjectId.toHexString(),
+        projectsId = projectsId.map { it.toHexString() }.toList(),
 
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
@@ -201,8 +201,8 @@ fun UserDTO.toRealm(entity: UserRealmEntity) {
     entity.username = username
     entity.email = email
     entity.groups = groups.toRealmList()
-    entity.defaultProjectId = defaultProjectId
-    entity.projectsId = projectsId.toRealmList()
+    entity.defaultProjectId = defaultProjectId.toObjectId()
+    entity.projectsId = projectsId.map { it.toObjectId() }.toRealmList()
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()

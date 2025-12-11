@@ -6,6 +6,7 @@ import com.example.on_track_app.data.realm.entities.UserRealmEntity
 import com.example.on_track_app.data.realm.entities.update
 import com.example.on_track_app.data.realm.utils.toRealmList
 import com.example.on_track_app.data.synchronization.UserDTO
+import com.example.on_track_app.data.synchronization.toObjectId
 import com.example.on_track_app.model.MockUser
 import com.example.on_track_app.utils.DebugLogcatLogger
 import io.realm.kotlin.Realm
@@ -34,8 +35,8 @@ class RealmUserRepository(
                 this.username = username
                 this.email = email
                 this.groups = groupsId.toRealmList()
-                this.defaultProjectId = defaultProjectId
-                this.projectsId = projectsId.toRealmList()
+                this.defaultProjectId = defaultProjectId.toObjectId()
+                this.projectsId = projectsId.map { it.toObjectId() }.toRealmList()
                 this.cloudId = cloudId
             }
             val saved = copyToRealm(entity)

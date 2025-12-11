@@ -7,6 +7,7 @@ import io.realm.kotlin.types.RealmInstant
 import org.mongodb.kbson.ObjectId
 
 
+
 interface Entity {
     val id: ObjectId
 }

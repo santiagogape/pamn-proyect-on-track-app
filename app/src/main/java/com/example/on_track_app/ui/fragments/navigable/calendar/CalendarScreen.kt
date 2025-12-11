@@ -36,9 +36,11 @@ fun CalendarScreen(
             Calendar(
                 tasksByDate = items,
                 onDayClick = {
-                    date -> val intent = Intent(context, AgendaActivity::class.java)
-                    intent.putExtra("LOCAL_DATE", date.toString())
-                    context.startActivity(intent)
+                    date ->
+                        val intent = Intent(context, AgendaActivity::class.java)
+                        intent.putExtra("LOCAL_DATE", date.toString())
+                    //todo -> context of current project to agenda
+                        context.startActivity(intent)
                 }
             )
         }

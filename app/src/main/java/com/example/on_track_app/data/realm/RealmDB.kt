@@ -8,6 +8,8 @@ import io.realm.kotlin.RealmConfiguration
 object RealmDatabase {
     private val configuration = RealmConfiguration.create(
         schema = setOf(
+            //config
+            LocalConfig::class,
             //entities
             ReminderRealmEntity::class,
             GroupRealmEntity::class,
