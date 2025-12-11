@@ -15,7 +15,7 @@ class TasksViewModel(
     private val taskRepository: FirestoreRepository<Task>
 ) : ViewModel() {
 
-    private val _text = MutableStateFlow("This is dashboard screen")
+    private val _text = MutableStateFlow("Your task list is empty")
     val text: StateFlow<String> = _text
 
     private val _currentProjectId = MutableStateFlow<String?>(null)
@@ -24,10 +24,8 @@ class TasksViewModel(
     val tasks: StateFlow<List<Task>> = _currentProjectId
         .flatMapLatest { projectId ->
             if (projectId == null) {
-                // If no ID, get everything
                 taskRepository.getElements()
             } else {
-                // If ID exists, switch to specific query
                 taskRepository.getTasksByProjectId(projectId)
             }
         }

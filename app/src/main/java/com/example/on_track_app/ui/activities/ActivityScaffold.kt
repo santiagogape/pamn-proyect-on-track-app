@@ -40,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -115,12 +117,17 @@ fun ActivityScaffold(
                 )
             }
             if (showMenu) {
+                val density = LocalDensity.current
+                val offsetPx = remember(density) {
+                    with(density) { -45.dp.roundToPx() }
+                }
                 Popup(
                     alignment = Alignment.BottomCenter,
+                    offset = IntOffset(0, offsetPx),
                     onDismissRequest = { showMenu = false },
                     properties = PopupProperties(clippingEnabled = false)
                 ) {
-                    Box(modifier = Modifier.offset(y = (-40).dp)) {
+                    Box {
                         Surface(
                             modifier = Modifier.width(280.dp),
                             shape = RoundedCornerShape(16.dp),
@@ -128,7 +135,7 @@ fun ActivityScaffold(
                             shadowElevation = 6.dp
                         ) {
                             androidx.compose.foundation.layout.Column(
-                                modifier = Modifier.padding(top = 30.dp, bottom = 16.dp)
+                                modifier = Modifier.padding(top = 30.dp, bottom = 20.dp)
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("NEW TASK") },

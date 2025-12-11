@@ -19,7 +19,7 @@ class CalendarViewModel(
     private val eventRepository: FirestoreRepository<Event>
 ) : ViewModel() {
 
-    private val _text = MutableStateFlow("This is calendar screen")
+    private val _text = MutableStateFlow("There are no tasks for today")
     val text: StateFlow<String> = _text
 
     val projects: StateFlow<List<Project>> = projectRepository.getElements()

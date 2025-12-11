@@ -13,7 +13,7 @@ class ProjectsViewModel(
     private val projectRepository: FirestoreRepository<Project>
 ) : ViewModel() {
 
-    private val _text = MutableStateFlow("This is projects screen")
+    private val _text = MutableStateFlow("You have no projects")
     val text: StateFlow<String> = _text
 
     val items: StateFlow<List<Project>> = projectRepository.getElements()
