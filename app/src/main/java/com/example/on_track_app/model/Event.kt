@@ -7,10 +7,11 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.Date
+import java.util.UUID
 
 data class Event(
     @DocumentId
-    override val id: String = "",
+    override val id: String = UUID.randomUUID().toString(),
     override val name: String = "",
     override val description: String = "",
     val projectId: String? = null,

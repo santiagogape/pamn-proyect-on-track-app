@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
 import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
+import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.main.TasksViewModel
 
 @Composable
@@ -23,18 +24,28 @@ fun DashboardScreen(
     LaunchedEffect(projectId) {
         viewModel.setProjectId(projectId)
     }
-    val items by viewModel.tasks.collectAsStateWithLifecycle()
 
+    val uiState by viewModel.tasks.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (items.isEmpty()){
-            Text(text = text, style = MaterialTheme.typography.headlineSmall)
-        } else {
-            ExpandableCards(items)
+        when (val state = uiState) {
+            is ItemStatus.Loading -> {
+                CircularProgressIndicator()
+            }
+            is ItemStatus.Error -> {
+                Text("Something went wrong loading tasks.")
+            }
+            is ItemStatus.Success -> {
+                if (state.elements.isEmpty()) {
+                    Text(text = text, style = MaterialTheme.typography.headlineSmall)
+                } else {
+                    ExpandableCards(state.elements)
+                }
+            }
         }
     }
 }

@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -29,6 +28,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -47,24 +48,28 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.navigation.NavItem
 import com.example.on_track_app.navigation.isOnDestination
-import com.example.on_track_app.ui.fragments.dialogs.EventCreation
-import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
+import com.example.on_track_app.ui.fragments.dialogs.ActiveDialog
+import com.example.on_track_app.ui.fragments.dialogs.GlobalDialogCoordinator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScaffold(
+    factory: AppViewModelFactory,
     header: @Composable (()-> Unit),
     footer: @Composable (()-> Unit),
     navigationTarget: @Composable (() -> Unit)
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    var taskDialogVisible by remember { mutableStateOf(false) }
-    var eventDialogVisible by remember { mutableStateOf(false) }
+    var activeDialog by remember { mutableStateOf<ActiveDialog>(ActiveDialog.None) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { header() },
@@ -101,21 +106,6 @@ fun ActivityScaffold(
             contentAlignment = Alignment.Center
         ) {
             navigationTarget()
-            if (taskDialogVisible) {
-                TaskCreation(
-                    onDismiss = { taskDialogVisible = false },
-                    onSubmit = { name, description, project, date, hour, minute ->
-                        taskDialogVisible = false
-                    }
-                )
-            } else if (eventDialogVisible) {
-                EventCreation(
-                    onDismiss = { eventDialogVisible = false },
-                    onSubmit = { name, description, project, startDateTime, endDateTime ->
-                        taskDialogVisible = false
-                    }
-                )
-            }
             if (showMenu) {
                 val density = LocalDensity.current
                 val offsetPx = remember(density) {
@@ -135,27 +125,39 @@ fun ActivityScaffold(
                             shadowElevation = 6.dp
                         ) {
                             androidx.compose.foundation.layout.Column(
-                                modifier = Modifier.padding(top = 30.dp, bottom = 20.dp)
+                                modifier = Modifier.padding(top = 20.dp, bottom = 20.dp)
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("NEW TASK") },
                                     onClick = {
                                         showMenu = false
-                                        taskDialogVisible = true
+                                        activeDialog = ActiveDialog.CreateTask
                                     },
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("NEW PROJECT") },
+                                    onClick = {
+                                        showMenu = false
+                                        activeDialog = ActiveDialog.CreateProject
+                                    },
+                                    // TODO: Change the icon
                                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("NEW EVENT") },
                                     onClick = {
                                         showMenu = false
-                                        eventDialogVisible = true
+                                        activeDialog = ActiveDialog.CreateEvent
                                     },
                                     leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("NEW REMINDER") },
-                                    onClick = { showMenu = false },
+                                    onClick = {
+                                        showMenu = false
+                                        activeDialog = ActiveDialog.CreateReminder
+                                    },
                                     leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
                                 )
                             }
@@ -163,6 +165,12 @@ fun ActivityScaffold(
                     }
                 }
             }
+            GlobalDialogCoordinator(
+                activeDialog = activeDialog,
+                onDismiss = { activeDialog = ActiveDialog.None },
+                snackbarHostState = snackbarHostState,
+                viewModelFactory = factory
+            )
         }
     }
 }

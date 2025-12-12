@@ -1,6 +1,7 @@
 package com.example.on_track_app.data
 
 import android.util.Log
+import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.model.Task
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -40,8 +41,9 @@ class FirestoreRepository<T : Any>(
     }
 
     // TODO: Add parameter userId: String and add whereEqualTo() in the query to the DB
-    fun getElements(): Flow<List<T>> = callbackFlow {
+    fun getElements(userId: String): Flow<List<T>> = callbackFlow {
         val listenerRegistration = db.collection(collectionName)
+            .whereEqualTo("userId", userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error) // Close the flow on error
@@ -61,13 +63,10 @@ class FirestoreRepository<T : Any>(
         awaitClose { listenerRegistration.remove() }
     }
 
-    suspend fun addElement(element: T): Boolean {
-        val data = elementToMap(element)
-
-        // TODO: Ensure userId property is set BEFORE calling this function
+    suspend fun addElement(element: Expandable): Boolean {
 
         return try {
-            db.collection(collectionName).add(data).await()
+            db.collection(collectionName).document(element.id).set(element).await()
             true
         } catch (e: Exception) {
             Log.e("Firestore", "Error adding document", e)

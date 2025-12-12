@@ -35,6 +35,7 @@ fun OnTrackApp(
         val label = items.find { navBackStackEntry?.destination.isOnDestination(it.route) }?.label ?: ""
 
         ActivityScaffold(
+            factory = factory,
             header = {
                 MainHeader(label,darkTheme,onToggleTheme,null)
                      },

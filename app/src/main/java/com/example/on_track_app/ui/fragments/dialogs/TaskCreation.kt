@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +42,7 @@ import java.time.LocalDate.now
 
 @Composable
 fun TaskCreation(
+    isLoading: Boolean,
     onDismiss: () -> Unit,
     onSubmit: (String, String, String?, LocalDate, Int?, Int?) -> Unit
 ) {
@@ -175,18 +177,26 @@ fun TaskCreation(
                                         project.ifBlank { null },
                                         date,
                                         if (hour != -1) hour else null,
-                                        if (minute != -1) hour else null
+                                        if (minute != -1) minute else null
                                     )
                                 }
                             },
-                            enabled = name.isNotEmpty() && description.isNotEmpty(),
+                            enabled = !isLoading && name.isNotEmpty() && description.isNotEmpty(),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.onPrimary,
                                 contentColor = MaterialTheme.colorScheme.primary
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Submit")
+                            if (isLoading) {
+                                androidx.compose.material3.CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Submit")
+                            }
                         }
                     }
                 }

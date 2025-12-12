@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,7 @@ enum class DateType {
 
 @Composable
 fun EventCreation(
+    isLoading: Boolean,
     onDismiss: () -> Unit,
     onSubmit: (String, String, String?, LocalDateTime, LocalDateTime) -> Unit
 ) {
@@ -72,10 +74,6 @@ fun EventCreation(
         else LocalDateTime.of(endDate,endTime)
     }}
 
-
-
-
-    
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -220,7 +218,15 @@ fun EventCreation(
                                     ),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Text("Submit")
+                                    if (isLoading) {
+                                        androidx.compose.material3.CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = MaterialTheme.colorScheme.primary,
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Text("Submit")
+                                    }
                                 }
                             }
                         }

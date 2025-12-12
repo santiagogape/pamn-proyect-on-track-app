@@ -8,10 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.rememberNavController
-import com.example.on_track_app.di.AppViewModelFactory
-import com.example.on_track_app.navigation.AppNavigation
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.on_track_app.ui.activities.OnTrackApp
 import com.example.on_track_app.ui.fragments.login.LoginScreen

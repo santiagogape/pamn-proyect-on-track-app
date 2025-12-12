@@ -1,5 +1,6 @@
 package com.example.on_track_app.ui.fragments.navigable.home
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,9 +14,12 @@ import com.example.on_track_app.data.FirestoreRepository
 import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.di.DummyFactory
 import com.example.on_track_app.model.Task
+import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
+import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.viewModels.main.HomeViewModel
+import com.example.on_track_app.viewModels.main.ItemStatus
 
 @Composable
 fun HomeScreen(
@@ -24,17 +28,28 @@ fun HomeScreen(
     val viewModel: HomeViewModel = viewModel(factory=factory)
 
     val text by viewModel.text.collectAsStateWithLifecycle()
-    val items by viewModel.tasks.collectAsStateWithLifecycle()
+    val uiState by viewModel.tasks.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (items.isEmpty()){
-            Text(text = text, style = MaterialTheme.typography.headlineSmall)
-        } else {
-            ExpandableCards(items)
+        when (val state = uiState) {
+
+            is ItemStatus.Loading -> {
+                CircularProgressIndicator()
+            }
+            is ItemStatus.Error -> {
+                Text("Something went wrong loading tasks.")
+            }
+            is ItemStatus.Success -> {
+                if (state.elements.isEmpty()) {
+                    Text(text = text, style = MaterialTheme.typography.headlineSmall)
+                } else {
+                    ExpandableCards(state.elements)
+                }
+            }
         }
     }
 }

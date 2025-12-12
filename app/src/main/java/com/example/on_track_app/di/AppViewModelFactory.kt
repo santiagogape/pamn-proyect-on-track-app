@@ -20,23 +20,23 @@ class AppViewModelFactory(
         return when {
             modelClass.isAssignableFrom(HomeViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
-                HomeViewModel(container.taskRepository) as T
+                HomeViewModel(container.taskRepository, container.googleAuthClient) as T
             }
             modelClass.isAssignableFrom(CalendarViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
-                CalendarViewModel(container.projectRepository, container.taskRepository, container.eventRepository) as T
+                CalendarViewModel(container.projectRepository, container.taskRepository, container.eventRepository, container.googleAuthClient) as T
             }
             modelClass.isAssignableFrom(NotificationsViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
-                NotificationsViewModel(container.projectRepository, container.taskRepository) as T
+                NotificationsViewModel(container.projectRepository, container.taskRepository, container.googleAuthClient) as T
             }
             modelClass.isAssignableFrom(TasksViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
-                TasksViewModel(container.taskRepository) as T
+                TasksViewModel(container.taskRepository, container.googleAuthClient) as T
             }
             modelClass.isAssignableFrom(ProjectsViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
-                ProjectsViewModel(container.projectRepository) as T
+                ProjectsViewModel(container.projectRepository, container.googleAuthClient) as T
             }
             modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")

@@ -66,6 +66,7 @@ fun Project(
         ))
 
         ActivityScaffold(
+            factory = factory,
             header = {
                 ProjectsHeader(project,darkTheme,onToggleTheme,null)
                 },

@@ -22,7 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.App
 import com.example.on_track_app.R
+import com.example.on_track_app.di.AppViewModelFactory
+import com.example.on_track_app.di.DummyFactory
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
@@ -35,16 +38,24 @@ import java.time.LocalDate.now
 class AgendaActivity : ComponentActivity() {
     private val settings by lazy { SettingsDataStore(this) }
 
+    private val appContainer by lazy {
+        (application as App).container
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val date = LocalDate.parse(intent.getStringExtra("LOCAL_DATE")!!)
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
-            Agenda(darkTheme = darkTheme,{
-                lifecycleScope.launch {
-                    settings.setDarkTheme(!darkTheme)
-                }
-            }, date = date)
+            Agenda(
+                darkTheme = darkTheme,{
+                    lifecycleScope.launch {
+                        settings.setDarkTheme(!darkTheme)
+                    }
+                },
+                date = date,
+                factory = appContainer.viewModelFactory
+            )
 
         }
     }
@@ -55,7 +66,8 @@ fun Agenda(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
     date: LocalDate = now(),
-    viewModel: CalendarViewModel = viewModel()
+    viewModel: CalendarViewModel = viewModel(),
+    factory: AppViewModelFactory
 ){
     var currentDate by remember { mutableStateOf(date) }
 
@@ -64,6 +76,7 @@ fun Agenda(
 
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
+            factory = factory,
             header = {
                 AgendaHeader(currentDate,darkTheme,onToggleTheme,null)
                      },
@@ -95,6 +108,6 @@ fun Agenda(
 @Composable
 fun Prev(){
     OnTrackAppTheme(darkTheme = false) {
-           Agenda(false,{})
+           Agenda(false,{}, factory =  DummyFactory as AppViewModelFactory)
     }
 }

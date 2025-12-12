@@ -5,10 +5,13 @@ import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 data class Reminder(
     @DocumentId
-    val id: String = "",
+    override val id: String = UUID.randomUUID().toString(),
+    override val name: String = "",
+    override val description: String = "",
     val userId: String = "",
     val taskId: String? = null,
     val eventId: String? = null,
@@ -16,7 +19,7 @@ data class Reminder(
     val dateIso: String = LocalDate.now().toString(),
     @get:PropertyName("time")
     val timeIso: String = LocalTime.now().toString(),
-) {
+) : Expandable {
     @get:Exclude
     val date: LocalDate
         get() = LocalDate.parse(dateIso)
