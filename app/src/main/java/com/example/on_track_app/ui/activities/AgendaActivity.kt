@@ -68,10 +68,11 @@ fun Agenda(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
     date: LocalDate = now(),
-    viewModel: CalendarViewModel = viewModel(),
     factory: AppViewModelFactory
 ){
     var currentDate by remember { mutableStateOf(date) }
+
+    val viewModel: CalendarViewModel = viewModel(factory = factory)
 
     val tasksToday by viewModel.tasksFor(currentDate)
         .collectAsStateWithLifecycle()
