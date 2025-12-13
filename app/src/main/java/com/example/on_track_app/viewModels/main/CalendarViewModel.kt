@@ -5,13 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.example.on_track_app.data.FirestoreRepository
 import com.example.on_track_app.data.auth.GoogleAuthClient
 import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.model.Project
 import com.example.on_track_app.model.Task
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 
@@ -23,28 +28,46 @@ class CalendarViewModel(
 ) : ViewModel() {
 
     private val userId: String? = googleAuthClient.getUserId()
-    private val _text = MutableStateFlow("There are no tasks for today")
+    private val _text = MutableStateFlow("There are no tasks or events for today")
     val text: StateFlow<String> = _text
 
-    val projects: StateFlow<List<Project>> = if (userId != null) {
-            projectRepository.getElements(userId)
-        } else {
-            flowOf(emptyList())
+    // TODO: Tasks and events from a specific project or not? Fix this
+    private val _events = MutableStateFlow<List<Event>>(emptyList())
+
+    private val _currentProjectId = MutableStateFlow<String?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val tasks: StateFlow<List<Expandable>> = _currentProjectId
+        .flatMapLatest { projectId ->
+            if (projectId == null) {
+                if (userId != null) {
+                    taskRepository.getElements(userId)
+                } else {
+                    flowOf(emptyList())
+                }
+            } else {
+                // If ID exists, switch to specific query
+                taskRepository.getElementsByProjectId(projectId)
+            }
         }
         .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            emptyList()
-        )
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        ) as StateFlow<List<Task>>
 
-    // TODO: Tasks and events from a specific project or not? Fix this
-    private val _projectEvents = MutableStateFlow<List<Event>>(emptyList())
-    private val _projectTasks = MutableStateFlow<List<Task>>(emptyList())
-    val tasks: StateFlow<List<Task>> = _projectTasks
+
+    fun setProjectId(id: String?) {
+        _currentProjectId.value = id
+    }
 
     val taskByDates: StateFlow<Map<LocalDate, List<Task>>> =
-        tasks.map {
-                list -> list.groupBy {  task -> task.date }.toSortedMap()}.stateIn(
+        tasks.map { list ->
+            list
+                .filterIsInstance<Task>()
+                .groupBy {  task -> task.date }
+                .toSortedMap()
+        }.stateIn(
             viewModelScope,
             // Stop calculation 5s after UI disappears to save battery
             SharingStarted.WhileSubscribed(5000),
@@ -59,10 +82,6 @@ class CalendarViewModel(
                 SharingStarted.WhileSubscribed(5000),
                 emptyList()
             )
-    }
-
-    fun project(id: String): StateFlow<List<Event>>{
-        return _projectEvents
     }
 
 }

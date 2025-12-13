@@ -35,17 +35,14 @@ fun CalendarScreen(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (items.isEmpty()) Text(text = text, style = MaterialTheme.typography.headlineSmall)
-        else {
-            Calendar(
-                tasksByDate = items,
-                onDayClick = {
-                    date -> val intent = Intent(context, AgendaActivity::class.java)
-                    intent.putExtra("LOCAL_DATE", date.toString())
-                    context.startActivity(intent)
-                }
-            )
-        }
+        Calendar(
+            tasksByDate = items,
+            onDayClick = {
+                date -> val intent = Intent(context, AgendaActivity::class.java)
+                intent.putExtra("LOCAL_DATE", date.toString())
+                context.startActivity(intent)
+            }
+        )
     }
 }
 
