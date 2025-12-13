@@ -42,7 +42,7 @@ class TasksViewModel(
                     flowOf(emptyList())
                 }
             } else {
-                taskRepository.getTasksByProjectId(projectId)
+                taskRepository.getElementsByProjectId(projectId)
             }
         }
         .map { taskList ->

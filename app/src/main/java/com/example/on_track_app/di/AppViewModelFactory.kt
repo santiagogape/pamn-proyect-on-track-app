@@ -2,13 +2,10 @@ package com.example.on_track_app.di
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.on_track_app.data.FirestoreRepository
-import com.example.on_track_app.model.Task
-import com.example.on_track_app.ui.fragments.navigable.notifications.NotificationsScreen
 import com.example.on_track_app.viewModels.login.LoginViewModel
 import com.example.on_track_app.viewModels.main.CalendarViewModel
 import com.example.on_track_app.viewModels.main.HomeViewModel
-import com.example.on_track_app.viewModels.main.NotificationsViewModel
+import com.example.on_track_app.viewModels.main.RemindersViewModel
 import com.example.on_track_app.viewModels.main.ProjectsViewModel
 import com.example.on_track_app.viewModels.main.TasksViewModel
 
@@ -26,9 +23,9 @@ class AppViewModelFactory(
                 @Suppress("UNCHECKED_CAST")
                 CalendarViewModel(container.projectRepository, container.taskRepository, container.eventRepository, container.googleAuthClient) as T
             }
-            modelClass.isAssignableFrom(NotificationsViewModel::class.java) -> {
+            modelClass.isAssignableFrom(RemindersViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
-                NotificationsViewModel(container.projectRepository, container.taskRepository, container.googleAuthClient) as T
+                RemindersViewModel(container.reminderRepository, container.taskRepository, container.googleAuthClient) as T
             }
             modelClass.isAssignableFrom(TasksViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")

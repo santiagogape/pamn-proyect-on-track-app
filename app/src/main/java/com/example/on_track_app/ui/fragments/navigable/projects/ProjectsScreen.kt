@@ -26,7 +26,7 @@ fun ProjectsScreen(
     val viewModel: ProjectsViewModel = viewModel(factory = factory)
     val context = LocalContext.current
 
-    val uiState by viewModel.items.collectAsStateWithLifecycle()
+    val uiState by viewModel.projects.collectAsStateWithLifecycle()
     val text by viewModel.text.collectAsStateWithLifecycle()
 
     Box(
@@ -51,10 +51,10 @@ fun ProjectsScreen(
                 if (state.elements.isEmpty()) {
                     Text(text = text, style = MaterialTheme.typography.headlineSmall)
                 } else {
-                    StaticCards(state.elements) { projectName ->
+                    StaticCards(state.elements) { project ->
                         val intent = Intent(context, ProjectActivity::class.java)
-                        intent.putExtra("PROJECT", projectName)
-                        intent.putExtra("PROJECT_ID", projectName)
+                        intent.putExtra("PROJECT", project.name)
+                        intent.putExtra("PROJECT_ID", project.id)
                         context.startActivity(intent)
                     }
                 }

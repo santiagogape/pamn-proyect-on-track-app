@@ -13,22 +13,49 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
+import com.example.on_track_app.ui.theme.OutlinedTextFieldColors // Assuming this exists based on your snippet
 import java.time.LocalDate
 import java.time.LocalTime
+// Assuming you have these models. If not, replace with your actual package path
+import com.example.on_track_app.model.Task
+import com.example.on_track_app.model.Event
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderCreation(
     isLoading: Boolean,
+    availableTasks: List<Task>,
+    availableEvents: List<Event>,
     onDismiss: () -> Unit,
-    // onSubmit passes: Date, Hour, Minute
-    onSubmit: (LocalDate, Int, Int) -> Unit
+    // onSubmit passes: Name, Desc, TaskId, EventId, Date, Hour, Minute
+    onSubmit: (String, String, String?, String?, LocalDate, Int, Int) -> Unit
 ) {
     var calendarOpen by remember { mutableStateOf(false) }
 
-    // Default to today and current hour + 1 (so it's in the future)
+    // Input State
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+
+    // Task Selection State
+    var selectedTask by remember { mutableStateOf<Task?>(null) }
+    var taskDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Event Selection State
+    var selectedEvent by remember { mutableStateOf<Event?>(null) }
+    var eventDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Date/Time State (Default to now + 1 hour)
     var date by remember { mutableStateOf(LocalDate.now()) }
     var hour by remember { mutableIntStateOf(LocalTime.now().hour + 1) }
     var minute by remember { mutableIntStateOf(0) }
+
+    // Logic: Auto-fill name if user selects a task/event and name is empty
+    LaunchedEffect(selectedTask) {
+        if (selectedTask != null && name.isEmpty()) name = selectedTask?.name ?: ""
+    }
+    LaunchedEffect(selectedEvent) {
+        if (selectedEvent != null && name.isEmpty()) name = selectedEvent?.name ?: ""
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -65,20 +92,127 @@ fun ReminderCreation(
                 }
 
                 if (calendarOpen) {
-                    // Reusing your Calendar composable
                     Calendar(mapOf()) { chosen ->
                         date = chosen
                         calendarOpen = false
                     }
                 } else {
-                    Text(
-                        text = "When should we remind you?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    // Reuse your custom color wrapper
+                    OutlinedTextFieldColors { colors ->
+
+                        // 1. NAME FIELD
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text("Name *") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            isError = name.isEmpty(),
+                            colors = colors
+                        )
+
+                        // 2. DESCRIPTION FIELD (Optional for reminders, but good to have)
+                        OutlinedTextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            label = { Text("Description") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            colors = colors
+                        )
+
+                        // 3. TASK DROPDOWN
+                        ExposedDropdownMenuBox(
+                            expanded = taskDropdownExpanded,
+                            onExpandedChange = { taskDropdownExpanded = !taskDropdownExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = selectedTask?.name ?: "",
+                                onValueChange = {}, // Read-only
+                                readOnly = true,
+                                label = { Text("Link to Task (Optional)") },
+                                placeholder = { Text("Select a task") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = taskDropdownExpanded)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = colors,
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = taskDropdownExpanded,
+                                onDismissRequest = { taskDropdownExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("None") },
+                                    onClick = {
+                                        selectedTask = null
+                                        taskDropdownExpanded = false
+                                    }
+                                )
+                                availableTasks.forEach { task ->
+                                    DropdownMenuItem(
+                                        text = { Text(task.name) },
+                                        onClick = {
+                                            selectedTask = task
+                                            taskDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        // 4. EVENT DROPDOWN
+                        ExposedDropdownMenuBox(
+                            expanded = eventDropdownExpanded,
+                            onExpandedChange = { eventDropdownExpanded = !eventDropdownExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = selectedEvent?.name ?: "",
+                                onValueChange = {}, // Read-only
+                                readOnly = true,
+                                label = { Text("Link to Event (Optional)") },
+                                placeholder = { Text("Select an event") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = eventDropdownExpanded)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = colors,
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = eventDropdownExpanded,
+                                onDismissRequest = { eventDropdownExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("None") },
+                                    onClick = {
+                                        selectedEvent = null
+                                        eventDropdownExpanded = false
+                                    }
+                                )
+                                availableEvents.forEach { event ->
+                                    DropdownMenuItem(
+                                        text = { Text(event.name) },
+                                        onClick = {
+                                            selectedEvent = event
+                                            eventDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     // DATE & TIME PICKER
-                    // Using "withTime = true" hardcoded because Reminder model requires time
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -89,7 +223,7 @@ fun ReminderCreation(
                                 hour = h
                                 minute = m
                             },
-                            withTime = true, // Reminders always need time
+                            withTime = true,
                             label = "${date.toString().split("-").reversed().joinToString("/")}\nAt $hour:${minute.toString().padStart(2, '0')}"
                         )
                     }
@@ -103,9 +237,19 @@ fun ReminderCreation(
                     ) {
                         Button(
                             onClick = {
-                                onSubmit(date, hour, minute)
+                                if (name.isNotEmpty()) {
+                                    onSubmit(
+                                        name,
+                                        description,
+                                        selectedTask?.id,
+                                        selectedEvent?.id,
+                                        date,
+                                        hour,
+                                        minute
+                                    )
+                                }
                             },
-                            enabled = !isLoading,
+                            enabled = !isLoading && name.isNotEmpty(),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.onPrimary,
                                 contentColor = MaterialTheme.colorScheme.primary

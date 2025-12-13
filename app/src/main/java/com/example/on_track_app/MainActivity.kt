@@ -12,6 +12,8 @@ import androidx.compose.runtime.setValue
 import com.example.on_track_app.ui.activities.OnTrackApp
 import com.example.on_track_app.ui.fragments.login.LoginScreen
 import com.example.on_track_app.utils.SettingsDataStore
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -21,6 +23,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val appContainer = (application as App).container
         val authClient = appContainer.googleAuthClient
+        val user = Firebase.auth.currentUser
+        val photoUrl = user?.photoUrl?.toString()
         setContent {
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
             val appViewModelFactory = appContainer.viewModelFactory
@@ -33,7 +37,8 @@ class MainActivity : ComponentActivity() {
                             settings.setDarkTheme(!darkTheme)
                         }
                     },
-                    factory = appViewModelFactory
+                    factory = appViewModelFactory,
+                    userPhotoUrl = photoUrl
                 )
             } else {
                 LoginScreen(

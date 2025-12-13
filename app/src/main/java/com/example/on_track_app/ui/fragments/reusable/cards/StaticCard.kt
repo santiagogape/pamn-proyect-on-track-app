@@ -1,5 +1,6 @@
 package com.example.on_track_app.ui.fragments.reusable.cards
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,42 +11,45 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun StaticCard(
     title: String,
     modifier: Modifier = Modifier,
-    action: (String) -> Unit //Activity opener, needs the project title.
+    action: () -> Unit //Activity opener, needs the project title.
 ) {
-    val mod = modifier
-        .fillMaxWidth()
-    Card(
-        modifier = mod,
+    val darkWine = Color(0xFF800020)
+
+    Card (
+        onClick = action,
+        modifier = modifier
+            .shadow(
+                elevation = 10.dp,
+                shape = RoundedCornerShape(20.dp),
+                clip = false,
+                ambientColor = darkWine,
+                spotColor = darkWine
+            )
+            .fillMaxWidth()
+            .animateContentSize(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
-        )
-    ){
-        Card(
-        onClick = {action.invoke(title)},
-        modifier = mod.padding(end = 5.dp, bottom = 5.dp),
-        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primary
         )
     ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
-
 }

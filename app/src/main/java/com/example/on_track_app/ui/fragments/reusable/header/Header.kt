@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.model.Expandable
+import com.example.on_track_app.model.Reminder
 import java.time.LocalDate
 
 @Composable
@@ -57,10 +59,11 @@ fun MainHeader(
     label: String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
+    reminders: List<Reminder>,
     pfpUrl: String?
 ) {
     Header(
-        startContent = { OpenRemindersIconButton() },
+        startContent = { OpenRemindersIconButton(reminders) },
         centerContent = {
             Text(
                 text = label,
@@ -79,12 +82,13 @@ fun ProjectsHeader(
     label: String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
+    projectReminders: List<Expandable>,
     pfpUrl: String? = null
 ) {
     Header(
         startContent = {
             BackButton()
-            OpenRemindersIconButton()
+            OpenRemindersIconButton(projectReminders as List<Reminder>)
         },
         centerContent = {
             Text(
@@ -105,12 +109,13 @@ fun AgendaHeader(
     date: LocalDate,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
+    reminders: List<Reminder>,
     pfpUrl: String?
 ) {
     Header(
         startContent = {
             BackButton()
-            OpenRemindersIconButton()
+            OpenRemindersIconButton(reminders)
         },
         centerContent = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

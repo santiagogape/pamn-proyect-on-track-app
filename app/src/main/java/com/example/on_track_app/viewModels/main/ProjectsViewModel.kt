@@ -26,7 +26,7 @@ class ProjectsViewModel(
     private val _text = MutableStateFlow("You have no projects")
     val text: StateFlow<String> = _text
 
-    val items: StateFlow<ItemStatus> = if (userId != null) {
+    val projects: StateFlow<ItemStatus> = if (userId != null) {
             projectRepository.getElements(userId)
         } else {
             flowOf(emptyList())

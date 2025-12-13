@@ -2,11 +2,13 @@ package com.example.on_track_app.data
 
 import android.util.Log
 import com.example.on_track_app.model.Expandable
+import com.example.on_track_app.model.Reminder
 import com.example.on_track_app.model.Task
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
@@ -87,7 +89,7 @@ class FirestoreRepository<T : Any>(
         }
     }
 
-    fun getTasksByProjectId(projectId: String): Flow<List<Task>> = callbackFlow {
+    fun getElementsByProjectId(projectId: String): Flow<List<Expandable>> = callbackFlow {
         val listenerRegistration = db.collection(collectionName)
             .whereEqualTo("projectId", projectId)
             .addSnapshotListener { snapshot, error ->
@@ -102,6 +104,19 @@ class FirestoreRepository<T : Any>(
             }
 
         awaitClose { listenerRegistration.remove() }
+    }
+
+    fun getProjectReminders(userId: String, projectTasks: Flow<List<Task>>): Flow<List<Reminder>> {
+        // TODO: Add events to the filtering logic
+        val allReminders: Flow<List<Reminder>> = getElements(userId) as Flow<List<Reminder>>
+        return combine(projectTasks, allReminders) { tasks, reminders ->
+            val projectTasksIds = tasks.map { it.id }.toSet()
+            // val projectEventsIds = events.map { it.projectId }.toSet()
+            reminders.filter { reminder ->
+                (reminder.taskId) != null && projectTasksIds.contains(reminder.taskId)
+                // || (reminder.eventId != null && projectEventIds.contains(reminder.eventId))
+            } as List<Reminder>
+        }
     }
 
     private fun injectId(obj: T, id: String) {

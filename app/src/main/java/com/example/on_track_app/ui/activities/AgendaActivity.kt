@@ -26,11 +26,13 @@ import com.example.on_track_app.App
 import com.example.on_track_app.R
 import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.di.DummyFactory
+import com.example.on_track_app.model.Reminder
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.SettingsDataStore
 import com.example.on_track_app.viewModels.main.CalendarViewModel
+import com.example.on_track_app.viewModels.main.RemindersViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDate.now
@@ -74,11 +76,14 @@ fun Agenda(
     val tasksToday by viewModel.tasksFor(currentDate)
         .collectAsStateWithLifecycle()
 
+    val remindersViewModel: RemindersViewModel = viewModel(factory = factory)
+    val reminders: List<Reminder> by remindersViewModel.reminders.collectAsStateWithLifecycle()
+
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
             factory = factory,
             header = {
-                AgendaHeader(currentDate,darkTheme,onToggleTheme,null)
+                AgendaHeader(currentDate,darkTheme,onToggleTheme,reminders,null)
                      },
             footer = { NextPrev(
                 { currentDate = currentDate.minusDays(1) },

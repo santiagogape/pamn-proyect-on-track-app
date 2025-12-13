@@ -31,7 +31,7 @@ fun ExpandableCards (
 @Composable
 fun StaticCards(
     contents: List<Expandable>,
-    action: (String) -> Unit
+    action: (Expandable) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -40,7 +40,7 @@ fun StaticCards(
         items(contents, key = { it.id }) { item ->
             StaticCard(
                 title = item.name,
-                action = action
+                action = { action(item) }
             )
 
         }

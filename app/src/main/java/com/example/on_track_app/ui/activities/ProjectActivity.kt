@@ -6,17 +6,20 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.on_track_app.App
-import com.example.on_track_app.di.AppContainer
 import com.example.on_track_app.di.AppViewModelFactory
+import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.navigation.Destinations
 import com.example.on_track_app.navigation.ProjectNavigation
 import com.example.on_track_app.navigation.routes
 import com.example.on_track_app.ui.fragments.reusable.header.ProjectsHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.viewModels.main.RemindersViewModel
 import kotlinx.coroutines.launch
 
 class ProjectActivity : ComponentActivity() {
@@ -62,13 +65,16 @@ fun Project(
         // Bottom navigation items
         val items = routes(listOf(
             Destinations.TASKS,
-            Destinations.NOTIFICATIONS
+            Destinations.CALENDAR
         ))
+
+        val remindersViewModel: RemindersViewModel = viewModel(factory = factory)
+        val reminders: List<Expandable> by remindersViewModel.projectReminders(projectId).collectAsStateWithLifecycle()
 
         ActivityScaffold(
             factory = factory,
             header = {
-                ProjectsHeader(project,darkTheme,onToggleTheme,null)
+                ProjectsHeader(project,darkTheme,onToggleTheme,reminders,null)
                 },
             footer = { NavBar(navController,items) }
         ){

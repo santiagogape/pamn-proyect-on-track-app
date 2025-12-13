@@ -5,6 +5,7 @@ import com.example.on_track_app.data.FirestoreRepository
 import com.example.on_track_app.data.auth.GoogleAuthClient
 import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.Reminder
 import com.example.on_track_app.model.Task
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -13,6 +14,7 @@ interface AppContainer {
     val taskRepository: FirestoreRepository<Task>
     val projectRepository: FirestoreRepository<Project>
     val eventRepository: FirestoreRepository<Event>
+    val reminderRepository: FirestoreRepository<Reminder>
     val viewModelFactory: AppViewModelFactory
 }
 
@@ -43,6 +45,14 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             db = firestoreInstance,
             collectionName = "events",
             clazz = Event::class.java
+        )
+    }
+
+    override val reminderRepository: FirestoreRepository<Reminder> by lazy {
+        FirestoreRepository(
+            db = firestoreInstance,
+            collectionName = "reminders",
+            clazz = Reminder::class.java
         )
     }
 
