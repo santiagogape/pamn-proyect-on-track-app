@@ -45,11 +45,12 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.on_track_app.model.OwnerType
+import com.example.on_track_app.ui.fragments.dialogs.EventCreation
+import com.example.on_track_app.ui.fragments.dialogs.ProjectCreation
+import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
 import com.example.on_track_app.ui.navigation.NavItem
 import com.example.on_track_app.ui.navigation.isOnDestination
-import com.example.on_track_app.ui.fragments.dialogs.EventCreation
-import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
-import com.example.on_track_app.ui.fragments.dialogs.ProjectCreation
 import com.example.on_track_app.utils.LocalConfig
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.CreationViewModel
@@ -118,7 +119,8 @@ fun ActivityScaffold(
                         onDismiss = { dialog = Dialogs.NONE },
                         onSubmit = { name, description, project, date, hour, minute ->
                             dialog = Dialogs.NONE
-                            creator.addNewTask(name, description, project ?: localConfig.defaultProjectID, date, hour, minute)
+                            creator.addNewTask(name, description, project ?: localConfig.defaultProjectID,localConfig.userID,
+                                OwnerType.USER, date, hour, minute)
                         }
                     )
                 }
@@ -127,20 +129,20 @@ fun ActivityScaffold(
                         onDismiss = { dialog = Dialogs.NONE },
                         onSubmit = { name, description, project, startDateTime, endDateTime ->
                             dialog = Dialogs.NONE
-                            creator.addNewEvent(name, description, project ?: localConfig.defaultProjectID, startDateTime, endDateTime) //todo: correct hardcoded "DEFAULT" projectID
+                            creator.addNewEvent(name, description, project ?: localConfig.defaultProjectID, localConfig.userID,
+                                OwnerType.USER,startDateTime, endDateTime) //todo: correct hardcoded "DEFAULT" projectID
                         }
                     )
                 }
                 Dialogs.PROJECT -> {
                     ProjectCreation(
                         onDismiss = {dialog = Dialogs.NONE}
-                    ) { name ->
-                        creator.addNewProject(name, localConfig.userID)
+                    ) { name, description ->
+                        creator.addNewProject(name, description,localConfig.userID)
                         dialog = Dialogs.NONE }
                 }
                 Dialogs.NONE -> {}
             }
-
             if (showMenu) {
                 Popup(
                     alignment = Alignment.BottomCenter,
@@ -175,7 +177,8 @@ fun ActivityScaffold(
                                 )
                                 DropdownMenuItem(
                                     text = { Text("NEW PROJECT") },
-                                    onClick = { showMenu = false; dialog = Dialogs.PROJECT },
+                                    onClick = { showMenu = false
+                                        dialog = Dialogs.PROJECT },
                                     leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
                                 )
                             }

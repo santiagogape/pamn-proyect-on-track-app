@@ -3,13 +3,13 @@ package com.example.on_track_app.data.synchronization
 import com.example.on_track_app.data.realm.entities.EventRealmEntity
 import com.example.on_track_app.data.realm.entities.GroupRealmEntity
 import com.example.on_track_app.data.realm.entities.ProjectRealmEntity
+import com.example.on_track_app.data.realm.entities.RealmMembershipEntity
 import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.UserRealmEntity
 import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.realm.utils.toMillis
 import com.example.on_track_app.data.realm.utils.toRealmInstant
-import com.example.on_track_app.data.realm.utils.toRealmList
 import org.mongodb.kbson.ObjectId
 
 fun String.toObjectId(): ObjectId = ObjectId(this)
@@ -21,17 +21,16 @@ fun EventRealmEntity.toDTO(): EventDTO =
         name = name,
         description = description,
 
-        projectId = projectId.toHexString(),
-
+        cloudProjectId = cloudProjectId!!,
         startDate = startDate.toMillis(),
         startWithTime = startWithTime,
         endDate = endDate.toMillis(),
         endWithTime = endWithTime,
 
-        remindersId = remindersId.toList(),
-
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
+        ownerType = ownerType,
+        cloudOwnerId = cloudOwnerId!!,
     )
 
 
@@ -39,14 +38,14 @@ fun EventDTO.toRealm(entity: EventRealmEntity) {
     entity.name = name
     entity.description = description
 
-    entity.projectId = projectId.toObjectId()
+    entity.cloudProjectId = cloudProjectId
+    entity.cloudOwnerId = cloudOwnerId
+    entity.ownerType = ownerType
 
     entity.startDate = startDate.toRealmInstant()
     entity.startWithTime = startWithTime
     entity.endDate = endDate.toRealmInstant()
     entity.endWithTime = endWithTime
-
-    entity.remindersId = remindersId.toRealmList()
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
@@ -60,26 +59,19 @@ fun GroupRealmEntity.toDTO(): GroupDTO =
     GroupDTO(
         cloudId = cloudId,
         name = name,
-        members = members.toList(),
-        defaultProjectId = defaultProjectId,
-        projectsId = projectsId.toList(),
-        ownerId = ownerId,
-
+        cloudOwnerId = cloudOwnerId!!,
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
+        description = description,
     )
 
 
 fun GroupDTO.toRealm(entity: GroupRealmEntity) {
     entity.name = name
-    entity.members = members.toRealmList()
-    entity.defaultProjectId = defaultProjectId
-    entity.projectsId = projectsId.toRealmList()
-    entity.ownerId = ownerId
-
+    entity.description = description
+    entity.cloudOwnerId = cloudOwnerId
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-    
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -90,26 +82,20 @@ fun ProjectRealmEntity.toDTO(): ProjectDTO =
     ProjectDTO(
         cloudId = cloudId,
         name = name,
-        members = members.toList(),
-
         ownerType = ownerType,
-        ownerId = ownerId.toHexString(),
-
+        cloudOwnerId = cloudOwnerId!!,
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        
+        description = description,
     )
 
 fun ProjectDTO.toRealm(entity: ProjectRealmEntity) {
     entity.name = name
-    entity.members = members.toRealmList()
-
+    entity.description = description
+    entity.cloudOwnerId = cloudOwnerId
     entity.ownerType = ownerType
-    entity.ownerId = ownerId.toObjectId()
-
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-    
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -119,29 +105,31 @@ fun ReminderRealmEntity.toDTO(): ReminderDTO =
     ReminderDTO(
         cloudId = cloudId,
 
-        date = date.toMillis(),
+        date = at.toMillis(),
         withTime = withTime,
         label = label,
 
-        ownerId = ownerId.toHexString(),
+        cloudOwnerId = cloudOwnerId!!,
         ownerType = ownerType,
 
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        
+        cloudLinkTo = cloudLinkedTo!!,
+        linkType = linkType!!,
     )
 
 fun ReminderDTO.toRealm(entity: ReminderRealmEntity) {
-    entity.date = date.toRealmInstant()
+    entity.at = date.toRealmInstant()
     entity.withTime = withTime
     entity.label = label
 
-    entity.ownerId = ownerId.toObjectId()
+    entity.cloudOwnerId = cloudOwnerId
     entity.ownerType = ownerType
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-    
+    entity.cloudLinkedTo = cloudLinkTo
+    entity.linkType = linkType
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -156,13 +144,11 @@ fun TaskRealmEntity.toDTO(): TaskDTO =
         withTime = withTime,
         description = description,
         status = status,
-
-        reminders = reminders.toList(),
-        projectId = projectId.toHexString(),
-
+        cloudProjectId = cloudProjectId!!,
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        
+        ownerType = ownerType,
+        cloudOwnerId = cloudOwnerId!!,
     )
 
 fun TaskDTO.toRealm(entity: TaskRealmEntity) {
@@ -172,12 +158,12 @@ fun TaskDTO.toRealm(entity: TaskRealmEntity) {
     entity.description = description
     entity.status = status
 
-    entity.reminders = reminders.toRealmList()
-    entity.projectId = projectId.toObjectId()
+    entity.cloudProjectId = cloudProjectId
 
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
-    
+    entity.ownerType = ownerType
+    entity.cloudOwnerId = cloudOwnerId
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
@@ -186,28 +172,42 @@ fun TaskDTO.toRealm(entity: TaskRealmEntity) {
 fun UserRealmEntity.toDTO(): UserDTO =
     UserDTO(
         cloudId = cloudId,
-        username = username,
         email = email,
-        groups = groups.toList(),
-        defaultProjectId = defaultProjectId.toHexString(),
-        projectsId = projectsId.map { it.toHexString() }.toList(),
-
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        
+        name = name
     )
 
 fun UserDTO.toRealm(entity: UserRealmEntity) {
-    entity.username = username
     entity.email = email
-    entity.groups = groups.toRealmList()
-    entity.defaultProjectId = defaultProjectId.toObjectId()
-    entity.projectsId = projectsId.map { it.toObjectId() }.toRealmList()
-
+    entity.name = name
     entity.cloudId = cloudId
     entity.version = version.toRealmInstant()
     
     entity.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
+}
+
+fun RealmMembershipEntity.toDTO(): MembershipDTO =
+    MembershipDTO(
+        cloudId = cloudId,
+        version = version.toMillis(),
+        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
+        cloudEntityId = cloudEntityId!!,
+        cloudMemberId = cloudMemberId!!,
+        type = membershipType
+    )
+
+
+
+fun MembershipDTO.toRealm(entity: RealmMembershipEntity){
+    entity.cloudId = cloudId
+    entity.version = version.toRealmInstant()
+    entity.synchronizationStatus =
+        if (deleted) SynchronizationState.DELETED.name
+        else SynchronizationState.CURRENT.name
+    entity.cloudEntityId = cloudEntityId
+    entity.cloudMemberId = cloudMemberId
+    entity.membershipType = type
 }

@@ -14,9 +14,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun StaticCard(
+    id: String,
     title: String,
     modifier: Modifier = Modifier,
-    action: (String) -> Unit //Activity opener, needs the project title.
+    action: (String,String) -> Unit //Activity opener, needs the project title.
 ) {
     val mod = modifier
         .fillMaxWidth()
@@ -28,7 +29,7 @@ fun StaticCard(
         )
     ){
         Card(
-        onClick = {action.invoke(title)},
+        onClick = {action.invoke(id,title)},
         modifier = mod.padding(end = 5.dp, bottom = 5.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(

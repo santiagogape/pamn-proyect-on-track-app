@@ -1,0 +1,23 @@
+{
+	"nodes":[
+		{"id":"0aa30ef189ab3015","x":-180,"y":-20,"width":760,"height":370,"color":"5","type":"group","label":"lo que importa"},
+		{"id":"reminder-node","type":"text","text":"data class Reminder(\n    override val id: String,\n    override val ownerId: String,\n    override val ownerType: String,\n    val at: DateTime,\n    override val label: String\n    val linkedTo: ReminderLinked?\n) : Identifiable, Ownership, Labeled","x":510,"y":-670,"width":420,"height":260},
+		{"id":"user-node","type":"text","text":"data class User(\n    override val id: String = \"\",\n    val username: String,\n    val email: String\n) : Identifiable","x":-960,"y":-670,"width":250,"height":180},
+		{"id":"group-node","type":"text","text":"data class Group(\n    override val id: String,\n    override val name: String,\n    override val description: String,\n    override val ownerId: String,\n    override val membersIds: List< String>\n) : Identifiable, Named, Described, UserOwned, Membership","x":-95,"y":-690,"width":320,"height":230},
+		{"id":"task-node","type":"text","text":"data class Task(\n    override val id: String = \"\",\n    override val ownerId: String,\n    override val ownerType: String,\n    override val name: String,\n    override val description: String,\n    val due: DateTime,\n    override val projectId: String?\n) : Identifiable, Ownership, Named, Described, ProjectOwned","x":-160,"y":0,"width":300,"height":320},
+		{"id":"event-node","type":"text","text":"data class Event(\n    override val id: String,\n    override val ownerId: String,\n    override val ownerType: String,\n    override val name: String,\n    override val description: String,\n    override val projectId: String?,\n    val start: DateTime,\n    val end: DateTime?\n) : Identifiable, Ownership, Named, Described, ProjectOwned","x":180,"y":0,"width":380,"height":330},
+		{"id":"project-node","type":"text","text":"data class Project(\n    override val id: String,\n    override val ownerId: String,\n    override val ownerType: String,\n    override val name: String,\n    override val description: String,\n    override val membersIds: List< String>\n) : Identifiable, Ownership, Named, Described, Membership","x":-885,"y":50,"width":350,"height":280},
+		{"id":"7e22d3d07318b6e2","x":1000,"y":-670,"width":500,"height":1330,"type":"text","text":"\tinterface Identifiable {\n\t    val id: String\n\t}\n\t\n\tinterface UserOwned {\n\t    val ownerId: String\n\t}\n\t\n\tinterface Ownership {\n\t    val ownerId: String\n\t    val ownerType: String\n\t}\n\t\n\tinterface ProjectOwned {\n\t    val projectId: String?\n\t}\n\t\n\tinterface Named {\n\t    val name: String\n\t}\n\t\n\tinterface Described {\n\t    val description: String\n\t}\n\t\n\tinterface Membership {\n\t    val membersIds: List< String>\n\t}\n\t\n\tinterface Labeled {\n\t    val label: String\n\t}\n\t\n\tinterface DateTime {\n\t    val date: LocalDate\n\t    val time: LocalTime?\n\t}\n\t\n\t\n\tinterface Linked {\n\t    val linkedTo: String\n\t    val linkedType: String // TASK or EVENT\n\t}"}
+	],
+	"edges":[
+		{"id":"user-tasks-events","fromNode":"user-node","fromSide":"bottom","toNode":"project-node","toSide":"top","color":"4","label":"tiene"},
+		{"id":"user-groups","fromNode":"user-node","fromSide":"top","toNode":"group-node","toSide":"top","color":"2","label":"dueño de"},
+		{"id":"user-projects","fromNode":"user-node","fromSide":"left","toNode":"project-node","toSide":"left","color":"1","label":"puede ser miembro de"},
+		{"id":"88046de0110bb1b5","fromNode":"group-node","fromSide":"bottom","toNode":"project-node","toSide":"top","color":"4","label":"tiene"},
+		{"id":"1267591e64d1d02d","fromNode":"user-node","fromSide":"right","toNode":"group-node","toSide":"left","color":"1","label":"puede ser miembro de"},
+		{"id":"a8f2af1ed30e55b5","fromNode":"0aa30ef189ab3015","fromSide":"left","toNode":"project-node","toSide":"right","color":"1","label":"puede asociarse a"},
+		{"id":"ebe487dd2487c364","fromNode":"user-node","fromSide":"bottom","toNode":"0aa30ef189ab3015","toSide":"top","color":"4","label":"tiene"},
+		{"id":"9513b2bafa24e4a2","fromNode":"group-node","fromSide":"bottom","toNode":"0aa30ef189ab3015","toSide":"top","color":"4","label":"tiene"},
+		{"id":"60628efa46c40447","fromNode":"0aa30ef189ab3015","fromSide":"right","toNode":"reminder-node","toSide":"bottom","color":"5","label":"puede tener"}
+	]
+}

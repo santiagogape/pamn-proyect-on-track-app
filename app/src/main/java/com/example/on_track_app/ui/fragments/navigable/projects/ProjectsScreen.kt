@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
 import com.example.on_track_app.utils.DebugLogcatLogger
+import com.example.on_track_app.utils.DefaultConfig
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.ProjectsViewModel
 
@@ -27,9 +28,10 @@ fun ProjectsScreen(
     val viewModel: ProjectsViewModel = viewModel(factory = viewModelFactory)
 
     val context = LocalContext.current
+    val default = DefaultConfig.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val items by viewModel.items.collectAsStateWithLifecycle()
-    val projects by viewModel.projects.collectAsStateWithLifecycle()
+    val projects by viewModel.projects(default.defaultProjectID).collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -41,11 +43,10 @@ fun ProjectsScreen(
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
         } else {
             projects.forEach { DebugLogcatLogger.logMockProject(it) }
-            val mapped = projects.map { it.name }
-            StaticCards(mapped) { projectName ->
+            StaticCards(projects) { projectId,projectName ->
                 val intent = Intent(context, ProjectActivity::class.java)
                 intent.putExtra("PROJECT", projectName)
-                intent.putExtra("PROJECT_ID", projectName) //todo: name -> id
+                intent.putExtra("PROJECT_ID", projectId)
                 context.startActivity(intent)
             }
 

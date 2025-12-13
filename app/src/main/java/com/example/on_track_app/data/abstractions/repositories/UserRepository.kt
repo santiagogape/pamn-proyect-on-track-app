@@ -6,9 +6,6 @@ interface UserRepository: BasicById<MockUser> {
     suspend fun addUser(
         username: String,
         email: String,
-        groupsId: List<String>,
-        defaultProjectId: String,
-        projectsId: List<String>,
         cloudId: String?
     ): String
     suspend fun updateUser(id: String, newEmail: String)

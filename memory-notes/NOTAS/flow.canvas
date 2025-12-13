@@ -1,0 +1,29 @@
+{
+	"nodes":[
+		{"id":"ab7420db6de0dd7c","type":"group","x":180,"y":-40,"width":750,"height":550,"label":"propiedad de grupo"},
+		{"id":"a3dbd7f0521b2216","type":"group","x":-700,"y":-40,"width":710,"height":550,"label":"propiedad del usuario"},
+		{"id":"e985c6b820409748","type":"text","text":"app","x":-860,"y":-290,"width":250,"height":60},
+		{"id":"b33f33ad1b5bfa0e","type":"text","text":"signup/login\nconfiguracion local + remota\n","x":-1060,"y":-50,"width":250,"height":90},
+		{"id":"4e854739b9f8b272","type":"text","text":"MainActivity.\n\ncontexto: project DEFAULT del usuario\n\nvistas: home, projects, tasks, calendar, reminders, groups\n\ncalendar = tasks + events","x":-680,"y":-20,"width":320,"height":230},
+		{"id":"63c3fe2635699ea1","type":"text","text":"agenda activity.\n\ncontexto: project desde el que se abrió\n\nvistas: agenda \n","x":-645,"y":330,"width":250,"height":160},
+		{"id":"dfe0b3c6b52bd0d7","type":"text","text":"GroupActivity.\n\ncontexto: project DEFAULT del grupo\n\nvistas: home, projects, tasks, calendar, reminders, groups\n\ncalendar = tasks + events","x":200,"y":-20,"width":320,"height":230},
+		{"id":"f2ff98c1e6f259ab","type":"text","text":"project activity.\n\ncontexto: project\n\nvistas: tasks, calendar, reminders","x":660,"y":13,"width":250,"height":165},
+		{"id":"ff16239ec3b2b801","type":"text","text":"agenda activity.\n\ncontexto: project desde el que se abrió\n\nvistas: agenda \n","x":235,"y":330,"width":250,"height":160},
+		{"id":"284951b74731db20","type":"text","text":"( usuario es dueño o miembro de dicho grupo)","x":580,"y":330,"width":250,"height":60},
+		{"id":"8b69d3e1ea957829","type":"text","text":"project activity.\n\ncontexto: project\n\nvistas: tasks, calendar, reminders","x":-240,"y":165,"width":250,"height":165},
+		{"id":"e63c83ecc1bf2c12","type":"text","text":"la propiedad de grupo es algo que solo se puede modificar si hay conexion.\n\nel punto es que necesitas conexion para mantenerlo sincronizado. si no hay conexion no se puede modificar el contenido\n\n\nsi hay conexion: el contenido local se mantiene sincronizado y se puede modificar actualizando el remoto\n\nsi no hay conexion: se puede leer el contenido local pero sin poder modificarlo.","x":180,"y":580,"width":750,"height":320},
+		{"id":"e6a4e8110e6ce24d","type":"text","text":"la propiedad de usuario es algo que puede manejarse localmente y sincronizar en la nube.\n\nsolo se modifica localmente cuando la app esta encendida.\nsolo se sube remotamente cuando hay conexion\n","x":-645,"y":580,"width":600,"height":160}
+	],
+	"edges":[
+		{"id":"069a2912ccc864ee","fromNode":"e985c6b820409748","fromSide":"bottom","toNode":"b33f33ad1b5bfa0e","toSide":"top","label":"primera vez=si"},
+		{"id":"22b884f916c7f5fc","fromNode":"e985c6b820409748","fromSide":"bottom","toNode":"4e854739b9f8b272","toSide":"top","label":"primera vez = no"},
+		{"id":"74ce574adcdca6c4","fromNode":"b33f33ad1b5bfa0e","fromSide":"right","toNode":"4e854739b9f8b272","toSide":"left"},
+		{"id":"29f8be282c3a2e0e","fromNode":"4e854739b9f8b272","fromSide":"right","toNode":"8b69d3e1ea957829","toSide":"left","label":"projects"},
+		{"id":"2c2681c795578942","fromNode":"4e854739b9f8b272","fromSide":"bottom","toNode":"63c3fe2635699ea1","toSide":"top","label":"calendar"},
+		{"id":"b46baa10c381ac51","fromNode":"dfe0b3c6b52bd0d7","fromSide":"right","toNode":"f2ff98c1e6f259ab","toSide":"left","label":"projects"},
+		{"id":"0006c83a0311afaa","fromNode":"dfe0b3c6b52bd0d7","fromSide":"bottom","toNode":"ff16239ec3b2b801","toSide":"top","label":"calendar"},
+		{"id":"3debd53b7d425d72","fromNode":"4e854739b9f8b272","fromSide":"right","toNode":"dfe0b3c6b52bd0d7","toSide":"top","label":"groups"},
+		{"id":"e28ff72d6c1d7785","fromNode":"a3dbd7f0521b2216","fromSide":"bottom","toNode":"e6a4e8110e6ce24d","toSide":"top","toEnd":"none"},
+		{"id":"79ea5ed9c99115c7","fromNode":"ab7420db6de0dd7c","fromSide":"bottom","toNode":"e63c83ecc1bf2c12","toSide":"top","toEnd":"none"}
+	]
+}

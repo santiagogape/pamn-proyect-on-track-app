@@ -1,0 +1,24 @@
+{
+	"nodes":[
+		{"id":"44a0052b8b83f2c6","type":"group","x":190,"y":-30,"width":770,"height":380,"color":"5","label":"lo que importa"},
+		{"id":"acfb68fb319ee148","type":"text","text":"data class Task (\n    val id: String = \"\",\n    val userId: String \n    val name: String \n    val description: String  \n    val date: LocalDate\n    val time: LocalTime?\n    val projectId: String?\n)\n","x":210,"y":-10,"width":243,"height":300},
+		{"id":"16d72daafb042fbf","type":"text","text":"data class Event(\n    val id: String ,\n    val userId: String \n    val name: String ,\n    val description: String ,\n    val projectId: String?,\n    val startDate: LocalDate,\n    val startTime: LocalTime?,\n    val endTimeIso: LocalDate?\n    val endDateIso: LocalTime?\n)\n","x":570,"y":0,"width":370,"height":330},
+		{"id":"6d8a5bcc3f6c15f1","type":"text","text":"data class Reminder(\n    val id: String ,\n    val userId: String , //el user\n    val ownerId: String ,//id de task, event o lo que sea\n    val ownerType: String ,//tipo \"TASK\", \"EVENT\",....\n    val date: LocalDate,\n    val time: LocalTime,\n    val label: String\n)\n","x":510,"y":-670,"width":430,"height":280},
+		{"id":"5ec58f6804e425f4","type":"text","text":"data class Project (\n    val id: String,\n    val ownerId: String ,\n    val ownerType: String, //user,group\n    val name: String ,\n    val description: String,\n    val membersIds: List< String> ,\n)\n","x":-960,"y":65,"width":340,"height":280},
+		{"id":"e8a732c3b8330964","type":"text","text":"data class User (\n    val id: String = \"\",\n    val username: String \n    val email: String \n)","x":-960,"y":-670,"width":250,"height":180},
+		{"id":"3f4e5b1a0b7168bb","type":"text","text":"data class Group (\n    val id: String,\n    val name: String,\n    val description: String,\n    val ownerId: String ,\n    val membersIds: List< String> \n)\n","x":-95,"y":-690,"width":300,"height":200},
+		{"id":"a92cd9ec6174c026","x":-400,"y":360,"width":480,"height":960,"type":"text","text":"interface Identifiable {\n    val id: String\n}\n\ninterface UserOwned {\n    val userId: String\n}\n\ninterface Ownership {\n    val ownerId: String\n    val ownerType: String\n}\n\ninterface ProjectOwned {\n    val projectId: String?\n}\n\ninterface Named {\n    val name: String\n}\n\ninterface Described {\n    val description: String\n}\n\ninterface Membership {\n    val membersIds: List< String>\n}\n\ninterface Labeled {\n    val label: String\n}\n\ninterface DateTime {\n    val date: LocalDate\n    val time: LocalTime?\n}\n"}
+	],
+	"edges":[
+		{"id":"47d58592bacecc12","fromNode":"44a0052b8b83f2c6","fromSide":"right","toNode":"6d8a5bcc3f6c15f1","toSide":"bottom","color":"5","label":"puede tener lista de"},
+		{"id":"453aab6daa5a6f87","fromNode":"5ec58f6804e425f4","fromSide":"right","toNode":"44a0052b8b83f2c6","toSide":"left","color":"1","label":"puede estar asociado a un project\ntendra projectId != null"},
+		{"id":"57c8c22f3bbeb954","fromNode":"e8a732c3b8330964","fromSide":"bottom","toNode":"44a0052b8b83f2c6","toSide":"top","color":"4","label":"tiene"},
+		{"id":"7f740e5943908389","fromNode":"3f4e5b1a0b7168bb","fromSide":"bottom","toNode":"44a0052b8b83f2c6","toSide":"top","color":"4","label":"tiene"},
+		{"id":"96cf58535f7d1e0b","fromNode":"e8a732c3b8330964","fromSide":"left","toNode":"5ec58f6804e425f4","toSide":"left","color":"1","label":"tiene"},
+		{"id":"d76fc88543e6f5f7","fromNode":"e8a732c3b8330964","fromSide":"top","toNode":"3f4e5b1a0b7168bb","toSide":"top","color":"2","label":"dueño de "},
+		{"id":"9265ca0afa9b1e1f","fromNode":"e8a732c3b8330964","fromSide":"right","toNode":"3f4e5b1a0b7168bb","toSide":"left","color":"6","label":"puede ser \nmiembro de"},
+		{"id":"387aea0dff1a9b7d","fromNode":"e8a732c3b8330964","fromSide":"bottom","toNode":"5ec58f6804e425f4","toSide":"top","color":"1","label":"puede ser \nmiembro de"},
+		{"id":"79b8f733f6498552","fromNode":"3f4e5b1a0b7168bb","fromSide":"left","toNode":"5ec58f6804e425f4","toSide":"left","color":"1","label":"tiene"},
+		{"id":"a8f16a8e87c4eee5","fromNode":"3f4e5b1a0b7168bb","fromSide":"bottom","toNode":"5ec58f6804e425f4","toSide":"top","color":"1","label":"puede ser \nmiembro de"}
+	]
+}

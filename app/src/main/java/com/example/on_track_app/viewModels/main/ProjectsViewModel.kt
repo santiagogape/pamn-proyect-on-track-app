@@ -23,8 +23,8 @@ class ProjectsViewModel(private val repo: ProjectRepository, config: UniqueRepos
     private val _items = MutableStateFlow(listOf("project1", "project2", "project3"))
     val items: StateFlow<List<String>> = _items
 
-    val projects: StateFlow<List<MockProject>> = this.repo.getAll().map { list ->
-        list.filter { item -> item.id != default }
+    fun projects(defaultIdToExclude:String): StateFlow<List<MockProject>> = this.repo.getAll().map { list ->
+        list.filter { item -> item.id != defaultIdToExclude }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
 }

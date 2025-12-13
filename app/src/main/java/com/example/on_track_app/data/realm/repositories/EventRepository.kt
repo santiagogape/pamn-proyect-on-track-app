@@ -5,12 +5,16 @@ import com.example.on_track_app.data.realm.entities.EventRealmEntity
 import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.entities.update
+import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.synchronization.toObjectId
 import com.example.on_track_app.data.realm.utils.toRealmInstant
 import com.example.on_track_app.data.synchronization.EventDTO
+import com.example.on_track_app.data.synchronization.ReferenceIntegrityManager
 import com.example.on_track_app.model.MockEvent
 import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.OwnerType
 import io.realm.kotlin.Realm
+import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.reflect.KClass
@@ -20,18 +24,22 @@ class RealmEventRepository (
     db: Realm,
     mapper: SyncMapper<EventRealmEntity, EventDTO, MockEvent>,
     maker: () -> EventRealmEntity,
-    klass: KClass<EventRealmEntity> = EventRealmEntity::class
-) : EventRepository, RealmSynchronizableRepository<EventRealmEntity, EventDTO, MockEvent>(db,mapper,maker,klass) {
+    klass: KClass<EventRealmEntity> = EventRealmEntity::class,
+    dtoClass: KClass<EventDTO> = EventDTO::class,
+    integrityManager: ReferenceIntegrityManager
+) : EventRepository, RealmSynchronizableRepository<EventRealmEntity, EventDTO, MockEvent>(db,mapper,maker,klass,dtoClass,integrityManager),
+    SynchronizedReference {
 
     override suspend fun addEvent(
         name: String,
         description: String,
-        projectId: String,
         start: MockTimeField,
         end: MockTimeField,
-        cloudId: String?
+        projectId: String?,
+        cloudId: String?,
+        ownerId: String,
+        ownerType: OwnerType
     ): String {
-        var dto: EventDTO? = null
         var newId = ""
 
 
@@ -39,19 +47,34 @@ class RealmEventRepository (
             val event = EventRealmEntity().apply {
                 this.name = name
                 this.description = description
-                this.projectId = projectId.toObjectId()
-                this.startDate = start.date.toRealmInstant()
+                this.startDate = start.instant.toRealmInstant()
                 this.startWithTime = start.timed
-                this.endDate = end.date.toRealmInstant()
+                this.endDate = end.instant.toRealmInstant()
                 this.endWithTime = end.timed
+                this.projectId = projectId?.toObjectId()
                 this.cloudId = cloudId
+                this.ownerId = ownerId.toObjectId()
+                this.ownerType = ownerType.name
+
+                this.synchronizationStatus = SynchronizationState.CREATED.name
+                this.version = RealmInstant.now()
             }
 
             val saved = copyToRealm(event)
+
+            integrityManager.
+            resolveReferenceOnCreate(transferClass, saved.ownerId.toHexString(), Filter.OWNER
+            )?.let { saved.cloudOwnerId = it }
+
+            saved.projectId?.let {
+                integrityManager.
+                resolveReferenceOnCreate(transferClass, it.toHexString(), Filter.PROJECT
+                )?.let { cloud -> saved.cloudProjectId = cloud }
+            }
+
             newId = saved.id.toHexString()
-            dto = mapper.toDTO(saved)
         }
-        dto?.let { syncEngine?.onLocalChange(newId, it) }
+        syncEngine?.onLocalChange(newId, transferClass)
         return newId
     }
 
@@ -60,7 +83,6 @@ class RealmEventRepository (
         newName: String,
         newDescription: String
     ) {
-        var dto: EventDTO? = null
         db.write {
             val entity: EventRealmEntity? = entity(id)
             entity?.let {
@@ -68,17 +90,44 @@ class RealmEventRepository (
                 it.description = newDescription
                 it.update()
             }
-            entity?.let { dto = mapper.toDTO(it) }
         }
-        dto?.let { syncEngine?.onLocalChange(id,it) }
+        syncEngine?.onLocalChange(id,transferClass)
     }
 
     override fun byProject(id: String): Flow<List<MockEvent>> {
-        return db.query(EventRealmEntity::class, "projectId == $0", id.toObjectId())
+        return db.query(localClass, Filter.PROJECT.query, id.toObjectId())
             .asFlow()
             .map { results ->
                 results.list.map { it.toDomain() }
             }
+    }
+
+    override fun canSync(id: String): Boolean {
+        val entity = db.entity(id) ?: return false
+
+        if (entity.cloudOwnerId == null ) return false
+
+        if (entity.projectId != null && entity.cloudProjectId == null) return false
+
+        return true
+    }
+
+    override suspend fun synchronizeReferences(id: String, cloudId: String) {
+        db.write {
+            filter(
+                Filter.OWNER,
+                id
+            ).map { entity ->
+                entity.cloudOwnerId = cloudId
+            }
+
+            filter(
+                Filter.PROJECT,
+                id
+            ).map { entity ->
+                entity.cloudProjectId = cloudId
+            }
+        }
     }
 
 }

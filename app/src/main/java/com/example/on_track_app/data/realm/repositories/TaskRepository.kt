@@ -5,15 +5,18 @@ import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.entities.update
+import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.synchronization.toObjectId
 import com.example.on_track_app.data.realm.utils.toRealmInstant
-import com.example.on_track_app.data.realm.utils.toRealmList
+import com.example.on_track_app.data.synchronization.ReferenceIntegrityManager
 import com.example.on_track_app.data.synchronization.TaskDTO
-import com.example.on_track_app.data.synchronization.toDTO
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.OwnerType
 import com.example.on_track_app.utils.DebugLogcatLogger
 import io.realm.kotlin.Realm
+import io.realm.kotlin.query.RealmQuery
+import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.collections.map
@@ -23,40 +26,59 @@ class RealmTaskRepository(
     db: Realm,
     mapper: SyncMapper<TaskRealmEntity, TaskDTO , MockTask>,
     maker: () ->TaskRealmEntity,
-    klass: KClass<TaskRealmEntity> = TaskRealmEntity::class
-) : TaskRepository, RealmSynchronizableRepository<TaskRealmEntity, TaskDTO , MockTask>(db,mapper,maker,klass) {
+    klass: KClass<TaskRealmEntity> = TaskRealmEntity::class,
+    dtoClass: KClass<TaskDTO> = TaskDTO::class,
+    integrityManager: ReferenceIntegrityManager
+) : TaskRepository,
+    RealmSynchronizableRepository<TaskRealmEntity, TaskDTO , MockTask>(db,mapper,maker,klass,dtoClass,integrityManager),
+    SynchronizedReference {
 
     override suspend fun addTask(
         name: String,
         description: String,
         date: MockTimeField,
-        remindersId: List<String>,
-        projectId: String,
-        cloudId: String?
+        projectId: String?,
+        cloudId: String?,
+        ownerId: String,
+        ownerType: OwnerType
     ): String {
-        var dto: TaskDTO? = null
         var id = ""
 
         db.write {
             val task = TaskRealmEntity().apply {
                 this.name = name
                 this.description = description
-                this.projectId = projectId.toObjectId()
-                this.date = date.date.toRealmInstant()
+                this.projectId = projectId?.toObjectId()
+                this.date = date.instant.toRealmInstant()
                 this.withTime = date.timed
-                this.reminders = remindersId.toRealmList()
                 this.cloudId = cloudId
+                this.ownerId = ownerId.toObjectId()
+                this.ownerType = ownerType.name
+                //todo add status
+                this.synchronizationStatus = SynchronizationState.CREATED.name
+                this.version = RealmInstant.now()
             }
 
             val saved = copyToRealm(task)
+
+            integrityManager.
+            resolveReferenceOnCreate(transferClass, saved.ownerId.toHexString(), Filter.OWNER
+            )?.let { saved.cloudOwnerId = it }
+
+            saved.projectId?.let { integrityManager.
+                resolveReferenceOnCreate(
+                    transferClass,
+                    it.toHexString(),
+                    Filter.PROJECT
+                )?.let { cloud -> saved.cloudProjectId = cloud } }
+
             id = saved.id.toHexString()
 
-            dto = saved.toDTO()
 
             DebugLogcatLogger.logRealmSaved(saved)
 
         }
-        dto?.let { syncEngine?.onLocalChange(id, it)}
+        syncEngine?.onLocalChange(id, transferClass)
 
         return id
     }
@@ -66,7 +88,6 @@ class RealmTaskRepository(
         newName: String,
         newDescription: String
     ) {
-        var dto: TaskDTO? = null
         db.write {
             val entity: TaskRealmEntity? = entity(id)
             entity?.let {
@@ -74,18 +95,49 @@ class RealmTaskRepository(
                 it.description = newDescription
                 it.update()
             }
-            dto = entity?.toDTO()
         }
 
-        dto?.let { syncEngine?.onLocalChange(id,it) }
+        syncEngine?.onLocalChange(id,transferClass)
 
     }
 
     override fun byProject(id: String): Flow<List<MockTask>> {
-        return db.query(TaskRealmEntity::class, "projectId == $0", id.toObjectId())
+        return queryByProjectId(id)
             .asFlow()
             .map { results ->
                 results.list.map { it.toDomain() }
             }
+    }
+
+    private fun queryByProjectId(id: String): RealmQuery<TaskRealmEntity> =
+        db.query(localClass, Filter.PROJECT.query, id.toObjectId())
+
+
+    override fun canSync(id: String): Boolean {
+        val entity = db.entity(id) ?: return false
+
+        if (entity.cloudOwnerId == null) return false
+
+        if (entity.projectId != null && entity.cloudProjectId == null) return false
+
+        return true
+    }
+
+    override suspend fun synchronizeReferences(id: String, cloudId: String) {
+        db.write {
+            filter(
+                Filter.OWNER,
+                id
+            ).map { entity ->
+                entity.cloudOwnerId = cloudId
+            }
+
+            filter(
+                Filter.PROJECT,
+                id
+            ).map { entity ->
+                entity.cloudProjectId = cloudId
+            }
+        }
     }
 }

@@ -1,14 +1,31 @@
 package com.example.on_track_app.data.synchronization
 
+import com.example.on_track_app.model.Described
+import com.example.on_track_app.model.Labeled
+import com.example.on_track_app.model.Named
 
 
-interface Owned {
-    val ownerId: String
+interface SynchronizableUserOwnership {
+    val cloudOwnerId: String
+}
+
+interface SynchronizableOwnership: SynchronizableUserOwnership {
     val ownerType: String
 }
 
-interface ProjectOwnership {
-    val projectId: String
+interface SynchronizableProjectOwnership {
+    val cloudProjectId: String
+}
+
+interface SynchronizableMembership {
+    val cloudEntityId: String
+    val cloudMemberId: String
+    val type: String
+}
+
+interface SynchronizableLink {
+    val cloudLinkTo: String?
+    val linkType: String?
 }
 
 interface SynchronizableDTO {
@@ -18,49 +35,67 @@ interface SynchronizableDTO {
     fun copyDTO(cloudId: String? = null): SynchronizableDTO
 }
 
+data class MembershipDTO (
+    override val cloudId: String?,
+    override val version: Long,
+    override val deleted: Boolean,
+    override val cloudEntityId: String,
+    override val cloudMemberId: String,
+    override val type: String,
+    ) : SynchronizableDTO, SynchronizableMembership {
+    override fun copyDTO(cloudId: String?): SynchronizableDTO {
+        return copy(cloudId = cloudId)
+    }
+}
+
 data class EventDTO(
     override val cloudId: String? = null,
-    val name: String = "",
-    val description: String = "",
-    override val projectId: String = "",
+    override val name: String = "",
+    override val description: String = "",
+    override val cloudProjectId: String = "",
     val startDate: Long = 0L,     // millis
     val startWithTime: Boolean = false,
     val endDate: Long = 0L,       // millis
     val endWithTime: Boolean = false,
-    val remindersId: List<String> = emptyList(),
-
     override val version: Long = 0L,
     override val deleted: Boolean = false,
-
-): SynchronizableDTO, ProjectOwnership {
+    override val ownerType: String = "",
+    override val cloudOwnerId: String = "",
+    ): SynchronizableDTO,
+    SynchronizableProjectOwnership,
+    SynchronizableOwnership,
+    Named, Described {
     override fun copyDTO(cloudId: String?): EventDTO = copy(cloudId = cloudId)
 }
 
 data class GroupDTO(
     override val cloudId: String? = null,
-    val name: String = "",
-    val members: List<String> = emptyList(),
-    val defaultProjectId: String = "",
-    val projectsId: List<String> = emptyList(),
-    val ownerId: String = "",
-
+    override val name: String = "",
     override val version: Long = 0L,
     override val deleted: Boolean = false,
-): SynchronizableDTO {
+    override val description: String = "",
+    override val cloudOwnerId: String = "",
+): SynchronizableDTO,
+    Named,
+    Described,
+    SynchronizableUserOwnership {
     override fun copyDTO(cloudId: String?): GroupDTO = copy(cloudId = cloudId)
 }
 
 data class ProjectDTO(
     override val cloudId: String? = null,
-    val name: String = "",
-    val members: List<String> = emptyList(),
+    override val name: String = "",
 
     override val ownerType: String = "",
-    override val ownerId: String = "",
+    override val cloudOwnerId: String = "",
 
     override val version: Long = 0L,
     override val deleted: Boolean = false,
-): SynchronizableDTO, Owned {
+    override val description: String = "",
+): SynchronizableDTO,
+    SynchronizableOwnership,
+    Named,
+    Described {
     override fun copyDTO(cloudId: String?): ProjectDTO = copy(cloudId = cloudId)
 }
 
@@ -69,44 +104,49 @@ data class ReminderDTO(
 
     val date: Long = 0L,
     val withTime: Boolean = false,
-    val label: String = "",
+    override val label: String = "",
 
-    override val ownerId: String = "",
+    override val cloudOwnerId: String = "",
     override val ownerType: String = "",
 
     override val version: Long = 0L,
     override val deleted: Boolean = false,
-): SynchronizableDTO, Owned {
+    override val cloudLinkTo: String? = null,
+    override val linkType: String? = null,
+): SynchronizableDTO,
+    SynchronizableOwnership,
+    Labeled,
+    SynchronizableLink {
     override fun copyDTO(cloudId: String?): ReminderDTO = copy(cloudId = cloudId)
 }
 
 data class TaskDTO(
     override val cloudId: String? = null,
-    val name: String = "",
+    override val name: String = "",
+    override val description: String = "",
     val date: Long = 0L,
     val withTime: Boolean = false,
-    val description: String = "",
     val status: String = "",
-    val reminders: List<String> = emptyList(),
-    override val projectId: String = "",
-
+    override val cloudProjectId: String = "",
     override val version: Long = 0L,
     override val deleted: Boolean = false,
-): SynchronizableDTO, ProjectOwnership {
+    override val ownerType: String = "",
+    override val cloudOwnerId: String = "",
+): SynchronizableDTO,
+    SynchronizableProjectOwnership,
+    SynchronizableOwnership,
+    Named,
+    Described {
     override fun copyDTO(cloudId: String?): TaskDTO = copy(cloudId = cloudId)
 }
 
 
 data class UserDTO(
     override val cloudId: String? = null,
-    val username: String = "",
+    override val name: String = "",
     val email: String = "",
-    val groups: List<String> = emptyList(),
-    val defaultProjectId: String = "",
-    val projectsId: List<String> = emptyList(),
-
     override val version: Long = 0L,
     override val deleted: Boolean = false,
-): SynchronizableDTO {
+): SynchronizableDTO, Named {
     override fun copyDTO(cloudId: String?): UserDTO = copy(cloudId = cloudId)
 }

@@ -11,3 +11,7 @@ val LocalViewModelFactory = staticCompositionLocalOf<ViewModelProvider.Factory> 
 val LocalConfig = staticCompositionLocalOf<LocalConfigurations> {
     error("No LocalConfigurations provided")
 }
+
+val DefaultConfig = staticCompositionLocalOf<LocalConfigurations> {
+    error("No LocalConfigurations provided")
+}

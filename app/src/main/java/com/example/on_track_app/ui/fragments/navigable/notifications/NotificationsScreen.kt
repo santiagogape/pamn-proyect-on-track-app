@@ -2,15 +2,19 @@ package com.example.on_track_app.ui.fragments.navigable.notifications
 
 
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.NotificationsViewModel
 
@@ -35,8 +39,6 @@ fun NotificationsScreen(
     ) {
         if (items.isEmpty()){
             Text(text = text, style = MaterialTheme.typography.headlineSmall)
-        } else {
-            StaticCards(items.map { it.name}){}//todo -> create activity logic
         }
     }
 }

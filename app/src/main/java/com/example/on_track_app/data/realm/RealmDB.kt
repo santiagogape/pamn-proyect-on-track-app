@@ -16,7 +16,8 @@ object RealmDatabase {
             ProjectRealmEntity::class,
             TaskRealmEntity::class,
             EventRealmEntity::class,
-            UserRealmEntity::class
+            UserRealmEntity::class,
+            RealmMembershipEntity::class
         )
     )
 

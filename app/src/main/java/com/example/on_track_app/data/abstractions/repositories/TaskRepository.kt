@@ -2,6 +2,7 @@ package com.example.on_track_app.data.abstractions.repositories
 
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.OwnerType
 
 interface TaskRepository: BasicById<MockTask>, IndexedByProject<MockTask> {
 
@@ -9,9 +10,10 @@ interface TaskRepository: BasicById<MockTask>, IndexedByProject<MockTask> {
         name: String,
         description: String,
         date: MockTimeField,
-        remindersId: List<String>,
-        projectId: String,
-        cloudId: String?
+        projectId: String?,
+        cloudId: String?,
+        ownerId: String,
+        ownerType: OwnerType
     ): String
     suspend fun updateTask(
         id: String,

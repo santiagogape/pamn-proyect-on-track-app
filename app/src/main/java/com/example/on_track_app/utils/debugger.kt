@@ -7,6 +7,7 @@ import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.model.CloudIdentifiable
 import com.example.on_track_app.model.Identifiable
 import com.example.on_track_app.model.LocalConfigurations
+import com.example.on_track_app.model.Named
 
 object DebugLogcatLogger {
 
@@ -26,7 +27,7 @@ object DebugLogcatLogger {
     // ---------------------------------------------------------------------
     // MOCK PROJECT CREATED
     // ---------------------------------------------------------------------
-    fun <T> logMockProject(project: T) where T: CloudIdentifiable, T: Identifiable {
+    fun <T> logMockProject(project: T) where T: CloudIdentifiable, T: Identifiable, T : Named {
         Log.d(
             TAG,
             """

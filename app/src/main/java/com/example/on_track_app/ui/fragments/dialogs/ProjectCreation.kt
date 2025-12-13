@@ -34,9 +34,10 @@ import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
 @Composable
 fun ProjectCreation(
     onDismiss: () -> Unit,
-    onSubmit: (String) -> Unit
+    onSubmit: (String, String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -85,6 +86,16 @@ fun ProjectCreation(
                             isError = name.isEmpty(),
                             colors = colors
                         )
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description *") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        isError = description.isEmpty(),
+                        colors = colors
+                    )
 
                 }
 
@@ -102,9 +113,9 @@ fun ProjectCreation(
                     // SUBMIT
                     Button(
                         onClick = {
-                            if (name.isNotEmpty() ) {
+                            if (name.isNotEmpty() && description.isNotEmpty() ) {
                                 onSubmit(
-                                    name
+                                    name, description
                                 )
                             }
                         },

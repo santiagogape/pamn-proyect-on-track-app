@@ -14,16 +14,26 @@ import androidx.compose.ui.unit.dp
 import com.example.on_track_app.ui.activities.AgendaActivity
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.utils.DefaultConfig
+import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.CalendarViewModel
 
 @Composable
 fun CalendarScreen(
-    viewModel: CalendarViewModel = viewModel(),
     projectId: String? = null
 ) {
-    val text by viewModel.text.collectAsStateWithLifecycle()
-    val items by viewModel.taskByDates.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    val viewModelFactory = LocalViewModelFactory.current
+    val config = DefaultConfig.current
+
+    val viewModel: CalendarViewModel = viewModel(factory = viewModelFactory)
+    val text by viewModel.text.collectAsStateWithLifecycle()
+    val sourceFlow = remember(projectId) {
+        if (projectId != config.defaultProjectID) projectId?.let { viewModel.eventsByDatesAndProject(it) } ?: viewModel.eventsByDates
+        else viewModel.eventsByDates
+    }
+    val items by sourceFlow.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -36,17 +46,15 @@ fun CalendarScreen(
             Calendar(
                 tasksByDate = items,
                 onDayClick = {
-                    date ->
-                        val intent = Intent(context, AgendaActivity::class.java)
-                        intent.putExtra("LOCAL_DATE", date.toString())
+                    date -> val intent = Intent(context, AgendaActivity::class.java)
+                    intent.putExtra("LOCAL_DATE", date.toString())
                     //todo -> context of current project to agenda
-                        context.startActivity(intent)
+                    context.startActivity(intent)
                 }
             )
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

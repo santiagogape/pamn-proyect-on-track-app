@@ -13,32 +13,18 @@ data class SyncRepositoryEntry<D : SynchronizableDTO>(
     val remote: FirestoreSyncRepository<D>
 )
 
-
-/**
- * use:
- * val projectEntry = SyncRepositoryEntry(
- *     dtoClass = ProjectDTO::class,
- *     local = realmProjectRepository,              // implements SynchronizableRepository<ProjectDTO>
- *     remote = FirestoreSyncRepository(
- *         collection = FirestoreService.firestore.collection("projects"),
- *         clazz = ProjectDTO::class.java
- *     )
- * )
- *
- * val factory = SyncRepositoryFactory(
- *     entries = listOf(projectEntry /*, taskEntry, eventEntry, etc.*/)
- * )
- *
- */
 class SyncRepositoryFactory(
-    entries: List<SyncRepositoryEntry<out SynchronizableDTO>>
+    entries: List<SyncRepositoryEntry<out SynchronizableDTO>>,
+    val order: List<KClass<out SynchronizableDTO>> = listOf(UserDTO::class,GroupDTO::class,ProjectDTO::class,
+        TaskDTO::class,EventDTO::class,ReminderDTO::class
+    )
 ) {
-    // KClass<DTO> -> entry correspondiente
     private val registry: Map<KClass<out SynchronizableDTO>, SyncRepositoryEntry<out SynchronizableDTO>> =
         entries.associateBy { it.dtoClass }
 
     fun allEntries(): Collection<SyncRepositoryEntry<out SynchronizableDTO>> =
         registry.values
+
 
     @Suppress("UNCHECKED_CAST")
     fun <D : SynchronizableDTO> getForClass(clazz: KClass<D>): SyncRepositoryEntry<D>? {
@@ -55,7 +41,7 @@ class SyncEngine(
     fun start() {
         factory.allEntries().forEach { rawEntry ->
             scope.launch {
-                rawEntry.local.attachToEngine(this@SyncEngine) // -> this in OnTrackApp: Application
+                rawEntry.local.attachToEngine(this@SyncEngine)
                 rawEntry.remote.observeRemoteChanges()
                     .collect { dto ->
                         onRemoteChange(dto)
@@ -64,8 +50,10 @@ class SyncEngine(
         }
     }
 
-    suspend fun <D : SynchronizableDTO> onLocalChange(id:String, dto: D) {
-        val entry = factory.getForClass(dto::class) as? SyncRepositoryEntry<D> ?: return
+    suspend fun <D : SynchronizableDTO> onLocalChange(id:String, clazz: KClass<D>) {
+        val entry = factory.getForClass(clazz) ?: return
+        val dto: D = if (entry.local.canSync(id)) {entry.local.getDTO(id) } else {return} ?: return
+
 
         if (dto.deleted) {
             entry.remote.delete(dto)
@@ -73,8 +61,8 @@ class SyncEngine(
 
         } else if (dto.cloudId == null){
             val generateCloudId = entry.remote.generateCloudId()
-            val updated = entry.local.applyCloudId( id,dto.copyDTO(generateCloudId) as D)
-            (updated as? ProjectDTO)?.let { DebugLogcatLogger.logDTOToRemote(it) }
+            val updated = entry.local.applyCloudId( id,generateCloudId)
+            DebugLogcatLogger.logDTOToRemote(updated)
             entry.remote.push(generateCloudId, updated)
         } else {
             dto.cloudId?.let { entry.remote.push(it, dto)}

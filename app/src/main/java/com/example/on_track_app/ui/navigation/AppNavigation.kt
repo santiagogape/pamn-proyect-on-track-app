@@ -18,7 +18,6 @@ import androidx.navigation.compose.composable
 import com.example.on_track_app.ui.fragments.navigable.calendar.CalendarScreen
 import com.example.on_track_app.ui.fragments.navigable.dashboard.DashboardScreen
 import com.example.on_track_app.ui.fragments.navigable.home.HomeScreen
-import com.example.on_track_app.ui.fragments.navigable.notifications.NotificationsScreen
 import com.example.on_track_app.ui.fragments.navigable.projects.ProjectsScreen
 
 data class NavItem(
@@ -104,7 +103,6 @@ fun ProjectNavigation(navHostController: NavHostController, projectId: String){
         startDestination = Destinations.TASKS
     ) {
         composable(Destinations.TASKS) { DashboardScreen(projectId = projectId) }
-        composable(Destinations.NOTIFICATIONS) { NotificationsScreen(projectId = projectId) }
         composable(Destinations.CALENDAR) { CalendarScreen(projectId = projectId) }
     }
 }

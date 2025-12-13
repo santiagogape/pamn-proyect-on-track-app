@@ -1,19 +1,20 @@
 package com.example.on_track_app.data.abstractions.repositories
 
+import com.example.on_track_app.model.Link
 import com.example.on_track_app.model.MockReminder
-import com.example.on_track_app.model.ReminderOwner
+import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.OwnerType
 import java.time.LocalDate
 import java.time.LocalTime
 
 interface ReminderRepository: BasicById<MockReminder>, IndexedByOwner<MockReminder> {
     suspend fun addReminder(
         ownerId: String,
+        ownerType: OwnerType,
         label: String,
-        date: LocalDate,
-        time: LocalTime,
-        withTime: Boolean,
-        cloudId: String?,
-        type: ReminderOwner
+        at: MockTimeField,
+        linked: Link?,
+        cloudId: String?
     ): String
     suspend fun updateReminder(
         id: String,

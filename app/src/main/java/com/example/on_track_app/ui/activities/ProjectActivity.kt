@@ -16,6 +16,7 @@ import com.example.on_track_app.ui.navigation.ProjectNavigation
 import com.example.on_track_app.ui.navigation.routes
 import com.example.on_track_app.ui.fragments.reusable.header.ProjectsHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.utils.DefaultConfig
 import com.example.on_track_app.utils.LocalConfig
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
@@ -39,8 +40,11 @@ class ProjectActivity : ComponentActivity() {
             val projectId = intent.getStringExtra("PROJECT_ID")!!
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
             val context = LocalConfigurations(config.get()!!.userID,projectId)
-            CompositionLocalProvider(LocalViewModelFactory provides factory, LocalConfig provides context) {
-                Project(project = project, projectId = projectId,darkTheme = darkTheme,
+            CompositionLocalProvider(LocalViewModelFactory provides factory, LocalConfig provides context, DefaultConfig provides config.get()!!) {
+                Project(
+                    project = project,
+                    projectId = projectId,
+                    darkTheme = darkTheme,
                     onToggleTheme = {
                         lifecycleScope.launch {
                             settings.setDarkTheme(!darkTheme)
@@ -64,7 +68,7 @@ fun Project(
         // Bottom navigation items
         val items = routes(listOf(
             Destinations.TASKS,
-            Destinations.NOTIFICATIONS
+            Destinations.CALENDAR
         ))
 
         ActivityScaffold(

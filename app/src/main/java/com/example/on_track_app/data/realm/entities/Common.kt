@@ -3,28 +3,78 @@ package com.example.on_track_app.data.realm.entities
 import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.model.Identifiable
+import com.example.on_track_app.model.Link
+import com.example.on_track_app.model.LinkedType
 import io.realm.kotlin.types.RealmInstant
 import org.mongodb.kbson.ObjectId
 
 
-
+// local references
 interface Entity {
-    val id: ObjectId
+    var id: ObjectId
 }
 
-interface Owned {
-    val ownerId: ObjectId
-    val ownerType: String
+interface UserOwnedEntity {
+    var ownerId: ObjectId
 }
 
-interface ProjectOwnership {
-    val projectId: ObjectId
+
+interface OwnershipEntity: UserOwnedEntity {
+    var ownerType: String
 }
 
-interface SynchronizableEntity {
+interface ProjectOwnershipEntity {
+    var projectId: ObjectId?
+}
+
+interface MembershipEntity {
+
+    var entityId: ObjectId
+    var membershipType: String
+
+    var memberId: ObjectId
+}
+
+interface LinkEntity {
+    var linkedTo: ObjectId?
+    var linkType: String?
+}
+
+fun LinkEntity.toLink(): Link? {
+    return if (this.linkedTo != null && this.linkType != null) {
+        Link(
+            to = this.linkedTo!!.toHexString(),
+            ofType = LinkedType.valueOf(this.linkType!!)
+        )
+    } else null
+}
+
+
+
+// remote references
+interface SynchronizableEntity: Entity {
     var cloudId: String?
     var version: RealmInstant
     var synchronizationStatus: String
+}
+
+interface SynchronizableUserOwnershipEntity: UserOwnedEntity {
+    var cloudOwnerId: String?
+}
+
+interface SynchronizableOwnershipEntity: OwnershipEntity,SynchronizableUserOwnershipEntity
+
+interface SynchronizableProjectOwnershipEntity: ProjectOwnershipEntity {
+    var cloudProjectId: String?
+}
+
+interface SynchronizableMembershipEntity: MembershipEntity {
+    var cloudEntityId: String?
+    var cloudMemberId: String?
+}
+
+interface SynchronizableLinkEntity: LinkEntity {
+    var cloudLinkedTo: String?
 }
 
 interface SyncMapperGeneric<T, DTO,DOM>
@@ -36,7 +86,7 @@ interface SyncMapperGeneric<T, DTO,DOM>
 }
 
 interface SyncMapper<RE, DTO,DOM>: SyncMapperGeneric<RE, DTO,DOM>
-        where RE : SynchronizableEntity, RE: Entity, DOM : Identifiable,
+        where RE : SynchronizableEntity, DOM : Identifiable,
               DTO : SynchronizableDTO {
     override fun toLocal(dto:DTO,entity: RE)
     override fun toDTO(entity: RE): DTO
@@ -49,6 +99,7 @@ fun SynchronizableEntity.update() {
 }
 
 fun SynchronizableEntity.delete() {
+    this.version = RealmInstant.now()
     this.synchronizationStatus = SynchronizationState.DELETED.name
 }
 

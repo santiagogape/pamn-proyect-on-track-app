@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import com.example.on_track_app.ui.activities.Main
 import com.example.on_track_app.utils.DebugLogcatLogger
+import com.example.on_track_app.utils.DefaultConfig
 import com.example.on_track_app.utils.LocalConfig
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
@@ -31,7 +32,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
             config.get()?.let { DebugLogcatLogger.logConfig(it, "main") }
-            CompositionLocalProvider(LocalViewModelFactory provides factory, LocalConfig provides config.get()!!) {
+            CompositionLocalProvider(LocalViewModelFactory provides factory, LocalConfig provides config.get()!!, DefaultConfig provides config.get()!!) {
                 Main(darkTheme = darkTheme,
                     onToggleTheme = {
                         lifecycleScope.launch {

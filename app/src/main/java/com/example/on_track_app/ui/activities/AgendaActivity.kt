@@ -30,6 +30,7 @@ import com.example.on_track_app.model.LocalConfigurations
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.utils.DefaultConfig
 import com.example.on_track_app.utils.LocalConfig
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
@@ -57,7 +58,11 @@ class AgendaActivity : ComponentActivity() {
             val conf = config.get()!!
             val context =
                 projectId?.let { LocalConfigurations(conf.userID,it) } ?: conf
-            CompositionLocalProvider(LocalViewModelFactory provides factory, LocalConfig provides context) {
+            CompositionLocalProvider(
+                LocalViewModelFactory provides factory,
+                LocalConfig provides context,
+                DefaultConfig provides config.get()!!
+            ) {
                 Agenda(darkTheme = darkTheme, {
                     lifecycleScope.launch {
                         settings.setDarkTheme(!darkTheme)
@@ -74,12 +79,14 @@ fun Agenda(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
     date: LocalDate = now(),
-    viewModel: CalendarViewModel = viewModel()
 ){
+    val viewModelFactory = LocalViewModelFactory.current
+
+    val viewModel: CalendarViewModel = viewModel(factory = viewModelFactory)
     //todo modify calendar viewmodel
     var currentDate by remember { mutableStateOf(date) }
 
-    val tasksToday by viewModel.tasksFor(currentDate)
+    val tasksToday by viewModel.eventsFor(currentDate)
         .collectAsStateWithLifecycle()
 
     OnTrackAppTheme(darkTheme = darkTheme) {
@@ -103,9 +110,11 @@ fun Agenda(
                 } else {
                     ExpandableCards(tasksToday.map { val expandable = object: Expandable {
                         override val name: String
-                            get() = it
+                            get() = it.name
                         override val description: String
-                            get() = it
+                            get() = it.description
+                        override val id: String
+                            get() = it.id
                     }
                         expandable
                     })

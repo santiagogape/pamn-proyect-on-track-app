@@ -46,5 +46,23 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
         val id = dto.cloudId ?: return
         collection.document(id).delete().await()
     }
+
+    override suspend fun getUpdatedAfter(version: Long): List<T> {
+        return collection
+            .whereGreaterThan("version", version)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(clazz) }
+    }
+
+    override suspend fun getAll(): List<T> {
+        return collection
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(clazz) }
+    }
+
 }
 

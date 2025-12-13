@@ -11,13 +11,13 @@ import io.realm.kotlin.Realm
 import kotlin.reflect.KClass
 
 class LocalConfigRepository(private val db: Realm) : UniqueRepository<LocalConfigurations>, Initializable, RealmRepository<LocalConfig>() {
-    override val klass: KClass<LocalConfig> = LocalConfig::class
+    override val localClass: KClass<LocalConfig> = LocalConfig::class
 
     override suspend fun init() {
         if (db.config() == null) {
             db.write {
                 val user = UserRealmEntity().apply {
-                    username = "LOCAL"
+                    name = "LOCAL"
                     email = "LOCAL"
                 }
 
@@ -28,7 +28,6 @@ class LocalConfigRepository(private val db: Realm) : UniqueRepository<LocalConfi
                 val managedUser = copyToRealm(user)
                 val managedProject = copyToRealm(project)
 
-                managedUser.defaultProjectId = managedProject.id
                 managedProject.ownerId = managedUser.id
 
                 val config = LocalConfig().apply {

@@ -19,8 +19,6 @@ fun Main(darkTheme: Boolean,
     OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()
 
-
-
         // Bottom navigation items
         val items = routes(listOf(
             Destinations.HOME,

@@ -34,6 +34,8 @@ fun HomeScreen(
                     get() = it
                 override val description: String
                     get() = it
+                override val id: String
+                    get() = it
             }
                 expandable
             })

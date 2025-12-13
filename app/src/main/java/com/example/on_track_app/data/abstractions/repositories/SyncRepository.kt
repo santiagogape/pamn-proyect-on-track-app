@@ -8,4 +8,6 @@ interface SyncRepository<T: SynchronizableDTO>{
     suspend fun push(cloudId:String, dto: T)
     fun generateCloudId(): String
     suspend fun delete(dto: T)
+    suspend fun getUpdatedAfter(version: Long): List<T>
+    suspend fun  getAll(): List<T>
 }

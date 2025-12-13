@@ -7,12 +7,14 @@ import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.realm.entities.delete
 import com.example.on_track_app.data.realm.utils.SynchronizationState
+import com.example.on_track_app.data.synchronization.ReferenceIntegrityManager
 import com.example.on_track_app.data.synchronization.SyncEngine
 import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.model.Identifiable
 import com.example.on_track_app.utils.DebugLogcatLogger
 import io.realm.kotlin.MutableRealm
 import io.realm.kotlin.Realm
+import io.realm.kotlin.query.RealmResults
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.TypedRealmObject
 import kotlinx.coroutines.flow.Flow
@@ -20,25 +22,52 @@ import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
 import kotlin.reflect.KClass
 
+enum class Filter{
+    ENTITY("id == $0"),
+    OWNER("ownerId == $0"),
+    PROJECT("projectId == $0"),
+    LINK("linkedTo == $0"),
+    MEMBERSHIP_ENTITY("entityId == $0"),
+    MEMBERSHIP_MEMBER("memberId == $0"),
+
+    REMOTE("cloudId == $0"),
+    REMOTE_OWNER("cloudOwnerId == $0"),
+    REMOTE_PROJECT("cloudProjectId == $0"),
+    REMOTE_LINK("cloudLinkedTo == $0"),
+    REMOTE_MEMBERSHIP_ENTITY("cloudEntityId == $0"),
+    REMOTE_MEMBERSHIP_MEMBER("cloudMemberId == $0");
+
+    val query: String
+    constructor(query:String){
+        this.query = query
+    }
+
+}
+
 abstract class RealmRepository<K> where K : TypedRealmObject, K : Entity {
 
-    abstract val klass: KClass<K>
+    abstract val localClass: KClass<K>
 
     protected fun Realm.config(): LocalConfig? = query(LocalConfig::class,"name == $0", "LOCAL_CONFIG").first().find()
 
     protected fun Realm.entity(id:String): K? =
-        query(klass, "id == $0", ObjectId(id))
+        query(localClass, Filter.ENTITY.query, ObjectId(id))
             .first()
             .find()
 
     protected fun Realm.entityByCloudId(id:String): K? =
-        query(klass, "cloudId == $0", id)
+        query(localClass, Filter.REMOTE.query, id)
             .first()
             .find()
 
     protected fun MutableRealm.entity(id: String): K? {
-        return query(klass, "id == $0", ObjectId(id))
+        return query(localClass, Filter.ENTITY.query, ObjectId(id))
             .first()
+            .find()
+    }
+
+    protected fun MutableRealm.filter(filter: Filter, id: String): RealmResults<K> {
+        return query(localClass, filter.query, ObjectId(id))
             .find()
     }
 }
@@ -48,7 +77,9 @@ interface SynchronizableRepositoryElimination<D : SynchronizableDTO> {
     suspend fun applyRemoteDelete(dto: D)
 }
 
-
+interface SynchronizedReference {
+    suspend fun synchronizeReferences(id: String, cloudId: String)
+}
 
 
 interface SynchronizableRepository<D : SynchronizableDTO>: SynchronizableRepositoryElimination<D> {
@@ -58,9 +89,14 @@ interface SynchronizableRepository<D : SynchronizableDTO>: SynchronizableReposit
     suspend fun applyRemoteUpdate(dto: D)
 
 
-    suspend fun applyCloudId(id:String,dto: D): D
+    suspend fun applyCloudId(id:String,cloudId: String): D
 
     fun attachToEngine(engine: SyncEngine)
+
+    fun canSync(id:String): Boolean
+    suspend fun getDTO(id:String): D?
+    fun getRemoteOf(id:String): String?
+
 }
 
 open class RealmSynchronizableRepository<
@@ -71,11 +107,16 @@ open class RealmSynchronizableRepository<
     protected val db: Realm,
     protected val mapper: SyncMapper<RE, DTO, DOM>,
     protected val maker: ()->RE,
-    override val klass: KClass<RE>
+    override val localClass: KClass<RE>,
+    protected val transferClass: KClass<DTO>,
+    protected val integrityManager: ReferenceIntegrityManager
 ) : RealmRepository<RE>(),
     BasicById<DOM>,
-    SynchronizableRepository<DTO> where RE: RealmObject, RE : SynchronizableEntity, RE: Entity, RE: TypedRealmObject, DOM : Identifiable,
-                                        DTO : SynchronizableDTO {
+    SynchronizableRepository<DTO>
+        where RE: RealmObject,
+              RE : SynchronizableEntity,
+              DOM : Identifiable,
+              DTO : SynchronizableDTO {
 
     protected var syncEngine: SyncEngine? = null
 
@@ -85,7 +126,7 @@ open class RealmSynchronizableRepository<
     // ---------------------------
 
     override fun getAll(): Flow<List<DOM>> =
-        db.query(klass)
+        db.query(localClass)
             .asFlow()
             .map { result -> result.list.map { mapper.toDomain(it)  } }
 
@@ -93,14 +134,12 @@ open class RealmSynchronizableRepository<
         db.entity(id)?.let { mapper.toDomain(it) }
 
     override suspend fun markAsDeleted(id: String) {
-        var dto: DTO? = null
 
         db.write {
             val local = entity(id) ?: return@write
             local.delete()
-            dto = mapper.toDTO(local)
         }
-        dto?.let { syncEngine?.onLocalChange(id, it) }
+        syncEngine?.onLocalChange(id, transferClass)
     }
 
     override suspend fun delete(id: String) {
@@ -147,25 +186,42 @@ open class RealmSynchronizableRepository<
         }
     }
 
-    // ---------------------------
-    // CLOUD ID ASSIGNATION
-    // ---------------------------
 
-    override suspend fun applyCloudId(id: String, dto: DTO): DTO {
+    /**
+     * @see canSync(id:String) at inheritors of
+     * @see RealmSynchronizableRepository
+     * @see SyncEngine.onLocalChange(id:String,clazz:KClass<D>) where D::SynchronizableDTO
+     * @exception NullPointerException might be thrown if you don check with
+     *      canSync(id) before calling this
+     */
+    override suspend fun applyCloudId(id: String, cloudId: String): DTO {
         lateinit var result: DTO
 
         db.write {
             val local = entity(id) ?: return@write
-            local.cloudId = dto.cloudId
+            local.cloudId = cloudId
             local.synchronizationStatus = SynchronizationState.CURRENT.name
             result = mapper.toDTO(local)
             DebugLogcatLogger.logRealmSaved(local)
         }
+        integrityManager.propagateOnCloudIdAssigned(result::class,id,cloudId)
         return result
     }
 
     override fun attachToEngine(engine: SyncEngine) {
         this.syncEngine = engine
+    }
+
+    override fun canSync(id: String): Boolean {
+        return false // mock --> see specifications of this class
+    }
+
+    override suspend fun getDTO(id: String): DTO? {
+        return db.entity(id)?.let { mapper.toDTO(it) }
+    }
+
+    override fun getRemoteOf(id: String): String? {
+        return db.entity(id)?.cloudId
     }
 }
 
