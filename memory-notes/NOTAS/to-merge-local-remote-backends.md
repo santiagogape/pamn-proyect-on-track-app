@@ -13,3 +13,9 @@ model/* everything has Firebase notation,
 
 ui/login/LoginScreen -> bring
 viewModels/login/LoginViewModel -> bring
+
+> from AppContainer -> usage of GoogleAuthClient(Context)
+
+> from model -> modify for my implementations
+
+

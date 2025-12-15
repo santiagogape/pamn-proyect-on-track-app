@@ -13,12 +13,10 @@ class LocalConfig: RealmObject, Config, Entity {
     override var name: String = LOCAL_CONFIG_ID
     override var id: ObjectId = ObjectId()
     var user: UserRealmEntity? = null
-    var default: ProjectRealmEntity? = null
 }
 
 fun LocalConfig.toDomain(): LocalConfigurations {
     return LocalConfigurations(
         userID = user?.id?.toHexString() ?: "",
-        defaultProjectID = default?.id?.toHexString() ?: ""
     )
 }

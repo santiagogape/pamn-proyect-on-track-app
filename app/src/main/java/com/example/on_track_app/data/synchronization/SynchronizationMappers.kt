@@ -21,7 +21,7 @@ fun EventRealmEntity.toDTO(): EventDTO =
         name = name,
         description = description,
 
-        cloudProjectId = cloudProjectId!!,
+        cloudProjectId = cloudProjectId,
         startDate = startDate.toMillis(),
         startWithTime = startWithTime,
         endDate = endDate.toMillis(),
@@ -107,7 +107,8 @@ fun ReminderRealmEntity.toDTO(): ReminderDTO =
 
         date = at.toMillis(),
         withTime = withTime,
-        label = label,
+        name = this.name,
+        description = this.description,
 
         cloudOwnerId = cloudOwnerId!!,
         ownerType = ownerType,
@@ -121,8 +122,8 @@ fun ReminderRealmEntity.toDTO(): ReminderDTO =
 fun ReminderDTO.toRealm(entity: ReminderRealmEntity) {
     entity.at = date.toRealmInstant()
     entity.withTime = withTime
-    entity.label = label
-
+    entity.name = name
+    entity.description = description
     entity.cloudOwnerId = cloudOwnerId
     entity.ownerType = ownerType
 
@@ -144,7 +145,7 @@ fun TaskRealmEntity.toDTO(): TaskDTO =
         withTime = withTime,
         description = description,
         status = status,
-        cloudProjectId = cloudProjectId!!,
+        cloudProjectId = cloudProjectId,
         version = version.toMillis(),
         deleted = synchronizationStatus == SynchronizationState.DELETED.name,
         ownerType = ownerType,

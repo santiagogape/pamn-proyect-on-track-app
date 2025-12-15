@@ -49,7 +49,7 @@ fun TimePickerField(
 
                     title = {
                         Text(
-                            "Selecciona hora",
+                            "Select hour",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(16.dp)
                         )
@@ -68,7 +68,7 @@ fun TimePickerField(
                     },
                     dismissButton = {
                         TextButton(onClick = { showDialog = false }, colors = colors) {
-                            Text("Cancelar")
+                            Text("Cancel")
                         }
                     }
                 ) {

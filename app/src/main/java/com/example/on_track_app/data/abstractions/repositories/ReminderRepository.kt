@@ -11,7 +11,8 @@ interface ReminderRepository: BasicById<MockReminder>, IndexedByOwner<MockRemind
     suspend fun addReminder(
         ownerId: String,
         ownerType: OwnerType,
-        label: String,
+        name: String,
+        description: String,
         at: MockTimeField,
         linked: Link?,
         cloudId: String?

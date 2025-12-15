@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.utils.LocalUserPFP
 import java.time.LocalDate
 
 @Composable
@@ -57,8 +58,8 @@ fun MainHeader(
     label: String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pfpUrl: String?
 ) {
+    val pfp = LocalUserPFP.current
     Header(
         startContent = { OpenRemindersIconButton() },
         centerContent = {
@@ -69,7 +70,7 @@ fun MainHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            if (pfpUrl != null) ProfilePicture(pfpUrl)
+            pfp?.let { ProfilePicture(it)}
         }
     )
 }
@@ -79,8 +80,8 @@ fun ProjectsHeader(
     label: String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pfpUrl: String? = null
 ) {
+    val pfp = LocalUserPFP.current
     Header(
         startContent = {
             BackButton()
@@ -94,7 +95,7 @@ fun ProjectsHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            if (pfpUrl != null) ProfilePicture(pfpUrl)
+            pfp?.let { ProfilePicture(it)}
         }
     )
 }
@@ -105,8 +106,8 @@ fun AgendaHeader(
     date: LocalDate,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pfpUrl: String?
 ) {
+    val pfp = LocalUserPFP.current
     Header(
         startContent = {
             BackButton()
@@ -126,7 +127,7 @@ fun AgendaHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            if (pfpUrl != null) ProfilePicture(pfpUrl)
+            pfp?.let { ProfilePicture(it)}
         }
     )
 }

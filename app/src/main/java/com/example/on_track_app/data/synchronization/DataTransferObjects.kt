@@ -1,7 +1,6 @@
 package com.example.on_track_app.data.synchronization
 
 import com.example.on_track_app.model.Described
-import com.example.on_track_app.model.Labeled
 import com.example.on_track_app.model.Named
 
 
@@ -14,7 +13,7 @@ interface SynchronizableOwnership: SynchronizableUserOwnership {
 }
 
 interface SynchronizableProjectOwnership {
-    val cloudProjectId: String
+    val cloudProjectId: String?
 }
 
 interface SynchronizableMembership {
@@ -52,7 +51,7 @@ data class EventDTO(
     override val cloudId: String? = null,
     override val name: String = "",
     override val description: String = "",
-    override val cloudProjectId: String = "",
+    override val cloudProjectId: String? = null,
     val startDate: Long = 0L,     // millis
     val startWithTime: Boolean = false,
     val endDate: Long = 0L,       // millis
@@ -104,7 +103,8 @@ data class ReminderDTO(
 
     val date: Long = 0L,
     val withTime: Boolean = false,
-    override val label: String = "",
+    override val name: String = "",
+    override val description: String = "",
 
     override val cloudOwnerId: String = "",
     override val ownerType: String = "",
@@ -115,7 +115,7 @@ data class ReminderDTO(
     override val linkType: String? = null,
 ): SynchronizableDTO,
     SynchronizableOwnership,
-    Labeled,
+    Named, Described,
     SynchronizableLink {
     override fun copyDTO(cloudId: String?): ReminderDTO = copy(cloudId = cloudId)
 }
@@ -127,7 +127,7 @@ data class TaskDTO(
     val date: Long = 0L,
     val withTime: Boolean = false,
     val status: String = "",
-    override val cloudProjectId: String = "",
+    override val cloudProjectId: String? = null,
     override val version: Long = 0L,
     override val deleted: Boolean = false,
     override val ownerType: String = "",

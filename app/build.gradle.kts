@@ -1,13 +1,14 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    id("kotlin-parcelize")
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
-    kotlin("plugin.serialization") version "1.9.0"
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.realm)
 
-}
 
+}
 
 android {
     namespace = "com.example.on_track_app"
@@ -36,18 +37,26 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
     }
-    kotlinOptions {
-        jvmTarget = "11"
+}
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
-
 }
 
 dependencies {
     // Firebase BoM
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+
+    implementation(libs.googleid)
     // Firebase dependencies: Firestore
     implementation(libs.firebase.firestore)
     implementation(libs.realm.kotlin)
@@ -65,6 +74,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.material3)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.compose.runtime)
 
 
     testImplementation(libs.junit)

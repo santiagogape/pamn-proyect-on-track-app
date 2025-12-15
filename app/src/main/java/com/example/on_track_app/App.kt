@@ -2,8 +2,8 @@ package com.example.on_track_app
 
 
 import android.app.Application
-import android.util.Log
 import com.example.on_track_app.data.abstractions.repositories.UniqueRepository
+import com.example.on_track_app.data.auth.GoogleAuthClient
 import com.example.on_track_app.data.firebase.FirestoreService
 import com.example.on_track_app.data.firebase.FirestoreSyncRepository
 import com.example.on_track_app.data.realm.RealmDatabase
@@ -47,14 +47,22 @@ import com.example.on_track_app.model.MockProject
 import com.example.on_track_app.model.MockReminder
 import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockUser
-import com.example.on_track_app.utils.DebugLogcatLogger
+import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.viewModels.CreationViewModel
 import com.example.on_track_app.viewModels.factory.ViewModelsFactoryMock
+import com.example.on_track_app.viewModels.login.LoginViewModel
 import com.example.on_track_app.viewModels.main.CalendarViewModel
-import com.example.on_track_app.viewModels.main.NotificationsViewModel
-import com.example.on_track_app.viewModels.main.ProjectsViewModel
-import com.example.on_track_app.viewModels.main.TasksViewModel
-import kotlinx.coroutines.*
+import com.example.on_track_app.viewModels.main.HomeViewModel
+import com.example.on_track_app.viewModels.raw.EventsViewModel
+import com.example.on_track_app.viewModels.raw.GroupsViewModel
+import com.example.on_track_app.viewModels.raw.MembershipsViewModel
+import com.example.on_track_app.viewModels.raw.ProjectsViewModel
+import com.example.on_track_app.viewModels.raw.RemindersViewModel
+import com.example.on_track_app.viewModels.raw.TasksViewModel
+import com.example.on_track_app.viewModels.raw.UsersViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 class OnTrackApp : Application() {
 
@@ -64,6 +72,10 @@ class OnTrackApp : Application() {
 
     lateinit var localConfig: UniqueRepository<LocalConfigurations>
 
+    lateinit var currentOwnership: OwnershipContext
+    lateinit var authViewModelFactory: ()-> LoginViewModel
+    lateinit var authenticationCheck: () -> MockUser?
+
 
     override fun onCreate() {
         super.onCreate()
@@ -72,16 +84,18 @@ class OnTrackApp : Application() {
         // coroutine scope for global services and coroutines
         applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+
+
+
         //init
         val localConfigRepo = LocalConfigRepository(RealmDatabase.realm)
-        runBlocking(Dispatchers.IO) {
-            localConfigRepo.init()
-        }
+
         localConfig = localConfigRepo
-        localConfig.get()?.let { DebugLogcatLogger.logConfig(it, "app") }
+        currentOwnership = OwnershipContext("",null,null)
 
 
         val integrityManager = ReferenceIntegrityManager(mutableMapOf())
+
 
 
 
@@ -238,31 +252,47 @@ class OnTrackApp : Application() {
             mapOf(
                 CreationViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = CreationViewModel::class.java,
-                    creator = { CreationViewModel(repoProject, repoEvent, repoTask) }
+                    creator = { CreationViewModel(repoProject, repoEvent, repoTask,repoReminder) }
+                ),
+                UsersViewModel::class to ViewModelsFactoryMock.FactoryEntry(
+                    vmClass = UsersViewModel::class.java,
+                    creator = { UsersViewModel(repoUser) }
+                ),
+                GroupsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
+                    vmClass = GroupsViewModel::class.java,
+                    creator = { GroupsViewModel(repoGroup) }
                 ),
                 ProjectsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = ProjectsViewModel::class.java,
-                    creator = { ProjectsViewModel(repoProject, localConfigRepo) }
+                    creator = { ProjectsViewModel(repoProject) }
+                ),
+                MembershipsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
+                    vmClass = MembershipsViewModel::class.java,
+                    creator = { MembershipsViewModel(repoMembership) }
                 ),
                 TasksViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = TasksViewModel::class.java,
                     creator = { TasksViewModel(repoTask) }
                 ),
+                EventsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
+                    vmClass = EventsViewModel::class.java,
+                    creator = { EventsViewModel(repoEvent) }
+                ),
+                RemindersViewModel::class to ViewModelsFactoryMock.FactoryEntry(
+                    vmClass = RemindersViewModel::class.java,
+                    creator = { RemindersViewModel(repoReminder) }
+                ),
                 CalendarViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = CalendarViewModel::class.java,
                     creator = { CalendarViewModel(repoEvent) }
-                ),
-                NotificationsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
-                    vmClass = NotificationsViewModel::class.java,
-                    creator = { NotificationsViewModel(repoEvent) }
+                ), HomeViewModel::class to ViewModelsFactoryMock.FactoryEntry(
+                    vmClass = HomeViewModel::class.java,
+                    creator = { HomeViewModel() }
                 )
             )
         )
 
 
-
-
-        // Sync Repository Factory for Sync Engine
         val syncRepositoryFactory by lazy {
             SyncRepositoryFactory(
                 listOf(
@@ -271,17 +301,34 @@ class OnTrackApp : Application() {
                         local = repoUser,
                         remote = remoteUserRepo),
                     SyncRepositoryEntry(
+                        dtoClass = GroupDTO::class,
+                        local = repoGroup,
+                        remote = remoteGroupRepo
+                    ),
+                    SyncRepositoryEntry(
                         dtoClass = ProjectDTO::class,
                         local = repoProject,
                         remote = remoteProjectRepo
-                    ),SyncRepositoryEntry(
-                        dtoClass = EventDTO::class,
-                        local = repoEvent,
-                        remote = remoteEventRepo
-                    ),SyncRepositoryEntry(
+                    ),
+                    SyncRepositoryEntry(
+                        dtoClass = MembershipDTO::class,
+                        local = repoMembership,
+                        remote = remoteMembershipRepo
+                    ),
+                    SyncRepositoryEntry(
                         dtoClass = TaskDTO::class,
                         local = repoTask,
                         remote = remoteTaskRepo
+                    ),
+                    SyncRepositoryEntry(
+                        dtoClass = EventDTO::class,
+                        local = repoEvent,
+                        remote = remoteEventRepo
+                    ),
+                    SyncRepositoryEntry(
+                        dtoClass = ReminderDTO::class,
+                        local = repoReminder,
+                        remote = remoteReminderRepo
                     )
                 )
             )
@@ -294,24 +341,16 @@ class OnTrackApp : Application() {
                 scope = applicationScope
             )
         }
+        val auth = GoogleAuthClient(this)
+        val configRepo = LocalConfigRepository(RealmDatabase.realm)
+        authViewModelFactory = {LoginViewModel(
+            configRepo,
+            auth,
+            syncEngine
+        )}
 
-        syncEngine.start()
+        authenticationCheck = {if(configRepo.ready()) repoUser.getById(configRepo.get().userID) else auth.getUser()}
 
-        // forcing to sync user -> todo not do this
-        runBlocking(Dispatchers.IO){
-
-            localConfig.get()?.let {
-                Log.d("SyncDebug","\nuser:${it.userID}\n\n")
-                syncEngine.onLocalChange(it.userID,UserDTO::class)
-            }
-        }
-
-        runBlocking(Dispatchers.IO){
-            localConfig.get()?.let {
-                Log.d("SyncDebug","\nproject:${it.defaultProjectID}\n\n")
-                syncEngine.onLocalChange(it.defaultProjectID,ProjectDTO::class)
-            }
-        }
     }
 }
 

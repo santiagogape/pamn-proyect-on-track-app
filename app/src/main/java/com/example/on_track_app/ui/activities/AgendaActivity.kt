@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,23 +19,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.OnTrackApp
 import com.example.on_track_app.R
-import com.example.on_track_app.model.Expandable
-import com.example.on_track_app.model.LocalConfigurations
+import com.example.on_track_app.model.toExpandable
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
-import com.example.on_track_app.utils.DefaultConfig
 import com.example.on_track_app.utils.LocalConfig
+import com.example.on_track_app.utils.LocalOwnership
 import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.utils.SettingsDataStore
 import com.example.on_track_app.viewModels.main.CalendarViewModel
+import com.example.on_track_app.viewModels.main.ItemStatus
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDate.now
@@ -54,20 +55,23 @@ class AgendaActivity : ComponentActivity() {
         setContent {
             val date = LocalDate.parse(intent.getStringExtra("LOCAL_DATE")!!)
             val projectId = intent.getStringExtra("PROJECT_ID")
+            val groupId = intent.getStringExtra("GROUP_ID")
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
-            val conf = config.get()!!
-            val context =
-                projectId?.let { LocalConfigurations(conf.userID,it) } ?: conf
+            val conf = config.get()
+            val context = OwnershipContext(conf.userID,projectId,groupId)
             CompositionLocalProvider(
                 LocalViewModelFactory provides factory,
-                LocalConfig provides context,
-                DefaultConfig provides config.get()!!
+                LocalConfig provides conf,
+                LocalOwnership provides context
             ) {
-                Agenda(darkTheme = darkTheme, {
+                Agenda(
+                    darkTheme = darkTheme,{
                     lifecycleScope.launch {
                         settings.setDarkTheme(!darkTheme)
                     }
-                }, date = date)
+                },
+                    date = date
+                )
             }
 
         }
@@ -81,10 +85,10 @@ fun Agenda(
     date: LocalDate = now(),
 ){
     val viewModelFactory = LocalViewModelFactory.current
+    var currentDate by remember { mutableStateOf(date) }
 
     val viewModel: CalendarViewModel = viewModel(factory = viewModelFactory)
     //todo modify calendar viewmodel
-    var currentDate by remember { mutableStateOf(date) }
 
     val tasksToday by viewModel.eventsFor(currentDate)
         .collectAsStateWithLifecycle()
@@ -92,7 +96,7 @@ fun Agenda(
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
             header = {
-                AgendaHeader(currentDate,darkTheme,onToggleTheme,null)
+                AgendaHeader(currentDate,darkTheme,onToggleTheme)
                      },
             footer = { NextPrev(
                 { currentDate = currentDate.minusDays(1) },
@@ -105,32 +109,20 @@ fun Agenda(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (tasksToday.isEmpty()){
-                    Text(text = stringResource(R.string.no_tasks_today), style = MaterialTheme.typography.headlineSmall)
-                } else {
-                    ExpandableCards(tasksToday.map { val expandable = object: Expandable {
-                        override val name: String
-                            get() = it.name
-                        override val description: String
-                            get() = it.description
-                        override val id: String
-                            get() = it.id
-                    }
-                        expandable
-                    })
+                when (val state = tasksToday){
+                    ItemStatus.Error -> {}
+                    ItemStatus.Loading -> CircularProgressIndicator()
+                    is ItemStatus.Success ->
+                        if (state.elements.isEmpty()){
+                            Text(text = stringResource(R.string.no_tasks_today), style = MaterialTheme.typography.headlineSmall)
+                        } else {
+                            ExpandableCards(state.elements.map { it.toExpandable() })
+                        }
                 }
             }
 
         }
 
 
-    }
-}
-
-@Preview
-@Composable
-fun Prev(){
-    OnTrackAppTheme(darkTheme = false) {
-           Agenda(false,{})
     }
 }

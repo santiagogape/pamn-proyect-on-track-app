@@ -25,17 +25,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.on_track_app.model.MockProject
+import com.example.on_track_app.ui.fragments.reusable.Selector
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
 import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
+import com.example.on_track_app.viewModels.main.ItemStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -48,6 +51,8 @@ enum class DateType {
 
 @Composable
 fun EventCreation(
+    defaultProject: MockProject?,
+    availableProjects: ItemStatus<List<MockProject>>,
     onDismiss: () -> Unit,
     onSubmit: (String, String, String?, LocalDateTime, LocalDateTime) -> Unit
 ) {
@@ -62,7 +67,7 @@ fun EventCreation(
 
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var project by remember { mutableStateOf("") }
+    var project by remember { mutableStateOf<String?>("") }
     val start: LocalDateTime by remember { derivedStateOf {
         if (oneDayEvent) LocalDateTime.of(startDate, LocalTime.of(0,0))
         else LocalDateTime.of(startDate,startTime)
@@ -72,10 +77,6 @@ fun EventCreation(
         else LocalDateTime.of(endDate,endTime)
     }}
 
-
-
-
-    
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -149,14 +150,14 @@ fun EventCreation(
                                     colors = colors
                                 )
 
-                                OutlinedTextField(
-                                    value = project,
-                                    onValueChange = { project = it },
-                                    label = { Text("Project (optional)") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = colors
-                                )
+                                Selector(
+                                    colors,
+                                    availableProjects,
+                                    defaultProject,
+                                    "Select a Project (Optional)",
+                                    "Selection",
+                                    "No project selected"
+                                ){  project = it?.id }
                             }
 
                             Row(modifier = Modifier.fillMaxWidth(),
@@ -209,7 +210,7 @@ fun EventCreation(
                                 Button(
                                     onClick = {
                                         onSubmit(
-                                            name, description, project.ifBlank { null },
+                                            name, description, project,
                                             start,end
                                         )
                                     },
@@ -221,6 +222,7 @@ fun EventCreation(
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Text("Submit")
+
                                 }
                             }
                         }

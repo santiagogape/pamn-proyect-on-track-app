@@ -6,9 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// === Tipografía base ===
-// Aquí puedes reemplazar FontFamily.Default por una fuente personalizada
-// (por ejemplo, FontFamily(Font(R.font.roboto_regular))) si agregas archivos a res/font.
 
 val Typography = Typography(
 

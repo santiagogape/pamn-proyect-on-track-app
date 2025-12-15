@@ -5,6 +5,7 @@ enum class LinkedType {
     EVENT
 }
 
+
 enum class OwnerType {
     GROUP,
     USER

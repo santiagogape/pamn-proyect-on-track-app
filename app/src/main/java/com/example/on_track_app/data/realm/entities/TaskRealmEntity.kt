@@ -43,7 +43,7 @@ fun TaskRealmEntity.toDomain(): MockTask {
     return MockTask(
         id = id.toHexString(),
         name = name,
-        date = MockTimeField(
+        due = MockTimeField(
             instant = date.toInstant(),
             timed = withTime
         ),

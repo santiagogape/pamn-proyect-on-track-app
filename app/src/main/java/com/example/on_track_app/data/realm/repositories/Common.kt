@@ -48,13 +48,12 @@ abstract class RealmRepository<K> where K : TypedRealmObject, K : Entity {
 
     abstract val localClass: KClass<K>
 
-    protected fun Realm.config(): LocalConfig? = query(LocalConfig::class,"name == $0", "LOCAL_CONFIG").first().find()
+    protected fun Realm.config(): LocalConfig? = query(LocalConfig::class).first().find()
 
     protected fun Realm.entity(id:String): K? =
         query(localClass, Filter.ENTITY.query, ObjectId(id))
             .first()
             .find()
-
     protected fun Realm.entityByCloudId(id:String): K? =
         query(localClass, Filter.REMOTE.query, id)
             .first()
@@ -132,6 +131,11 @@ open class RealmSynchronizableRepository<
 
     override fun getById(id: String): DOM? =
         db.entity(id)?.let { mapper.toDomain(it) }
+
+    override fun liveById(id: String): Flow<DOM?> {
+        return db.query(localClass, Filter.ENTITY.query, ObjectId(id)).first()
+            .asFlow().map { it.obj?.let { obj -> mapper.toDomain(obj) } }
+    }
 
     override suspend fun markAsDeleted(id: String) {
 

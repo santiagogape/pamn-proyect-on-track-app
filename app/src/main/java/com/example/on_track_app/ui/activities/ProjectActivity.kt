@@ -7,19 +7,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.on_track_app.OnTrackApp
-import com.example.on_track_app.model.LocalConfigurations
+import com.example.on_track_app.ui.fragments.reusable.header.ProjectsHeader
 import com.example.on_track_app.ui.navigation.Destinations
 import com.example.on_track_app.ui.navigation.ProjectNavigation
 import com.example.on_track_app.ui.navigation.routes
-import com.example.on_track_app.ui.fragments.reusable.header.ProjectsHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
-import com.example.on_track_app.utils.DefaultConfig
 import com.example.on_track_app.utils.LocalConfig
+import com.example.on_track_app.utils.LocalOwnership
 import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.viewModels.raw.ProjectsViewModel
 import kotlinx.coroutines.launch
 
 class ProjectActivity : ComponentActivity() {
@@ -36,20 +39,30 @@ class ProjectActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val project = intent.getStringExtra("PROJECT")!!
+            val conf = config.get()
+            val projectName = intent.getStringExtra("PROJECT")!!
             val projectId = intent.getStringExtra("PROJECT_ID")!!
+            val groupId = intent.getStringExtra("GROUP_ID")
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
-            val context = LocalConfigurations(config.get()!!.userID,projectId)
-            CompositionLocalProvider(LocalViewModelFactory provides factory, LocalConfig provides context, DefaultConfig provides config.get()!!) {
+            val context = OwnershipContext(
+                conf.userID,
+                projectId,
+                groupId
+            )
+            CompositionLocalProvider(
+                LocalViewModelFactory provides factory,
+                LocalConfig provides conf,
+                LocalOwnership provides context
+            ) {
                 Project(
-                    project = project,
-                    projectId = projectId,
+                    label = projectName,
                     darkTheme = darkTheme,
                     onToggleTheme = {
                         lifecycleScope.launch {
                             settings.setDarkTheme(!darkTheme)
                         }
-                    })
+                    }
+                )
             }
         }
     }
@@ -57,11 +70,13 @@ class ProjectActivity : ComponentActivity() {
 
 @Composable
 fun Project(
+    label:String,
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    project: String,
-    projectId: String
 ) {
+    val viewModel: ProjectsViewModel = viewModel(factory = LocalViewModelFactory.current)
+
+    val project by LocalOwnership.current.currentProject!!.let { viewModel.liveProject(it).collectAsStateWithLifecycle() }
     OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()
 
@@ -73,11 +88,11 @@ fun Project(
 
         ActivityScaffold(
             header = {
-                ProjectsHeader(project,darkTheme,onToggleTheme,null)
+                ProjectsHeader(project?.name ?: label,darkTheme,onToggleTheme)
                 },
             footer = { NavBar(navController,items) }
         ){
-            ProjectNavigation(navController,projectId)
+            ProjectNavigation(navController)
         }
 
 

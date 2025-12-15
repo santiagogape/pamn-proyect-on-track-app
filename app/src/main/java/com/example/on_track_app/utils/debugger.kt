@@ -6,20 +6,22 @@ import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.model.CloudIdentifiable
 import com.example.on_track_app.model.Identifiable
-import com.example.on_track_app.model.LocalConfigurations
+import com.example.on_track_app.model.MockUser
 import com.example.on_track_app.model.Named
 
 object DebugLogcatLogger {
 
     private const val TAG = "SyncDebug"
 
-    fun logConfig(conf: LocalConfigurations, where: String){
+    fun logConfig(conf: MockUser, where: String){
         Log.d(
             TAG,
             """
             ---- LOCAL CONFIG at $where ----
-            userID: ${conf.userID}
-            defaultProjectID: ${conf.defaultProjectID}
+            userID: ${conf.id}
+            name: ${conf.name}
+            email: ${conf.email}
+            cloudId: ${conf.cloudId}
             --------------------------------
             """)
     }

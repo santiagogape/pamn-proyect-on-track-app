@@ -17,9 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
-import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.utils.LocalThemeExtensions
 
 
 @Composable
@@ -29,59 +29,53 @@ fun ExpandableCardItem(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val mod = modifier
-        .fillMaxWidth()
+    val extensions = LocalThemeExtensions.current
+
     Card(
-        modifier = mod
-            .animateContentSize(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
-        )
-    ){
-        Card(
-            onClick = { expanded = !expanded },
-            modifier = mod
-                .padding(end = 5.dp, bottom = 5.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primary
+        onClick = { expanded = !expanded },
+        modifier = modifier
+            .shadow(
+                elevation = 10.dp,
+                shape = RoundedCornerShape(20.dp),
+                clip = false,
+                ambientColor = extensions.shadow,
+                spotColor = extensions.shadow
             )
+            .fillMaxWidth()
+            .animateContentSize(),
+
+        shape = RoundedCornerShape(20.dp),
+
+        // 4. DISABLE NATIVE ELEVATION: Set to 0 so we only see your manual shadow
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+
+            if (expanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
+                    text = content,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
-
-                // Espacio cuando expandido
-                if (expanded) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
             }
         }
     }
-
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ExpandableCardItemPreview() {
-    OnTrackAppTheme(darkTheme = false) {
-        ExpandableCardItem(
-            title = "Título de ejemplo",
-            content = "Este es el contenido que aparece al expandir la tarjeta. "
-        )
-    }
-}
+
+
 

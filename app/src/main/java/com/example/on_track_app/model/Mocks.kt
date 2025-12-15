@@ -50,10 +50,6 @@ interface Described {
     val description: String
 }
 
-interface Labeled {
-    val label: String
-}
-
 data class Link(
     val to: String ,//id
     val ofType: LinkedType
@@ -70,14 +66,14 @@ data class MockReminder(
     override val id: String,
     override val ownerId: String,
     override val ownerType: OwnerType,
-    override val label: String,
+    override val name: String,
+    override val description: String,
     val at: MockTimeField,
     val linked: Link?,
-    override val cloudId: String?
+    override val cloudId: String?,
 ): Identifiable,
     Ownership,
-    Labeled,
-    CloudIdentifiable
+    CloudIdentifiable, Named, Described
 
 data class MockEvent(
     override val id: String,
@@ -103,7 +99,7 @@ data class MockTask (
     override val projectId: String?,
     override val name: String,
     override val description: String,
-    val date: MockTimeField,
+    val due: MockTimeField,
     override val cloudId: String? = null,
 ): Identifiable,
     Ownership,

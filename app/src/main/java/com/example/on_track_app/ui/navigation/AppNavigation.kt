@@ -97,12 +97,12 @@ fun AppNavigation(navController: NavHostController) {
 }
 
 @Composable
-fun ProjectNavigation(navHostController: NavHostController, projectId: String){
+fun ProjectNavigation(navHostController: NavHostController){
     NavHost(
         navController = navHostController,
         startDestination = Destinations.TASKS
     ) {
-        composable(Destinations.TASKS) { DashboardScreen(projectId = projectId) }
-        composable(Destinations.CALENDAR) { CalendarScreen(projectId = projectId) }
+        composable(Destinations.TASKS) { DashboardScreen() }
+        composable(Destinations.CALENDAR) { CalendarScreen() }
     }
 }

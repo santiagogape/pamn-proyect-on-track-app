@@ -36,10 +36,8 @@ fun daysOfMonthGrid(month: YearMonth): List<CalendarDay> {
     val firstOfMonth = month.atDay(1)
     val daysInMonth = month.lengthOfMonth()
 
-    // DayOfWeek va de MONDAY=1 a SUNDAY=7 (depende de tu Locale)
     val firstDayOfWeek = firstOfMonth.dayOfWeek.value  // 1..7
 
-    // Normalizar para que el calendario empiece en Lunes
     val shift = (firstDayOfWeek - DayOfWeek.MONDAY.value).let {
         if (it < 0) it + 7 else it
     }
@@ -65,7 +63,6 @@ fun daysOfMonthGrid(month: YearMonth): List<CalendarDay> {
         )
     }
 
-    // 3) Días del mes siguiente para completar la fila
     if (result.size == 35) return result
     val total = when {
         result.size < 35 -> 35

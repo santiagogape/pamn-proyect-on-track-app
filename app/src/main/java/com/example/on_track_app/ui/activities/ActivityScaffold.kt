@@ -28,6 +28,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,24 +41,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.on_track_app.model.OwnerType
-import com.example.on_track_app.ui.fragments.dialogs.EventCreation
-import com.example.on_track_app.ui.fragments.dialogs.ProjectCreation
-import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
+import com.example.on_track_app.ui.fragments.dialogs.GlobalDialogCoordinator
 import com.example.on_track_app.ui.navigation.NavItem
 import com.example.on_track_app.ui.navigation.isOnDestination
-import com.example.on_track_app.utils.LocalConfig
-import com.example.on_track_app.utils.LocalViewModelFactory
-import com.example.on_track_app.viewModels.CreationViewModel
+import com.example.on_track_app.utils.LocalOwnership
 
 enum class Dialogs {
-    TASK, EVENT, PROJECT, NONE
+    TASK, EVENT, PROJECT, NONE, REMINDER
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,16 +64,15 @@ fun ActivityScaffold(
     footer: @Composable (()-> Unit),
     navigationTarget: @Composable (() -> Unit)
 ) {
-    val viewModelFactory = LocalViewModelFactory.current
-    val localConfig = LocalConfig.current
-    val creator: CreationViewModel = viewModel(factory = viewModelFactory)
     var showMenu by remember { mutableStateOf(false) }
-
     var dialog by remember {mutableStateOf(Dialogs.NONE)}
+    val ownership = LocalOwnership.current
+    val snackBarHostState = remember { SnackbarHostState() }
 
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
             TopAppBar(
                 title = { header() },
@@ -113,43 +110,25 @@ fun ActivityScaffold(
         ) {
             navigationTarget()
 
-            when (dialog) {
-                Dialogs.TASK -> {
-                    TaskCreation(
-                        onDismiss = { dialog = Dialogs.NONE },
-                        onSubmit = { name, description, project, date, hour, minute ->
-                            dialog = Dialogs.NONE
-                            creator.addNewTask(name, description, project ?: localConfig.defaultProjectID,localConfig.userID,
-                                OwnerType.USER, date, hour, minute)
-                        }
-                    )
-                }
-                Dialogs.EVENT -> {
-                    EventCreation(
-                        onDismiss = { dialog = Dialogs.NONE },
-                        onSubmit = { name, description, project, startDateTime, endDateTime ->
-                            dialog = Dialogs.NONE
-                            creator.addNewEvent(name, description, project ?: localConfig.defaultProjectID, localConfig.userID,
-                                OwnerType.USER,startDateTime, endDateTime) //todo: correct hardcoded "DEFAULT" projectID
-                        }
-                    )
-                }
-                Dialogs.PROJECT -> {
-                    ProjectCreation(
-                        onDismiss = {dialog = Dialogs.NONE}
-                    ) { name, description ->
-                        creator.addNewProject(name, description,localConfig.userID)
-                        dialog = Dialogs.NONE }
-                }
-                Dialogs.NONE -> {}
+            if (dialog != Dialogs.NONE) {
+                GlobalDialogCoordinator(
+                    activeDialog = dialog,
+                    onDismiss = { dialog = Dialogs.NONE },
+                    snackBarHostState = snackBarHostState
+                )
             }
             if (showMenu) {
+                val density = LocalDensity.current
+                val offsetPx = remember(density) {
+                    with(density) { -45.dp.roundToPx() }
+                }
                 Popup(
                     alignment = Alignment.BottomCenter,
+                    offset = IntOffset(0, offsetPx),
                     onDismissRequest = { showMenu = false },
                     properties = PopupProperties(clippingEnabled = false)
                 ) {
-                    Box(modifier = Modifier.offset(y = (-40).dp)) {
+                    Box {
                         Surface(
                             modifier = Modifier.width(280.dp),
                             shape = RoundedCornerShape(16.dp),
@@ -157,7 +136,7 @@ fun ActivityScaffold(
                             shadowElevation = 6.dp
                         ) {
                             androidx.compose.foundation.layout.Column(
-                                modifier = Modifier.padding(top = 30.dp, bottom = 16.dp)
+                                modifier = Modifier.padding(top = 20.dp, bottom = 20.dp)
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("NEW TASK") },
@@ -167,6 +146,15 @@ fun ActivityScaffold(
                                     },
                                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
                                 )
+                                if (ownership.currentProject == null)
+                                    DropdownMenuItem(
+                                        text = { Text("NEW PROJECT") },
+                                        onClick = {
+                                            showMenu = false
+                                            dialog = Dialogs.PROJECT
+                                        },
+                                        leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
+                                    )
                                 DropdownMenuItem(
                                     text = { Text("NEW EVENT") },
                                     onClick = {
@@ -176,9 +164,11 @@ fun ActivityScaffold(
                                     leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("NEW PROJECT") },
-                                    onClick = { showMenu = false
-                                        dialog = Dialogs.PROJECT },
+                                    text = { Text("NEW REMINDER") },
+                                    onClick = {
+                                        showMenu = false
+                                        dialog = Dialogs.REMINDER
+                                    },
                                     leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
                                 )
                             }
@@ -238,10 +228,10 @@ fun NextPrev(onPreviousDay: () -> Unit, onNextDay: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onPreviousDay) {
-            Icon(Icons.Default.ChevronLeft, contentDescription = "Día anterior")
+            Icon(Icons.Default.ChevronLeft, contentDescription = "Previous day")
         }
         IconButton(onClick = onNextDay) {
-            Icon(Icons.Default.ChevronRight, contentDescription = "Día siguiente")
+            Icon(Icons.Default.ChevronRight, contentDescription = "Next day")
         }
     }
 }

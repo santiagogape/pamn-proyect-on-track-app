@@ -33,7 +33,7 @@ fun CalendarHeader(
         IconButton(onClick = onPreviousMonth) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Mes anterior"
+                contentDescription = "Previous month"
             )
         }
 
@@ -47,7 +47,7 @@ fun CalendarHeader(
         IconButton(onClick = onNextMonth) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Mes siguiente"
+                contentDescription = "Next month"
             )
         }
     }

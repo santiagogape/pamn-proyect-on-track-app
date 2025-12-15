@@ -14,10 +14,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
-import com.example.on_track_app.utils.DebugLogcatLogger
-import com.example.on_track_app.utils.DefaultConfig
+import com.example.on_track_app.utils.LocalOwnership
 import com.example.on_track_app.utils.LocalViewModelFactory
-import com.example.on_track_app.viewModels.main.ProjectsViewModel
+import com.example.on_track_app.viewModels.main.ItemStatus
+import com.example.on_track_app.viewModels.raw.ProjectsViewModel
 
 
 @Composable
@@ -28,10 +28,9 @@ fun ProjectsScreen(
     val viewModel: ProjectsViewModel = viewModel(factory = viewModelFactory)
 
     val context = LocalContext.current
-    val default = DefaultConfig.current
+    val default = LocalOwnership.current
+    val projects by viewModel.projects().collectAsStateWithLifecycle()
     val text by viewModel.text.collectAsStateWithLifecycle()
-    val items by viewModel.items.collectAsStateWithLifecycle()
-    val projects by viewModel.projects(default.defaultProjectID).collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -39,17 +38,22 @@ fun ProjectsScreen(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (items.isEmpty()){
-            Text(text = text, style = MaterialTheme.typography.headlineSmall)
-        } else {
-            projects.forEach { DebugLogcatLogger.logMockProject(it) }
-            StaticCards(projects) { projectId,projectName ->
-                val intent = Intent(context, ProjectActivity::class.java)
-                intent.putExtra("PROJECT", projectName)
-                intent.putExtra("PROJECT_ID", projectId)
-                context.startActivity(intent)
+        when(val state = projects){
+            ItemStatus.Loading -> CircularProgressIndicator()
+            ItemStatus.Error -> {}
+            is ItemStatus.Success -> {
+                if (state.elements.isEmpty()) {
+                    Text(text = text, style = MaterialTheme.typography.headlineSmall)
+                } else {
+                    StaticCards(state.elements) { projectId,projectName ->
+                        val intent = Intent(context, ProjectActivity::class.java)
+                        intent.putExtra("PROJECT", projectName)
+                        intent.putExtra("PROJECT_ID", projectId)
+                        intent.putExtra("GROUP_ID", default.currentGroup)
+                        context.startActivity(intent)
+                    }
+                }
             }
-
         }
     }
 }

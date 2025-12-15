@@ -38,7 +38,8 @@ class RealmReminderRepository (
     override suspend fun addReminder(
       ownerId: String,
       ownerType: OwnerType,
-      label: String,
+      name: String,
+      description: String,
       at: MockTimeField,
       linked: Link?,
       cloudId: String?
@@ -51,7 +52,8 @@ class RealmReminderRepository (
             val newReminder = ReminderRealmEntity().apply {
                 this.ownerId = ownerId.toObjectId()
                 this.ownerType = ownerType.name
-                this.label = label
+                this.name = name
+                this.description = description
                 this.at = at.instant.toRealmInstant()
                 this.withTime = at.timed
                 this.cloudId = cloudId

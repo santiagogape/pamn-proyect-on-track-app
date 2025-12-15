@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,27 +33,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.on_track_app.model.MockProject
+import com.example.on_track_app.ui.fragments.reusable.Selector
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
 import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
+import com.example.on_track_app.viewModels.main.ItemStatus
 import java.time.LocalDate
 import java.time.LocalDate.now
 
+@OptIn(ExperimentalMaterial3Api::class) // Required for ExposedDropdownMenuBox
 @Composable
 fun TaskCreation(
+    defaultProject: MockProject?,
+    availableProjects: ItemStatus<List<MockProject>>,
     onDismiss: () -> Unit,
     onSubmit: (String, String, String?, LocalDate, Int?, Int?) -> Unit
 ) {
-    var deadlineOpen by remember {mutableStateOf(false)}
+    var deadlineOpen by remember { mutableStateOf(false) }
 
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var project by remember { mutableStateOf("") }
+
+    var selectedProject by remember { mutableStateOf<MockProject?>(null) }
+
     var date by remember { mutableStateOf(now()) }
     var hour by remember { mutableIntStateOf(-1) }
     var minute by remember { mutableIntStateOf(-1) }
-    var pickHour by remember {mutableStateOf(false)}
+    var pickHour by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -74,11 +83,12 @@ fun TaskCreation(
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
-                ){
+                ) {
                     IconButton(
                         modifier = Modifier.align(Alignment.CenterStart),
-                        onClick = onDismiss) {
-                        Icon(Icons.Filled.Close,null)
+                        onClick = onDismiss
+                    ) {
+                        Icon(Icons.Filled.Close, null)
                     }
                     // TITLE
                     Text(
@@ -88,47 +98,41 @@ fun TaskCreation(
                     )
                 }
 
-                if (deadlineOpen){
+                if (deadlineOpen) {
                     Calendar(mapOf()) { chosen ->
                         date = chosen
                         deadlineOpen = false
                     }
                 } else {
-                    OutlinedTextFieldColors {
-                        colors ->
-                            OutlinedTextField(
-                                value = name,
-                                onValueChange = { name = it },
-                                label = { Text("Name *") },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                isError = name.isEmpty(),
-                                colors = colors
-                            )
+                    OutlinedTextFieldColors { colors ->
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text("Name *") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            isError = name.isEmpty(),
+                            colors = colors
+                        )
 
-                            OutlinedTextField(
-                                value = description,
-                                onValueChange = { description = it },
-                                label = { Text("Description *") },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 80.dp, max = 250.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                isError = description.isEmpty(),
-                                colors = colors
-                            )
+                        OutlinedTextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            label = { Text("Description *") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 80.dp, max = 250.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            isError = description.isEmpty(),
+                            colors = colors
+                        )
 
-                            OutlinedTextField(
-                                value = project,
-                                onValueChange = { project = it },
-                                label = { Text("Project (optional)") },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = colors
-                            )
+                        // 4. THE PROJECT DROPDOWN
+                        Selector(colors,availableProjects,defaultProject, "Select a Project (Optional)","Selection","No project selected"){
+                            selectedProject = it
+                        }
                     }
-
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -136,15 +140,14 @@ fun TaskCreation(
                     ) {
                         DateTimeField(
                             onOpenCalendar = { deadlineOpen = true },
-                            onTime = { h, m -> hour=h; minute = m },
+                            onTime = { h, m -> hour = h; minute = m },
                             withTime = pickHour,
-                            label = "Deadline\n" + date.toString().split("-").reversed().joinToString("/")
+                            label = "Deadline\n" + date.toString().split("-").reversed()
+                                .joinToString("/")
                         )
                     }
 
-
                     Spacer(modifier = Modifier.height(8.dp))
-
 
                     // BUTTON ROW
                     Row(
@@ -152,16 +155,15 @@ fun TaskCreation(
                         horizontalArrangement = Arrangement.SpaceBetween
                     )
                     {
-                        ButtonColors {
-                                colors ->
+                        ButtonColors { colors ->
                             Button(
-                                onClick = {pickHour = !pickHour},
+                                onClick = { pickHour = !pickHour },
                                 colors = colors,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text("with time")
-                                if (pickHour) Icon(Icons.Filled.Check,null)
-                                else Icon(Icons.Filled.Close,null)
+                                if (pickHour) Icon(Icons.Filled.Check, null)
+                                else Icon(Icons.Filled.Close, null)
                             }
                         }
 
@@ -172,10 +174,10 @@ fun TaskCreation(
                                     onSubmit(
                                         name,
                                         description,
-                                        project.ifBlank { null },
+                                        selectedProject?.id,
                                         date,
                                         if (hour != -1) hour else null,
-                                        if (minute != -1) hour else null
+                                        if (minute != -1) minute else null
                                     )
                                 }
                             },
@@ -191,8 +193,6 @@ fun TaskCreation(
                     }
                 }
             }
-
-
         }
     }
 }

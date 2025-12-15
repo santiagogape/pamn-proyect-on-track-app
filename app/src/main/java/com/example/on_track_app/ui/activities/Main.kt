@@ -32,7 +32,7 @@ fun Main(darkTheme: Boolean,
 
         ActivityScaffold(
             header = {
-                MainHeader(label,darkTheme,onToggleTheme,null)
+                MainHeader(label,darkTheme,onToggleTheme)
                      },
             footer = { NavBar(navController,items) }
         ){

@@ -13,6 +13,9 @@ data class SyncRepositoryEntry<D : SynchronizableDTO>(
     val remote: FirestoreSyncRepository<D>
 )
 
+//todo after recovering connection
+//todo sign out -> delete local -> warn if anything isn't synchronized
+//todo ensure order for sync
 class SyncRepositoryFactory(
     entries: List<SyncRepositoryEntry<out SynchronizableDTO>>,
     val order: List<KClass<out SynchronizableDTO>> = listOf(UserDTO::class,GroupDTO::class,ProjectDTO::class,
