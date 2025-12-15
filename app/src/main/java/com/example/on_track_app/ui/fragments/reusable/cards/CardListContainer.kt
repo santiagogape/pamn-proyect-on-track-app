@@ -12,7 +12,9 @@ import com.example.on_track_app.model.Task
 
 @Composable
 fun ExpandableCards (
-    contents: List<Expandable>
+    contents: List<Expandable>,
+    onEditItem: (Expandable) -> Unit,
+    onDeleteItem: (Expandable) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -21,7 +23,9 @@ fun ExpandableCards (
         items(contents, key = { it.id }) { item ->
             ExpandableCardItem(
                 title = item.name,
-                content = item.description
+                content = item.description,
+                onEdit = { onEditItem(item) },
+                onDelete = { onDeleteItem(item) }
             )
         }
     }

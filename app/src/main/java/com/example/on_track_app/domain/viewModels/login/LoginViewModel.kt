@@ -1,5 +1,6 @@
-package com.example.on_track_app.viewModels.login
+package com.example.on_track_app.domain.viewModels.login
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.example.on_track_app.data.auth.GoogleAuthClient
 import androidx.lifecycle.viewModelScope
@@ -13,7 +14,7 @@ class LoginViewModel(
     private val _signInState = MutableStateFlow<SignInState>(SignInState.Initial)
     val signInState = _signInState.asStateFlow()
 
-    fun signIn(context: android.content.Context) {
+    fun signIn(context: Context) {
         _signInState.value = SignInState.Loading
 
         viewModelScope.launch {

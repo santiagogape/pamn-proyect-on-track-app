@@ -92,7 +92,10 @@ fun ReminderCreation(
                 }
 
                 if (calendarOpen) {
-                    Calendar(mapOf()) { chosen ->
+                    Calendar(
+                        eventsByDate = emptyMap(), // Pass empty map
+                        tasksByDate = emptyMap(),  // Pass empty map
+                    ) { chosen ->
                         date = chosen
                         calendarOpen = false
                     }

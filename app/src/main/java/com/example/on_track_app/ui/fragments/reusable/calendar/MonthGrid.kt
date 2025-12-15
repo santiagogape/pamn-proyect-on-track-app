@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Task
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -91,6 +92,7 @@ fun MonthGrid(
     month: YearMonth,
     today: LocalDate,
     tasksByDate: Map<LocalDate, List<Task>>,
+    eventsByDate: Map<LocalDate, List<Event>>,
     onDayClick: (LocalDate) -> Unit,
 ) {
 
@@ -102,7 +104,7 @@ fun MonthGrid(
                 date = date,
                 isToday = date == today,
                 onClick = onDayClick,
-                hasEvents = !tasksByDate[date.date].isNullOrEmpty()
+                hasEvents = !tasksByDate[date.date].isNullOrEmpty() or !eventsByDate[date.date].isNullOrEmpty()
             )
         }
     }

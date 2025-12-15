@@ -15,9 +15,11 @@ data class Task (
     override val description: String = "",
     val check: Boolean = false,
     @get:PropertyName("date")
-    val dateIso: String  = LocalDate.now().toString(),
+    @set:PropertyName("date")
+    var dateIso: String  = LocalDate.now().toString(),
     @get:PropertyName("time")
-    val timeIso: String? = null,
+    @set:PropertyName("time")
+    var timeIso: String? = null,
     val projectId: String? = null
 ) : Expandable {
     @get:Exclude

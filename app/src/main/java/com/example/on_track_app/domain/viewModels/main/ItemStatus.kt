@@ -1,4 +1,4 @@
-package com.example.on_track_app.viewModels.main
+package com.example.on_track_app.domain.viewModels.main
 
 import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.ui.fragments.dialogs.CreationStatus

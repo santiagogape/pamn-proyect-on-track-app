@@ -10,8 +10,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.di.AppViewModelFactory
-import com.example.on_track_app.viewModels.login.LoginViewModel
-import com.example.on_track_app.viewModels.login.SignInState
+import com.example.on_track_app.domain.viewModels.login.LoginViewModel
+import com.example.on_track_app.domain.viewModels.login.SignInState
 
 @Composable
 fun LoginScreen(

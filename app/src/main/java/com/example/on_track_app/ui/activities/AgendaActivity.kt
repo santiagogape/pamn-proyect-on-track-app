@@ -26,13 +26,22 @@ import com.example.on_track_app.App
 import com.example.on_track_app.R
 import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.di.DummyFactory
+import com.example.on_track_app.model.Expandable
+import com.example.on_track_app.model.Project
 import com.example.on_track_app.model.Reminder
+import com.example.on_track_app.model.Task
+import com.example.on_track_app.ui.fragments.dialogs.TaskCreation
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.SettingsDataStore
-import com.example.on_track_app.viewModels.main.CalendarViewModel
-import com.example.on_track_app.viewModels.main.RemindersViewModel
+import com.example.on_track_app.domain.viewModels.main.CalendarViewModel
+import com.example.on_track_app.domain.viewModels.main.ItemStatus
+import com.example.on_track_app.domain.viewModels.main.RemindersViewModel
+import com.example.on_track_app.domain.viewModels.main.TasksViewModel
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.ui.fragments.dialogs.EventCreation
+import com.example.on_track_app.ui.fragments.reusable.cards.SectionedExpandableCards
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDate.now
@@ -77,8 +86,12 @@ fun Agenda(
     val tasksToday by viewModel.tasksFor(currentDate)
         .collectAsStateWithLifecycle()
 
+    val eventsToday by viewModel.eventsFor(currentDate).collectAsStateWithLifecycle()
+
     val remindersViewModel: RemindersViewModel = viewModel(factory = factory)
     val reminders: List<Reminder> by remindersViewModel.reminders.collectAsStateWithLifecycle()
+
+    val tasksViewModel: TasksViewModel = viewModel(factory = factory)
 
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
@@ -97,10 +110,73 @@ fun Agenda(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (tasksToday.isEmpty()){
+                if (tasksToday.isEmpty() && eventsToday.isEmpty()){
                     Text(text = stringResource(R.string.no_tasks_today), style = MaterialTheme.typography.headlineSmall)
                 } else {
-                    ExpandableCards(tasksToday)
+                    val contents: Map<String, List<Expandable>> = mapOf(
+                        "Tasks" to tasksToday,
+                        "Events" to eventsToday
+                    )
+
+                    var taskToEdit by remember { mutableStateOf<Task?>(null) }
+                    var eventToEdit by remember { mutableStateOf<Event?>(null) }
+                    var projectToEdit by remember { mutableStateOf<Project?>(null) }
+
+                    SectionedExpandableCards(
+                        groupedContents = contents,
+                        onEditItem = { item ->
+                            when(item) {
+                                is Task -> {
+                                    taskToEdit = item
+                                }
+                                is Event -> {
+                                    eventToEdit = item
+                                }
+                            }
+                        },
+                        onDeleteItem = { item ->
+                            when(item) {
+                                is Task -> viewModel.deleteTask(item.id)
+                                is Event -> viewModel.deleteEvent(item.id)
+                            }
+
+                        }
+                    )
+
+                    val uiState by viewModel.availableProjects.collectAsStateWithLifecycle()
+                    var availableProjects = emptyList<Expandable>()
+                    if (uiState is ItemStatus.Success) {
+                        availableProjects = (uiState as ItemStatus.Success).elements
+                    }
+
+                    if (taskToEdit != null) {
+                        TaskCreation(
+                            isLoading = viewModel.isLoading(),
+                            availableProjects = availableProjects as List<Project>,
+                            existingTask = taskToEdit, // Pass the task to edit (or null if creating new)
+                            onDismiss = {
+                                taskToEdit = null // Reset editing state
+                            },
+                            onSubmit = { name, desc, projId, date, h, m ->
+                                viewModel.updateTask(taskToEdit!!.id, name, desc, date, h, m, projId)
+                                taskToEdit = null
+                            }
+                        )
+                    }
+
+                    if (eventToEdit != null) {
+                        EventCreation(
+                            isLoading = viewModel.isLoading(),
+                            existingEvent = eventToEdit,
+                            onDismiss = {
+                                eventToEdit = null // Reset editing state
+                            },
+                            onSubmit = { name, desc, projId, start, end ->
+                                viewModel.updateEvent(eventToEdit!!.id, name, desc, projId, start, end)
+                                eventToEdit = null
+                            }
+                        )
+                    }
                 }
             }
 

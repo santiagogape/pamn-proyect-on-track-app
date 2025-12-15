@@ -1,71 +1,52 @@
 package com.example.on_track_app.ui.fragments.dialogs
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
 import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
 import java.time.LocalDate
-import java.time.LocalDate.now
+import java.time.LocalTime
 
-@OptIn(ExperimentalMaterial3Api::class) // Required for ExposedDropdownMenuBox
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskCreation(
     isLoading: Boolean,
     availableProjects: List<Project>,
+    existingTask: Task? = null,
     onDismiss: () -> Unit,
     onSubmit: (String, String, String?, LocalDate, Int?, Int?) -> Unit
 ) {
     var deadlineOpen by remember { mutableStateOf(false) }
 
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var name by remember(existingTask) { mutableStateOf(existingTask?.name ?: "") }
 
-    // 3. Change state to hold the selected object instead of a raw string
-    var selectedProject by remember { mutableStateOf<Project?>(null) }
+    var description by remember(existingTask) { mutableStateOf(existingTask?.description ?: "") }
+
+    var selectedProject by remember(existingTask) {
+        mutableStateOf(availableProjects.find { it.id == existingTask?.projectId })
+    }
     var projectDropdownExpanded by remember { mutableStateOf(false) }
 
-    var date by remember { mutableStateOf(now()) }
-    var hour by remember { mutableIntStateOf(-1) }
-    var minute by remember { mutableIntStateOf(-1) }
-    var pickHour by remember { mutableStateOf(false) }
+    var date by remember(existingTask) { mutableStateOf(existingTask?.date ?: LocalDate.now()) }
+
+    var hour by remember(existingTask) { mutableIntStateOf(existingTask?.time?.hour ?: -1) }
+    var minute by remember(existingTask) { mutableIntStateOf(existingTask?.time?.minute ?: -1) }
+
+    var pickHour by remember(existingTask) { mutableStateOf(existingTask?.time != null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -84,6 +65,7 @@ fun TaskCreation(
                 horizontalAlignment = Alignment.CenterHorizontally
             )
             {
+                // HEADER
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
@@ -92,23 +74,27 @@ fun TaskCreation(
                         modifier = Modifier.align(Alignment.CenterStart),
                         onClick = onDismiss
                     ) {
-                        Icon(Icons.Filled.Close, null)
+                        Icon(Icons.Filled.Close, contentDescription = "Close")
                     }
-                    // TITLE
                     Text(
-                        text = "New Task",
+                        text = if (existingTask != null) "Edit Task" else "New Task",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
                 if (deadlineOpen) {
-                    Calendar(mapOf()) { chosen ->
+                    // CALENDAR VIEW
+                    Calendar(
+                        eventsByDate = emptyMap(), // Pass empty map
+                        tasksByDate = emptyMap(),  // Pass empty map
+                    ) { chosen ->
                         date = chosen
                         deadlineOpen = false
                     }
                 } else {
                     OutlinedTextFieldColors { colors ->
+                        // Name Input
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
@@ -120,6 +106,7 @@ fun TaskCreation(
                             colors = colors
                         )
 
+                        // Description Input
                         OutlinedTextField(
                             value = description,
                             onValueChange = { description = it },
@@ -132,7 +119,7 @@ fun TaskCreation(
                             colors = colors
                         )
 
-                        // 4. THE PROJECT DROPDOWN
+                        // Project Dropdown
                         ExposedDropdownMenuBox(
                             expanded = projectDropdownExpanded,
                             onExpandedChange = { projectDropdownExpanded = !projectDropdownExpanded },
@@ -140,7 +127,7 @@ fun TaskCreation(
                         ) {
                             OutlinedTextField(
                                 value = selectedProject?.name ?: "",
-                                onValueChange = {}, // Read-only, handled by menu
+                                onValueChange = {}, // Read-only
                                 readOnly = true,
                                 label = { Text("Project (optional)") },
                                 placeholder = { Text("Select a project") },
@@ -150,7 +137,7 @@ fun TaskCreation(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = colors,
                                 modifier = Modifier
-                                    .menuAnchor() // Important for M3 dropdown positioning
+                                    .menuAnchor()
                                     .fillMaxWidth()
                             )
 
@@ -158,7 +145,6 @@ fun TaskCreation(
                                 expanded = projectDropdownExpanded,
                                 onDismissRequest = { projectDropdownExpanded = false }
                             ) {
-                                // Optional: Add a "None" option to deselect
                                 DropdownMenuItem(
                                     text = { Text("None") },
                                     onClick = {
@@ -167,7 +153,6 @@ fun TaskCreation(
                                     }
                                 )
 
-                                // List the actual projects
                                 availableProjects.forEach { project ->
                                     DropdownMenuItem(
                                         text = { Text(project.name) },
@@ -181,6 +166,7 @@ fun TaskCreation(
                         }
                     }
 
+                    // Date & Time Selectors
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -196,12 +182,13 @@ fun TaskCreation(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // BUTTON ROW
+                    // ACTIONS ROW
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     )
                     {
+                        // Toggle Time Button
                         ButtonColors { colors ->
                             Button(
                                 onClick = { pickHour = !pickHour },
@@ -214,17 +201,18 @@ fun TaskCreation(
                             }
                         }
 
-                        // SUBMIT
+                        // Submit / Save Button
                         Button(
                             onClick = {
                                 if (name.isNotEmpty() && description.isNotEmpty()) {
                                     onSubmit(
                                         name,
                                         description,
-                                        selectedProject?.id, // 5. Pass the ID (or null)
+                                        selectedProject?.id,
                                         date,
-                                        if (hour != -1) hour else null,
-                                        if (minute != -1) minute else null
+                                        // Only pass time if the user checked "with time" and selected a valid time
+                                        if (pickHour && hour != -1) hour else null,
+                                        if (pickHour && minute != -1) minute else null
                                     )
                                 }
                             },
@@ -236,13 +224,14 @@ fun TaskCreation(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             if (isLoading) {
-                                androidx.compose.material3.CircularProgressIndicator(
+                                CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
                                     color = MaterialTheme.colorScheme.primary,
                                     strokeWidth = 2.dp
                                 )
                             } else {
-                                Text("Submit")
+                                // Text changes based on mode
+                                Text(if (existingTask != null) "Save" else "Submit")
                             }
                         }
                     }

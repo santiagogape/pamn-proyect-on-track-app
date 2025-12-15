@@ -3,6 +3,8 @@ package com.example.on_track_app.di
 import android.content.Context
 import com.example.on_track_app.data.FirestoreRepository
 import com.example.on_track_app.data.auth.GoogleAuthClient
+import com.example.on_track_app.domain.usecase.EventManager
+import com.example.on_track_app.domain.usecase.TaskManager
 import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Project
 import com.example.on_track_app.model.Reminder
@@ -16,6 +18,8 @@ interface AppContainer {
     val eventRepository: FirestoreRepository<Event>
     val reminderRepository: FirestoreRepository<Reminder>
     val viewModelFactory: AppViewModelFactory
+    val taskManager: TaskManager
+    val eventManager: EventManager
 }
 
 class DefaultAppContainer(private val context: Context) : AppContainer {
@@ -54,6 +58,14 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             collectionName = "reminders",
             clazz = Reminder::class.java
         )
+    }
+
+    override val taskManager: TaskManager by lazy {
+        TaskManager(taskRepository)
+    }
+
+    override val eventManager: EventManager by lazy {
+        EventManager(eventRepository)
     }
 
     override val viewModelFactory: AppViewModelFactory = AppViewModelFactory(this)

@@ -12,11 +12,12 @@ import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.model.Project
 import com.example.on_track_app.model.Task
-import com.example.on_track_app.viewModels.main.ProjectsViewModel
-import com.example.on_track_app.viewModels.main.TasksViewModel
+import com.example.on_track_app.domain.viewModels.main.CalendarViewModel
+import com.example.on_track_app.domain.viewModels.main.ProjectsViewModel
+import com.example.on_track_app.domain.viewModels.main.TasksViewModel
 import kotlinx.coroutines.launch
-import com.example.on_track_app.viewModels.main.ItemStatus
-import com.example.on_track_app.viewModels.main.RemindersViewModel
+import com.example.on_track_app.domain.viewModels.main.ItemStatus
+import com.example.on_track_app.domain.viewModels.main.RemindersViewModel
 
 
 @Composable
@@ -33,11 +34,9 @@ fun GlobalDialogCoordinator(
         ActiveDialog.CreateTask -> {
             // We get the specific ViewModel here, keeping Scaffold clean
             val tasksViewModel: TasksViewModel = viewModel(factory = viewModelFactory)
-            val projectsViewModel: ProjectsViewModel = viewModel(factory = viewModelFactory)
             // Reusing your creation logic
             TaskCreationCoordinator(
                 viewModel = tasksViewModel,
-                projectsViewModel = projectsViewModel,
                 onDismiss = onDismiss,
                 onSuccess = {
                     onDismiss()
@@ -49,8 +48,18 @@ fun GlobalDialogCoordinator(
         }
 
         ActiveDialog.CreateEvent -> {
-            // Future implementation
-            // EventCreationDialog(...)
+            val calendarViewModel: CalendarViewModel = viewModel(factory = viewModelFactory)
+
+            EventCreationCoordinator(
+                viewModel = calendarViewModel,
+                onDismiss = onDismiss,
+                onSuccess = {
+                    onDismiss()
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Event created successfully")
+                    }
+                }
+            )
         }
 
         ActiveDialog.CreateProject -> {
@@ -70,11 +79,9 @@ fun GlobalDialogCoordinator(
 
         ActiveDialog.CreateReminder -> {
             val remindersViewModel: RemindersViewModel = viewModel(factory = viewModelFactory)
-            val tasksViewModel: TasksViewModel = viewModel(factory = viewModelFactory)
 
             ReminderCreationCoordinator(
                 viewModel = remindersViewModel,
-                tasksViewModel = tasksViewModel,
                 onDismiss = onDismiss,
                 onSuccess = {
                     onDismiss()
@@ -90,12 +97,11 @@ fun GlobalDialogCoordinator(
 @Composable
 private fun TaskCreationCoordinator(
     viewModel: TasksViewModel,
-    projectsViewModel: ProjectsViewModel,
     onDismiss: () -> Unit,
     onSuccess: () -> Unit
 ) {
     val status by viewModel.creationStatus.collectAsStateWithLifecycle()
-    val uiState by projectsViewModel.projects.collectAsStateWithLifecycle()
+    val uiState by viewModel.availableProjects.collectAsStateWithLifecycle()
     var availableProjects = emptyList<Expandable>()
     if (uiState is ItemStatus.Success) {
         availableProjects = (uiState as ItemStatus.Success).elements
@@ -145,13 +151,12 @@ private fun ProjectCreationCoordinator(
 @Composable
 private fun ReminderCreationCoordinator(
     viewModel: RemindersViewModel,
-    tasksViewModel: TasksViewModel,
     onDismiss: () -> Unit,
     onSuccess: () -> Unit
 ) {
     val status by viewModel.creationStatus.collectAsStateWithLifecycle()
 
-    val uiState by tasksViewModel.tasks.collectAsStateWithLifecycle()
+    val uiState by viewModel.availableTasks.collectAsStateWithLifecycle()
     var availableTasks = emptyList<Expandable>()
     if (uiState is ItemStatus.Success) {
         availableTasks = (uiState as ItemStatus.Success).elements
@@ -175,4 +180,30 @@ private fun ReminderCreationCoordinator(
             viewModel.createReminder(name, desc, taskId, eventId, date, hour, minute)
         }
     )
+}
+
+@Composable
+private fun EventCreationCoordinator(
+    viewModel: CalendarViewModel,
+    onDismiss: () -> Unit,
+    onSuccess: () -> Unit
+) {
+    val status by viewModel.creationStatus.collectAsStateWithLifecycle()
+
+    LaunchedEffect(status) {
+        if (status is CreationStatus.Success) {
+            viewModel.resetStatus()
+            onSuccess()
+        }
+    }
+
+    EventCreation(
+        isLoading = status == CreationStatus.Loading,
+        onDismiss = onDismiss,
+        onSubmit = { name, desc, projId, start, end ->
+            viewModel.createEvent(name, desc, projId, start, end)
+        }
+    )
+
+
 }

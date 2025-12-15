@@ -14,7 +14,7 @@ import com.example.on_track_app.navigation.isOnDestination
 import com.example.on_track_app.navigation.routes
 import com.example.on_track_app.ui.fragments.reusable.header.MainHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
-import com.example.on_track_app.viewModels.main.RemindersViewModel
+import com.example.on_track_app.domain.viewModels.main.RemindersViewModel
 
 @Composable
 fun OnTrackApp(

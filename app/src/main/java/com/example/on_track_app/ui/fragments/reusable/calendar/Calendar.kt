@@ -10,12 +10,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Task
 import java.time.LocalDate
 import java.time.YearMonth.*
 
 @Composable
 fun Calendar(
+    eventsByDate: Map<LocalDate, List<Event>>,
     tasksByDate: Map<LocalDate, List<Task>>,
     onDayClick: (LocalDate) -> Unit
 ) {
@@ -39,6 +41,7 @@ fun Calendar(
             month = currentMonth,
             today = today,
             tasksByDate = tasksByDate,
+            eventsByDate = eventsByDate,
             onDayClick = onDayClick
         )
     }

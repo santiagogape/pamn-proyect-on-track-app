@@ -1,8 +1,7 @@
-package com.example.on_track_app.viewModels.main
+package com.example.on_track_app.domain.viewModels.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.data.FirestoreRepository
 import com.example.on_track_app.data.auth.GoogleAuthClient
 import com.example.on_track_app.model.Project

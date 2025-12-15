@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.model.Reminder
 import com.example.on_track_app.model.Task
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -42,7 +43,6 @@ class FirestoreRepository<T : Any>(
         }
     }
 
-    // TODO: Add parameter userId: String and add whereEqualTo() in the query to the DB
     fun getElements(userId: String): Flow<List<T>> = callbackFlow {
         val listenerRegistration = db.collection(collectionName)
             .whereEqualTo("userId", userId)
@@ -53,6 +53,17 @@ class FirestoreRepository<T : Any>(
                 }
 
                 val list = snapshot?.documents?.mapNotNull { doc ->
+
+                    // --- INSERT DEBUGGING LOGS HERE ---
+                    // This checks the raw database fields before Java/Kotlin touches them
+                    val rawStart = doc.getString("startDateObj")
+                    val rawDate = doc.getString("date")
+
+                    android.util.Log.d("DEBUG_REPO", "Document ID: ${doc.id}")
+                    android.util.Log.d("DEBUG_REPO", " - Value of field 'startDateObj': $rawStart")
+                    android.util.Log.d("DEBUG_REPO", " - Value of field 'date': $rawDate")
+                    // ----------------------------------
+
                     doc.toObject(clazz)?.apply {
                         injectId(this, doc.id)
                     }
@@ -76,12 +87,11 @@ class FirestoreRepository<T : Any>(
         }
     }
 
-    suspend fun updateElement(id: String, element: T): Boolean {
-        val data = elementToMap(element)
-        if (data.isEmpty()) return false
+    suspend fun updateElement(id: String, updates: MutableMap<String, Any?>): Boolean {
+        if (updates.isEmpty()) return false
 
         return try {
-            db.collection(collectionName).document(id).set(data).await()
+            db.collection(collectionName).document(id).update(updates).await()
             true
         } catch (e: Exception) {
             Log.e("Firestore", "Error updating document ($id)", e)
@@ -104,6 +114,52 @@ class FirestoreRepository<T : Any>(
             }
 
         awaitClose { listenerRegistration.remove() }
+    }
+
+    suspend fun deleteTaskWithReminders(taskId: String) {
+        try {
+            val elemRef = db.collection("tasks").document(taskId)
+            val linkedRemindersSnapshot = db.collection("reminders")
+                .whereEqualTo("taskId", taskId)
+                .get()
+                .await()
+
+            val batch = db.batch()
+
+            batch.delete(elemRef)
+
+            for (document in linkedRemindersSnapshot.documents) {
+                batch.delete(document.reference)
+            }
+
+            batch.commit().await()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun deleteEventWithReminders(eventId: String) {
+        try {
+            val elemRef = db.collection("events").document(eventId)
+            val linkedRemindersSnapshot = db.collection("reminders")
+                .whereEqualTo("eventId", eventId)
+                .get()
+                .await()
+
+            val batch = db.batch()
+
+            batch.delete(elemRef)
+
+            for (document in linkedRemindersSnapshot.documents) {
+                batch.delete(document.reference)
+            }
+
+            batch.commit().await()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun getProjectReminders(userId: String, projectTasks: Flow<List<Task>>): Flow<List<Reminder>> {

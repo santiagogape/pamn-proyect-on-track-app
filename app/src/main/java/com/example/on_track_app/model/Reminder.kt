@@ -16,9 +16,11 @@ data class Reminder(
     val taskId: String? = null,
     val eventId: String? = null,
     @get:PropertyName("date")
-    val dateIso: String = LocalDate.now().toString(),
+    @set:PropertyName("date")
+    var dateIso: String = LocalDate.now().toString(),
     @get:PropertyName("time")
-    val timeIso: String = LocalTime.now().toString(),
+    @set:PropertyName("time")
+    var timeIso: String = LocalTime.now().toString(),
 ) : Expandable {
     @get:Exclude
     val date: LocalDate

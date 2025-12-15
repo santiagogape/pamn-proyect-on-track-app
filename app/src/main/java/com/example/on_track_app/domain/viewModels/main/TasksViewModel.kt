@@ -1,5 +1,6 @@
-package com.example.on_track_app.viewModels.main
+package com.example.on_track_app.domain.viewModels.main
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.on_track_app.data.FirestoreRepository
@@ -13,6 +14,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import com.example.on_track_app.data.auth.GoogleAuthClient
+import com.example.on_track_app.domain.usecase.TaskManager
+import com.example.on_track_app.model.Project
 import com.example.on_track_app.ui.fragments.dialogs.CreationStatus
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -23,6 +26,8 @@ import java.time.LocalTime
 
 class TasksViewModel(
     private val taskRepository: FirestoreRepository<Task>,
+    private val projectRepository: FirestoreRepository<Project>,
+    private val taskManager: TaskManager,
     private val googleAuthClient: GoogleAuthClient
 ) : ViewModel() {
 
@@ -67,6 +72,25 @@ class TasksViewModel(
     private val _creationStatus  = MutableStateFlow<CreationStatus>(CreationStatus.Idle)
     val creationStatus = _creationStatus.asStateFlow()
 
+    val availableProjects: StateFlow<ItemStatus> = if (userId != null) {
+        projectRepository.getElements(userId)
+    } else {
+        flowOf(emptyList())
+    }
+        .map { projectList ->
+            ItemStatus.Success(projectList) as ItemStatus
+        }
+        .onStart {
+            emit(ItemStatus.Loading)
+        }
+        .catch {
+            emit(ItemStatus.Error)
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            ItemStatus.Loading
+        )
     fun createTask(
         name: String,
         description: String,
@@ -80,23 +104,15 @@ class TasksViewModel(
                 googleAuthClient.getUserId() ?: // Handle error: User is not logged in
                 return@launch
 
-            val timeString = if (hour != null && minute != null) {
-                LocalTime.of(hour, minute).toString()
-            } else {
-                null
-            }
-
-            val newTask = Task(
-                userId = currentUserId,
-                name = name,
-                description = description,
-                dateIso = date.toString(),
-                timeIso = timeString,
-                projectId = projectId
+            val success = taskManager.createTask(
+                currentUserId,
+                name,
+                description,
+                date,
+                hour,
+                minute,
+                projectId
             )
-
-            // 3. Send to Repository
-            val success = taskRepository.addElement(newTask)
 
             if (success) {
                 _creationStatus.value = CreationStatus.Success
@@ -104,6 +120,30 @@ class TasksViewModel(
                 _creationStatus.value = CreationStatus.Error("Failed to save task to database")
             }
         }
+    }
+
+    fun updateTask(
+        taskId: String,
+        newName: String,
+        newDescription: String,
+        newDate: LocalDate,
+        newHour: Int?,
+        newMinute: Int?,
+        newProjectId: String?
+    ) {
+        viewModelScope.launch {
+            taskManager.updateTask(taskId, newName, newDescription, newDate, newHour, newMinute, newProjectId)
+        }
+    }
+
+    fun deleteTask(taskId: String) {
+        viewModelScope.launch {
+            taskManager.deleteTask(taskId)
+        }
+    }
+
+    fun isLoading(): Boolean {
+        return _creationStatus.value == CreationStatus.Loading
     }
 
     fun resetStatus() {

@@ -15,8 +15,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
-import com.example.on_track_app.viewModels.main.ItemStatus
-import com.example.on_track_app.viewModels.main.ProjectsViewModel
+import com.example.on_track_app.domain.viewModels.main.ItemStatus
+import com.example.on_track_app.domain.viewModels.main.ProjectsViewModel
 
 
 @Composable
