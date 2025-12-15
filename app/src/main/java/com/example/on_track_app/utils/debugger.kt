@@ -8,6 +8,7 @@ import com.example.on_track_app.model.CloudIdentifiable
 import com.example.on_track_app.model.Identifiable
 import com.example.on_track_app.model.MockUser
 import com.example.on_track_app.model.Named
+import com.example.on_track_app.model.OwnerType
 
 object DebugLogcatLogger {
 
@@ -26,9 +27,17 @@ object DebugLogcatLogger {
             """)
     }
 
-    // ---------------------------------------------------------------------
-    // MOCK PROJECT CREATED
-    // ---------------------------------------------------------------------
+    fun logCreatingProject(name: String, description: String, owner: String, ownerType: OwnerType){
+        Log.d(TAG,"""
+            ---- CREATING PROJECT ----
+            name: $name
+            description: $description
+            owner: $owner
+            ownerType: $ownerType
+            --------------------------------
+            """.trimIndent())
+
+    }
     fun <T> logMockProject(project: T) where T: CloudIdentifiable, T: Identifiable, T : Named {
         Log.d(
             TAG,

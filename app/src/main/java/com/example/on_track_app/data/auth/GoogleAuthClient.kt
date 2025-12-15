@@ -4,23 +4,28 @@ import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import com.example.on_track_app.data.firebase.FirestoreService
 import com.example.on_track_app.model.MockUser
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+
+sealed class EnsureUserResult {
+    data class Created(val user: MockUser) : EnsureUserResult()
+    data class Exists(val cloudId: String) : EnsureUserResult()
+}
 
 
 abstract class AuthClient(protected val context: Context) {
     abstract suspend fun signIn(activityContext: Context): Boolean
     abstract fun getUser(): MockUser?
-    abstract suspend fun ensureUserExists()
+    abstract suspend fun ensureUserExists(): EnsureUserResult
 }
 class GoogleAuthClient(context: Context):AuthClient(context) {
     private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
+    private val db = FirestoreService.firestore
     private val credentialManager = CredentialManager.create(this.context)
 
     override suspend fun signIn(activityContext: Context): Boolean {
@@ -29,7 +34,7 @@ class GoogleAuthClient(context: Context):AuthClient(context) {
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId("236486268301-j30773r9oq9m3tpc5507b9o2b6sjhjrm.apps.googleusercontent.com")
-                .setAutoSelectEnabled(true)
+                .setAutoSelectEnabled(false)
                 .build()
 
             val request = GetCredentialRequest.Builder()
@@ -66,20 +71,23 @@ class GoogleAuthClient(context: Context):AuthClient(context) {
         MockUser("",it.displayName ?: "", it.email ?: "",it.uid)
     }
 
-    override suspend fun ensureUserExists() {
-        val user = auth.currentUser ?: return
-        val userDocRef = db.collection("users").document(user.uid)
+    override suspend fun ensureUserExists(): EnsureUserResult {
+        val firebaseUser = auth.currentUser ?: error("No user authenticated")
+        val userDocRef = db.collection("Users").document(firebaseUser.uid)
 
         val snapshot = userDocRef.get().await()
 
-        if (!snapshot.exists()) {
-            // First time login! Create the user document.
+        return if (!snapshot.exists()) {
             val newUser = MockUser(
-                id = user.uid,
-                email = user.email ?: "",
-                name = user.displayName ?: ""
+                id = "",
+                email = firebaseUser.email ?: "",
+                name = firebaseUser.displayName ?: "",
+                cloudId = firebaseUser.uid
             )
-            userDocRef.set(newUser).await()
+            EnsureUserResult.Created(newUser)
+        } else {
+            EnsureUserResult.Exists(firebaseUser.uid)
         }
     }
+
 }

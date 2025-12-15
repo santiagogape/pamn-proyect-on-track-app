@@ -1,22 +1,24 @@
 package com.example.on_track_app.viewModels.login
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.on_track_app.data.auth.AuthClient
+import com.example.on_track_app.data.auth.EnsureUserResult
 import com.example.on_track_app.data.realm.repositories.LocalConfigRepository
 import com.example.on_track_app.data.synchronization.SyncEngine
 import com.example.on_track_app.data.synchronization.UserDTO
+import com.example.on_track_app.utils.DebugLogcatLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class LoginViewModel(
     private val configureLocal: LocalConfigRepository,
     private val authClient: AuthClient,
-    private val syncEngine: SyncEngine
+    private val syncEngine: SyncEngine,
+    private val remoteInit: suspend (UserDTO) -> Unit
 ) : ViewModel() {
     private val _signInState = MutableStateFlow<SignInState>(SignInState.Initial)
     val signInState = _signInState.asStateFlow()
@@ -26,24 +28,31 @@ class LoginViewModel(
 
         viewModelScope.launch {
             val isSuccess = authClient.signIn(context)
-            if (isSuccess) {
-                // IMPORTANT: Create the user doc in Firestore if it doesn't exist
-                authClient.ensureUserExists()
-                runBlocking(Dispatchers.IO) {
-                    authClient.getUser()?.let {configureLocal.init(it)}
-                }
-                syncEngine.start()
-                runBlocking(Dispatchers.IO){
-                    configureLocal.get().let {
-                        Log.d("SyncDebug","\nuser:${it.userID}\n\n")
-                        syncEngine.onLocalChange(it.userID,UserDTO::class)
+            if (!isSuccess) {
+                _signInState.value = SignInState.Error("Sign in failed")
+                return@launch
+            }
+
+            when (val result = authClient.ensureUserExists()) {
+
+                is EnsureUserResult.Created -> {
+                    DebugLogcatLogger.logConfig(result.user,"LVM")
+                    val dto = withContext(Dispatchers.IO) {
+                        configureLocal.init(result.user)
+                    }
+
+                    withContext(Dispatchers.IO) {
+                        remoteInit(dto)
                     }
                 }
-                _signInState.value = SignInState.Success
-            } else {
-                _signInState.value = SignInState.Error("Sign in failed")
+
+                is EnsureUserResult.Exists -> {}
             }
+
+            syncEngine.start()
+            _signInState.value = SignInState.Success
         }
+
     }
 }
 

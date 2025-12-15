@@ -12,8 +12,8 @@ import com.example.on_track_app.model.Identifiable
 import com.example.on_track_app.model.Named
 
 @Composable
-fun <T: Expandable> ExpandableCards (
-    contents: List<T>
+fun ExpandableCards (
+    contents: List<Expandable>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

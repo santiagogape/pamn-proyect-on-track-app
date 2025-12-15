@@ -1,69 +1,159 @@
-package com.example.on_track_app
+tengo:
+class GoogleAuthClient(private val context: Context) {
+    private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
+    private val credentialManager = CredentialManager.create(context)
+
+    suspend fun signIn(activityContext: Context): Boolean {
+        try {
+            // 1. Build the Google Sign-In Request
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId("__-___.apps.googleusercontent.com")
+                .setAutoSelectEnabled(true)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            // 2. Launch the Android system bottom sheet
+            val result = credentialManager.getCredential(
+                request = request,
+                context = activityContext
+            )
+
+            // 3. Extract the ID Token from the result
+            val credential = result.credential
+            if (credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+
+                val googleCred = GoogleIdTokenCredential.createFrom(credential.data)
+                val idToken = googleCred.idToken
+
+                // 4. Exchange Google Token for Firebase Credential
+                val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+                auth.signInWithCredential(firebaseCredential).await()
+
+                return true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    fun getUserId(): String? = auth.currentUser?.uid
+
+    suspend fun ensureUserExists() {
+        val user = auth.currentUser ?: return
+        val userDocRef = db.collection("users").document(user.uid)
+
+        val snapshot = userDocRef.get().await()
+
+        if (!snapshot.exists()) {
+            // First time login! Create the user document.
+            val newUser = User(
+                id = user.uid,
+                email = user.email ?: "",
+                username = user.displayName ?: ""
+            )
+            userDocRef.set(newUser).await()
+        }
+    }
+}
 
 
-import android.app.Application
-import com.example.on_track_app.data.abstractions.repositories.UniqueRepository
-import com.example.on_track_app.data.auth.GoogleAuthClient
-import com.example.on_track_app.data.firebase.FirestoreService
-import com.example.on_track_app.data.firebase.FirestoreSyncRepository
-import com.example.on_track_app.data.realm.RealmDatabase
-import com.example.on_track_app.data.realm.entities.EventRealmEntity
-import com.example.on_track_app.data.realm.entities.GroupRealmEntity
-import com.example.on_track_app.data.realm.entities.ProjectRealmEntity
-import com.example.on_track_app.data.realm.entities.RealmMembershipEntity
-import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
-import com.example.on_track_app.data.realm.entities.SyncMapper
-import com.example.on_track_app.data.realm.entities.TaskRealmEntity
-import com.example.on_track_app.data.realm.entities.UserRealmEntity
-import com.example.on_track_app.data.realm.entities.toDomain
-import com.example.on_track_app.data.realm.repositories.Filter
-import com.example.on_track_app.data.realm.repositories.LocalConfigRepository
-import com.example.on_track_app.data.realm.repositories.RealmEventRepository
-import com.example.on_track_app.data.realm.repositories.RealmGroupRepository
-import com.example.on_track_app.data.realm.repositories.RealmMembershipRepository
-import com.example.on_track_app.data.realm.repositories.RealmProjectRepository
-import com.example.on_track_app.data.realm.repositories.RealmReminderRepository
-import com.example.on_track_app.data.realm.repositories.RealmTaskRepository
-import com.example.on_track_app.data.realm.repositories.RealmUserRepository
-import com.example.on_track_app.data.synchronization.EventDTO
-import com.example.on_track_app.data.synchronization.GroupDTO
-import com.example.on_track_app.data.synchronization.MembershipDTO
-import com.example.on_track_app.data.synchronization.ProjectDTO
-import com.example.on_track_app.data.synchronization.ReferenceIntegrityManager
-import com.example.on_track_app.data.synchronization.ReferenceIntegrityManagerEntry
-import com.example.on_track_app.data.synchronization.ReminderDTO
-import com.example.on_track_app.data.synchronization.SyncEngine
-import com.example.on_track_app.data.synchronization.SyncRepositoryEntry
-import com.example.on_track_app.data.synchronization.SyncRepositoryFactory
-import com.example.on_track_app.data.synchronization.TaskDTO
-import com.example.on_track_app.data.synchronization.UserDTO
-import com.example.on_track_app.data.synchronization.toDTO
-import com.example.on_track_app.data.synchronization.toRealm
-import com.example.on_track_app.model.LocalConfigurations
-import com.example.on_track_app.model.Membership
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockGroup
-import com.example.on_track_app.model.MockProject
-import com.example.on_track_app.model.MockReminder
-import com.example.on_track_app.model.MockTask
-import com.example.on_track_app.model.MockUser
-import com.example.on_track_app.utils.DebugLogcatLogger
-import com.example.on_track_app.utils.OwnershipContext
-import com.example.on_track_app.viewModels.CreationViewModel
-import com.example.on_track_app.viewModels.factory.ViewModelsFactoryMock
-import com.example.on_track_app.viewModels.login.LoginViewModel
-import com.example.on_track_app.viewModels.main.CalendarViewModel
-import com.example.on_track_app.viewModels.main.HomeViewModel
-import com.example.on_track_app.viewModels.raw.EventsViewModel
-import com.example.on_track_app.viewModels.raw.GroupsViewModel
-import com.example.on_track_app.viewModels.raw.MembershipsViewModel
-import com.example.on_track_app.viewModels.raw.ProjectsViewModel
-import com.example.on_track_app.viewModels.raw.RemindersViewModel
-import com.example.on_track_app.viewModels.raw.TasksViewModel
-import com.example.on_track_app.viewModels.raw.UsersViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+
+class LoginViewModel(
+    private val configureLocal: LocalConfigRepository,
+    private val authClient: AuthClient,
+    private val syncEngine: SyncEngine
+) : ViewModel() {
+    private val _signInState = MutableStateFlow<SignInState>(SignInState.Initial)
+    val signInState = _signInState.asStateFlow()
+
+    fun signIn(context: android.content.Context) {
+        _signInState.value = SignInState.Loading
+
+        viewModelScope.launch {
+            val isSuccess = authClient.signIn(context)
+            if (isSuccess) {
+                // IMPORTANT: Create the user doc in Firestore if it doesn't exist
+                authClient.ensureUserExists()
+                runBlocking(Dispatchers.IO) {
+                    authClient.getUser()?.let {configureLocal.init(it)}
+                }
+                syncEngine.start()
+                runBlocking(Dispatchers.IO){
+                    configureLocal.get().let {
+                        Log.d("SyncDebug","\nuser:${it.userID}\n\n")
+                        syncEngine.onLocalChange(it.userID,UserDTO::class)
+                    }
+                }
+                _signInState.value = SignInState.Success
+            } else {
+                _signInState.value = SignInState.Error("Sign in failed")
+            }
+        }
+    }
+}
+
+sealed class SignInState {
+    object Initial : SignInState()
+    object Loading : SignInState()
+    object Success : SignInState()
+    data class Error(val message: String) : SignInState()
+}
+
+
+@Composable
+fun LoginScreen(
+    viewModel: LoginViewModel,
+    onLoginSuccess: () -> Unit, // Callback to navigate when login finishes
+) {
+    // We get the ViewModel using your custom factory
+
+    val state by viewModel.signInState.collectAsState()
+    val context = LocalContext.current
+
+    // React to state changes
+    LaunchedEffect(state) {
+        if (state is SignInState.Success) {
+            onLoginSuccess()
+        } else if (state is SignInState.Error) {
+            Toast.makeText(context, (state as SignInState.Error).message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Welcome to OnTrack",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            if (state is SignInState.Loading) {
+                CircularProgressIndicator()
+            } else {
+                Button(
+                    onClick = { viewModel.signIn(context) },
+                    modifier = Modifier.fillMaxWidth(0.7f)
+                ) {
+                    Text(text = "Sign in with Google")
+                }
+            }
+        }
+    }
+}
 
 class OnTrackApp : Application() {
 
@@ -343,16 +433,14 @@ class OnTrackApp : Application() {
             )
         }
         val auth = GoogleAuthClient(this)
+        val configRepo = LocalConfigRepository(RealmDatabase.realm)
         authViewModelFactory = {LoginViewModel(
-            localConfigRepo,
+            configRepo,
             auth,
             syncEngine
-        ) { dto -> remoteUserRepo.push(dto.cloudId!!, dto)
-            DebugLogcatLogger.logDTOToRemote(dto)
-        }
-        }
+        )}
 
-        authenticationCheck = {if(localConfig.ready()) repoUser.getById(localConfig.get().userID) else auth.getUser()}
+        authenticationCheck = {if(configRepo.ready()) repoUser.getById(configRepo.get().userID) else auth.getUser()}
 
     }
 }
@@ -398,3 +486,82 @@ val MEMBERSHIP_MAPPER = object: SyncMapper<RealmMembershipEntity, MembershipDTO,
     override fun toDTO(entity: RealmMembershipEntity): MembershipDTO { return entity.toDTO() }
     override fun toDomain(entity: RealmMembershipEntity): Membership { return entity.toDomain() }
 }
+
+
+class MainActivity : ComponentActivity() {
+    private val settings by lazy { SettingsDataStore(this) }
+    private val factory by lazy {
+        (application as OnTrackApp).viewModelsFactory
+    }
+
+    private val config by lazy {
+        (application as OnTrackApp).localConfig
+    }
+
+    private val ownershipContext by lazy {
+        (application as OnTrackApp).currentOwnership
+    }
+
+    private val checkAuth by lazy {
+        (application as OnTrackApp).authenticationCheck
+    }
+
+    private val loginViewModelFactory by lazy {
+        (application as OnTrackApp).authViewModelFactory
+    }
+
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+
+            val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
+            var auth by remember { mutableStateOf(checkAuth()) }
+            if (auth == null) {
+                LoginScreen(
+                    viewModel = loginViewModelFactory(),
+                    onLoginSuccess = {auth = checkAuth()}
+                )
+            } else {
+                CompositionLocalProvider(
+                    LocalViewModelFactory provides factory,
+                    LocalConfig provides LocalConfigurations(config.get().userID),
+                    LocalOwnership provides ownershipContext
+                ) {
+                    config.get().let { DebugLogcatLogger.logConfig(checkAuth()!!, "main") }
+                    Main(
+                        darkTheme = darkTheme,
+                        onToggleTheme = {
+                            lifecycleScope.launch {
+                                settings.setDarkTheme(!darkTheme)
+                            }
+                        })
+                }
+            }
+        }
+    }
+}
+
+pero me esta saltando el toast con "Sign in failed"
+
+androidx.credentials.exceptions.NoCredentialException: During begin sign in, failure response from one tap: 10: [28444] Developer console is not set up correctly.
+2025-12-15 07:48:28.414 13488-13488 System.err              com.example.on_track_app             W  	at androidx.credentials.playservices.controllers.CredentialProviderBaseController$Companion.getCredentialExceptionTypeToException$credentials_play_services_auth_release(CredentialProviderBaseController.kt:114)
+2025-12-15 07:48:28.414 13488-13488 System.err              com.example.on_track_app             W  	at androidx.credentials.playservices.controllers.BeginSignIn.CredentialProviderBeginSignInController$resultReceiver$1$onReceiveResult$1.invoke(CredentialProviderBeginSignInController.kt:84)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at androidx.credentials.playservices.controllers.BeginSignIn.CredentialProviderBeginSignInController$resultReceiver$1$onReceiveResult$1.invoke(CredentialProviderBeginSignInController.kt:84)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at androidx.credentials.playservices.controllers.CredentialProviderController.maybeReportErrorFromResultReceiver(CredentialProviderController.kt:151)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at androidx.credentials.playservices.controllers.BeginSignIn.CredentialProviderBeginSignInController.access$maybeReportErrorFromResultReceiver(CredentialProviderBeginSignInController.kt:55)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at androidx.credentials.playservices.controllers.BeginSignIn.CredentialProviderBeginSignInController$resultReceiver$1.onReceiveResult(CredentialProviderBeginSignInController.kt:82)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at android.os.ResultReceiver$MyRunnable.run(ResultReceiver.java:50)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at android.os.Handler.handleCallback(Handler.java:942)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at android.os.Handler.dispatchMessage(Handler.java:99)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at android.os.Looper.loopOnce(Looper.java:240)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at android.os.Looper.loop(Looper.java:351)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at android.app.ActivityThread.main(ActivityThread.java:8377)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at java.lang.reflect.Method.invoke(Native Method)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:584)
+2025-12-15 07:48:28.415 13488-13488 System.err              com.example.on_track_app             W  	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+
+
+hay un error en lo que tengo actualmente para la autenticacion? o debo revisar el google-services.json?

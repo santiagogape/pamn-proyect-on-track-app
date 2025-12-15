@@ -140,14 +140,14 @@ fun ReminderCreation(
 
                         if (builder.reminderDefaultSource != null && builder.defaultType != null) {
                             selected = builder.reminderDefaultSource; type = builder.defaultType
-                        } else builder.defaultType?.let { defaultLinkedType ->
+                        } else {
                             val types = builder.sources.keys
                                 .map { type -> Selectable(type.name, type.name) }
 
                             Selector(
                                 colors,
                                 ItemStatus.Success(types),
-                                default = Selectable(defaultLinkedType.name, defaultLinkedType.name),
+                                default = null,
                                 label = "Select a type to link",
                                 placeholder = "tasks, events, ...",
                                 noSelectionLabel = "no link selected",

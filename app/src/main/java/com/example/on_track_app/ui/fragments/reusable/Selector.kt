@@ -82,7 +82,7 @@ fun <T> Selector(
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("None") },
+                        text = { Text(noSelectionLabel) },
                         onClick = {
                             select(null)
                             expanded = false
@@ -94,6 +94,7 @@ fun <T> Selector(
                             text = { Text(item.name) },
                             onClick = {
                                 select(item)
+                                selectedProject = item
                                 expanded = false
                             }
                         )

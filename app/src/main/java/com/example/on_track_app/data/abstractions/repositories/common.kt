@@ -1,12 +1,15 @@
 package com.example.on_track_app.data.abstractions.repositories
 
+import com.example.on_track_app.data.synchronization.UserDTO
 import com.example.on_track_app.model.MockUser
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface Initializable {
-    suspend fun init(remote: MockUser)
+    suspend fun init(remote: MockUser): UserDTO
 }
 interface UniqueRepository<T> {
+    val config: StateFlow<T?>
     fun ready(): Boolean
     fun get(): T
 }

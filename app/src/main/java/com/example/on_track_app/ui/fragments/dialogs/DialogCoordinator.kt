@@ -39,7 +39,7 @@ fun GlobalDialogCoordinator(
                 availableProjects = state,
                 onDismiss = onDismiss,
                 onSubmit = { name, desc, project, date, hour, min ->
-                    creator.addNewTask(name, desc, project ?: "",ownershipContext.owner(), ownershipContext.ownerType(), date,hour,min )
+                    creator.addNewTask(name, desc, project,ownershipContext.owner(), ownershipContext.ownerType(), date,hour,min )
                     onDismiss()
                     scope.launch {
                         snackBarHostState.showSnackbar("Task created successfully")
@@ -67,6 +67,10 @@ fun GlobalDialogCoordinator(
                     start,
                     end
                 )
+                onDismiss()
+                scope.launch {
+                    snackBarHostState.showSnackbar("Task created successfully")
+                }
             }
         }
 
