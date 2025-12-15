@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.coil.compose)
     implementation(libs.androidx.compose.runtime)
+    implementation(libs.play.services.auth)
 
 
     testImplementation(libs.junit)

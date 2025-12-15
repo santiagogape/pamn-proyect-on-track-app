@@ -9,11 +9,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
 @Composable
-fun ProfilePicture(url: String) {
+fun ProfilePicture(url: String, modifier: Modifier = Modifier) {
     AsyncImage(
         model = url,
         contentDescription = "User",
-        modifier = Modifier
+        modifier = modifier
             .size(32.dp)
             .clip(CircleShape)
     )

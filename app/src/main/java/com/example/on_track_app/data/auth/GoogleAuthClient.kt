@@ -5,14 +5,16 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.CustomCredential
 import com.example.on_track_app.model.User
+import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-class GoogleAuthClient(private val context: Context) {
+class GoogleAuthClient(private val context: Context, private val oneTapClient: SignInClient) {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
     private val credentialManager = CredentialManager.create(context)
@@ -72,6 +74,17 @@ class GoogleAuthClient(private val context: Context) {
                 username = user.displayName ?: ""
             )
             userDocRef.set(newUser).await()
+        }
+    }
+
+    suspend fun signOut() {
+        try {
+            oneTapClient.signOut().await()
+
+            auth.signOut()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

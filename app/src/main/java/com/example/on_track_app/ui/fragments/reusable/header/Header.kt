@@ -1,14 +1,24 @@
 package com.example.on_track_app.ui.fragments.reusable.header
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -60,7 +70,8 @@ fun MainHeader(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
     reminders: List<Reminder>,
-    pfpUrl: String?
+    pfpUrl: String?,
+    onLogout: () -> Unit // <--- 1. New Parameter
 ) {
     Header(
         startContent = { OpenRemindersIconButton(reminders) },
@@ -72,7 +83,41 @@ fun MainHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            if (pfpUrl != null) ProfilePicture(pfpUrl)
+
+            if (pfpUrl != null) {
+                // 2. State for the menu
+                var menuExpanded by remember { mutableStateOf(false) }
+
+                // 3. Wrap in Box to anchor the DropdownMenu
+                Box {
+                    ProfilePicture(
+                        url = pfpUrl,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .clickable { menuExpanded = true } // Open menu on click
+                    )
+
+                    // 4. The Dropdown Menu
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Log out") },
+                            onClick = {
+                                menuExpanded = false
+                                onLogout() // <--- Trigger the logout
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                    contentDescription = "Log out"
+                                )
+                            }
+                        )
+                    }
+                }
+            }
         }
     )
 }

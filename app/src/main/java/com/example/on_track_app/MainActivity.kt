@@ -38,7 +38,8 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     factory = appViewModelFactory,
-                    userPhotoUrl = photoUrl
+                    userPhotoUrl = photoUrl,
+                    authClient = authClient
                 )
             } else {
                 LoginScreen(

@@ -9,6 +9,7 @@ import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Project
 import com.example.on_track_app.model.Reminder
 import com.example.on_track_app.model.Task
+import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.firestore.FirebaseFirestore
 
 interface AppContainer {
@@ -25,7 +26,7 @@ interface AppContainer {
 class DefaultAppContainer(private val context: Context) : AppContainer {
     private val firestoreInstance = FirebaseFirestore.getInstance()
     override val googleAuthClient: GoogleAuthClient by lazy {
-        GoogleAuthClient(context)
+        GoogleAuthClient(context, Identity.getSignInClient(context))
     }
 
     override val taskRepository: FirestoreRepository<Task> by lazy {
