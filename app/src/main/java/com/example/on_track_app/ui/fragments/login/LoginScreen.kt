@@ -24,6 +24,9 @@ fun LoginScreen(
     val state by viewModel.signInState.collectAsState()
     val context = LocalContext.current
 
+    // Colors
+    val darkPink =  Color(0xFFA35B88)
+
     // React to state changes
     LaunchedEffect(state) {
         if (state is SignInState.Success) {
@@ -50,14 +53,14 @@ fun LoginScreen(
 
             if (state is SignInState.Loading) {
                 CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = darkPink
                 )
             } else {
                 Button(
                     onClick = { viewModel.signIn(context) },
                     modifier = Modifier.fillMaxWidth(0.7f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
+                        containerColor = darkPink,
                         contentColor = Color.White
                     )
                 ) {

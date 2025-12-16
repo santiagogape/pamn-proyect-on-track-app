@@ -24,22 +24,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val appContainer = (application as App).container
         val authClient = appContainer.googleAuthClient
-        val user = Firebase.auth.currentUser
-        var photoUrl by mutableStateOf(user?.photoUrl?.toString())
-
-        lifecycleScope.launch {
-            try {
-                user?.reload()?.await()
-                photoUrl = Firebase.auth.currentUser?.photoUrl?.toString()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
 
         setContent {
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
             val appViewModelFactory = appContainer.viewModelFactory
             var isLoggedIn by remember { mutableStateOf((authClient.getUserId()) != null) }
+            var photoUrl by mutableStateOf(Firebase.auth.currentUser?.photoUrl?.toString())
+
+            lifecycleScope.launch {
+                val user = Firebase.auth.currentUser
+                try {
+                    user?.reload()?.await()
+                    photoUrl = user?.photoUrl?.toString()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
             if (isLoggedIn) {
                 OnTrackApp(
                     darkTheme = darkTheme,
