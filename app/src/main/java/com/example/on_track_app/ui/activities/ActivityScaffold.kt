@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarToday
@@ -142,7 +143,7 @@ fun ActivityScaffold(
                                         activeDialog = ActiveDialog.CreateProject
                                     },
                                     // TODO: Change the icon
-                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
+                                    leadingIcon = { Icon(Icons.Default.AccountTree, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("NEW EVENT") },

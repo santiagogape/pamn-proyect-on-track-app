@@ -39,7 +39,9 @@ fun ProjectsScreen(
         when (val state = uiState) {
 
             is ItemStatus.Loading -> {
-                CircularProgressIndicator()
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
 
             is ItemStatus.Error -> {

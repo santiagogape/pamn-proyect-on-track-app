@@ -15,6 +15,7 @@ import com.example.on_track_app.utils.SettingsDataStore
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class MainActivity : ComponentActivity() {
     private val settings by lazy { SettingsDataStore(this) }
@@ -24,7 +25,17 @@ class MainActivity : ComponentActivity() {
         val appContainer = (application as App).container
         val authClient = appContainer.googleAuthClient
         val user = Firebase.auth.currentUser
-        val photoUrl = user?.photoUrl?.toString()
+        var photoUrl by mutableStateOf(user?.photoUrl?.toString())
+
+        lifecycleScope.launch {
+            try {
+                user?.reload()?.await()
+                photoUrl = Firebase.auth.currentUser?.photoUrl?.toString()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         setContent {
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
             val appViewModelFactory = appContainer.viewModelFactory

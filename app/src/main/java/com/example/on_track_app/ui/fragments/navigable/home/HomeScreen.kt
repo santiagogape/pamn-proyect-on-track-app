@@ -44,7 +44,9 @@ fun HomeScreen(
         when (val state = uiState) {
 
             is ItemStatus.Loading -> {
-                CircularProgressIndicator()
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
             is ItemStatus.Error -> {
                 Text("Something went wrong loading tasks.")

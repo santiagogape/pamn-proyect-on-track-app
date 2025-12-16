@@ -42,13 +42,14 @@ android {
 }
 
 dependencies {
-    // TODO: If necessary, add to the libraries
     implementation("com.google.firebase:firebase-auth")
 
     // Credential Manager (The modern way to sign in)
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     // Firebase BoM
     implementation(platform(libs.firebase.bom))
