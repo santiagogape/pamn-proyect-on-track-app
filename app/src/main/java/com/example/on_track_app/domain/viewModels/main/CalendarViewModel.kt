@@ -53,16 +53,25 @@ class CalendarViewModel(
             emptyList()
         )
 
-    val events: StateFlow<List<Event>> = if (userId != null) {
-        eventRepository.getElements(userId)
-    } else {
-        flowOf(emptyList())
-    }
+    private val _currentProjectId = MutableStateFlow<String?>(null)
+
+    val events: StateFlow<List<Expandable>> = _currentProjectId
+        .flatMapLatest { projectId ->
+            if (projectId == null) {
+                if (userId != null) {
+                    eventRepository.getElements(userId)
+                } else {
+                    flowOf(emptyList())
+                }
+            } else {
+                eventRepository.getElementsByProjectId(projectId)
+            }
+        }
         .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            emptyList()
-        )
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        ) as StateFlow<List<Event>>
 
     fun updateEvent(
         eventId: String,
@@ -89,26 +98,14 @@ class CalendarViewModel(
             eventManager.deleteEvent(eventId)
         }
     }
-    val eventsByDates: StateFlow<Map<LocalDate, List<Event>>> = events
-        .map { list ->
-            list
-                .groupBy { event -> event.startDateObj }
-                .toSortedMap()
-        }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            emptyMap()
-        )
+    val eventsByDates: StateFlow<Map<LocalDate, List<Event>>> = eventManager.getEventsByDate(viewModelScope, events)
 
     fun eventsFor(date: LocalDate): StateFlow<List<Event>> {
-        return eventsByDates
-            .map { map -> map[date].orEmpty() }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5000),
-                emptyList()
-            )
+        return eventManager.getEventsForDate(
+            sourceMap = eventsByDates,
+            date = date,
+            scope = viewModelScope
+        )
     }
 
     private val _creationStatus  = MutableStateFlow<CreationStatus>(CreationStatus.Idle)
@@ -138,7 +135,7 @@ class CalendarViewModel(
         }
     }
 
-    private val _currentProjectId = MutableStateFlow<String?>(null)
+
 
     val availableProjects: StateFlow<ItemStatus> = if (userId != null) {
         projectRepository.getElements(userId)
@@ -180,32 +177,18 @@ class CalendarViewModel(
             initialValue = emptyList()
         ) as StateFlow<List<Task>>
 
-
     fun setProjectId(id: String?) {
         _currentProjectId.value = id
     }
 
-    val taskByDates: StateFlow<Map<LocalDate, List<Task>>> =
-        tasks.map { list ->
-            list
-                .filterIsInstance<Task>()
-                .groupBy {  task -> task.date }
-                .toSortedMap()
-        }.stateIn(
-            viewModelScope,
-            // Stop calculation 5s after UI disappears to save battery
-            SharingStarted.WhileSubscribed(5000),
-            emptyMap()
-        )
+    val taskByDates: StateFlow<Map<LocalDate, List<Task>>> = taskManager.getTasksByDate(viewModelScope, tasks)
 
     fun tasksFor(date: LocalDate): StateFlow<List<Task>> {
-        return taskByDates
-            .map { map -> map[date].orEmpty() }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5000),
-                emptyList()
-            )
+        return taskManager.getTasksForDate(
+            sourceMap = taskByDates,
+            date = date,
+            scope = viewModelScope
+        )
     }
 
     fun updateTask(

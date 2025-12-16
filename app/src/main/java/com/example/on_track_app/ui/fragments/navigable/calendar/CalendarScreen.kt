@@ -10,6 +10,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.example.on_track_app.di.AppViewModelFactory
 import com.example.on_track_app.di.DummyFactory
 import com.example.on_track_app.ui.activities.AgendaActivity
@@ -23,6 +25,10 @@ fun CalendarScreen(
     projectId: String? = null
 ) {
     val viewModel: CalendarViewModel = viewModel(factory = factory)
+
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
+    }
 
     val text by viewModel.text.collectAsStateWithLifecycle()
     val tasksByDates by viewModel.taskByDates.collectAsStateWithLifecycle()
@@ -40,6 +46,7 @@ fun CalendarScreen(
             eventsByDate = eventsByDates,
             onDayClick = {
                 date -> val intent = Intent(context, AgendaActivity::class.java)
+                intent.putExtra("PROJECT_ID", projectId)
                 intent.putExtra("LOCAL_DATE", date.toString())
                 context.startActivity(intent)
             }

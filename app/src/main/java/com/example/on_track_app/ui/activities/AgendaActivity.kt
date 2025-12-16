@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.App
 import com.example.on_track_app.R
@@ -42,6 +44,8 @@ import com.example.on_track_app.domain.viewModels.main.TasksViewModel
 import com.example.on_track_app.model.Event
 import com.example.on_track_app.ui.fragments.dialogs.EventCreation
 import com.example.on_track_app.ui.fragments.reusable.cards.SectionedExpandableCards
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDate.now
@@ -56,6 +60,7 @@ class AgendaActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val projectId = intent.getStringExtra("PROJECT_ID")
             val date = LocalDate.parse(intent.getStringExtra("LOCAL_DATE")!!)
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
             Agenda(
@@ -65,7 +70,8 @@ class AgendaActivity : ComponentActivity() {
                     }
                 },
                 date = date,
-                factory = appContainer.viewModelFactory
+                factory = appContainer.viewModelFactory,
+                projectId = projectId
             )
 
         }
@@ -77,11 +83,16 @@ fun Agenda(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
     date: LocalDate = now(),
-    factory: AppViewModelFactory
+    factory: AppViewModelFactory,
+    projectId: String? = null
 ){
     var currentDate by remember { mutableStateOf(date) }
 
     val viewModel: CalendarViewModel = viewModel(factory = factory)
+
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
+    }
 
     val tasksToday by viewModel.tasksFor(currentDate)
         .collectAsStateWithLifecycle()
@@ -89,15 +100,21 @@ fun Agenda(
     val eventsToday by viewModel.eventsFor(currentDate).collectAsStateWithLifecycle()
 
     val remindersViewModel: RemindersViewModel = viewModel(factory = factory)
-    val reminders: List<Reminder> by remindersViewModel.reminders.collectAsStateWithLifecycle()
+    val targetFlow = remember(projectId) {
+        if (projectId != null) {
+            remindersViewModel.projectReminders(projectId)
+        } else {
+            remindersViewModel.reminders
+        }
+    }
 
-    val tasksViewModel: TasksViewModel = viewModel(factory = factory)
+    val reminders by targetFlow.collectAsStateWithLifecycle()
 
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
             factory = factory,
             header = {
-                AgendaHeader(currentDate,darkTheme,onToggleTheme,reminders,null)
+                AgendaHeader(currentDate,darkTheme,onToggleTheme,reminders as List<Reminder>,null)
                      },
             footer = { NextPrev(
                 { currentDate = currentDate.minusDays(1) },
@@ -190,6 +207,6 @@ fun Agenda(
 @Composable
 fun Prev(){
     OnTrackAppTheme(darkTheme = false) {
-           Agenda(false,{}, factory =  DummyFactory as AppViewModelFactory)
+           Agenda(false,{}, factory = DummyFactory as AppViewModelFactory)
     }
 }

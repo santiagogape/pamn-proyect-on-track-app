@@ -4,7 +4,14 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.example.on_track_app.data.FirestoreRepository
 import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Expandable
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.fragments.dialogs.CreationStatus
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -77,4 +84,34 @@ class EventManager(
         } catch (e: Exception) {
             Log.e("Events (HomeViewModel/CalendarScreen)", "Failed to delete event with ID=$eventId", e)
         }
-    }}
+    }
+
+    fun getEventsByDate(scope: CoroutineScope, events: StateFlow<List<Expandable>>): StateFlow<Map<LocalDate, List<Event>>> {
+        return events
+            .map { list ->
+                list
+                    .filterIsInstance<Event>()
+                    .groupBy { it.startDateObj }
+                    .toSortedMap()
+            }
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyMap()
+            )
+    }
+
+    fun getEventsForDate(
+        sourceMap: StateFlow<Map<LocalDate, List<Event>>>,
+        date: LocalDate,
+        scope: CoroutineScope
+    ): StateFlow<List<Event>> {
+        return sourceMap
+            .map { map -> map[date].orEmpty() }
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+    }
+}
