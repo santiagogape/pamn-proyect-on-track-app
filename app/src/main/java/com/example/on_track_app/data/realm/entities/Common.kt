@@ -1,25 +1,24 @@
 package com.example.on_track_app.data.realm.entities
 
 import com.example.on_track_app.data.realm.utils.SynchronizationState
-import com.example.on_track_app.data.synchronization.SynchronizableDTO
-import com.example.on_track_app.model.Identifiable
 import com.example.on_track_app.model.Link
 import com.example.on_track_app.model.LinkedType
 import io.realm.kotlin.types.RealmInstant
 import org.mongodb.kbson.ObjectId
 
+//todo refactor ownerId as UserRealmEntity?,GroupRealmEntity?
 
 // local references
 interface Entity {
     var id: ObjectId
 }
 
-interface UserOwnedEntity {
+interface OwnedEntity {
     var ownerId: ObjectId
 }
 
 
-interface OwnershipEntity: UserOwnedEntity {
+interface OwnershipEntity: OwnedEntity {
     var ownerType: String
 }
 
@@ -35,12 +34,12 @@ interface MembershipEntity {
     var memberId: ObjectId
 }
 
-interface LinkEntity {
+interface LinkedEntity {
     var linkedTo: ObjectId?
     var linkType: String?
 }
 
-fun LinkEntity.toLink(): Link? {
+fun LinkedEntity.toLink(): Link? {
     return if (this.linkedTo != null && this.linkType != null) {
         Link(
             to = this.linkedTo!!.toHexString(),
@@ -58,11 +57,11 @@ interface SynchronizableEntity: Entity {
     var synchronizationStatus: String
 }
 
-interface SynchronizableUserOwnershipEntity: UserOwnedEntity {
+interface SynchronizableOwnedEntity: OwnedEntity {
     var cloudOwnerId: String?
 }
 
-interface SynchronizableOwnershipEntity: OwnershipEntity,SynchronizableUserOwnershipEntity
+interface SynchronizableOwnershipEntity: OwnershipEntity,SynchronizableOwnedEntity
 
 interface SynchronizableProjectOwnershipEntity: ProjectOwnershipEntity {
     var cloudProjectId: String?
@@ -73,24 +72,8 @@ interface SynchronizableMembershipEntity: MembershipEntity {
     var cloudMemberId: String?
 }
 
-interface SynchronizableLinkEntity: LinkEntity {
+interface SynchronizableLinkedEntity: LinkedEntity {
     var cloudLinkedTo: String?
-}
-
-interface SyncMapperGeneric<T, DTO,DOM>
-        where DOM : Identifiable,
-              DTO : SynchronizableDTO {
-    fun toLocal(dto:DTO,entity: T)
-    fun toDTO(entity:T): DTO
-    fun toDomain(entity:T): DOM
-}
-
-interface SyncMapper<RE, DTO,DOM>: SyncMapperGeneric<RE, DTO,DOM>
-        where RE : SynchronizableEntity, DOM : Identifiable,
-              DTO : SynchronizableDTO {
-    override fun toLocal(dto:DTO,entity: RE)
-    override fun toDTO(entity: RE): DTO
-    override fun toDomain(entity: RE): DOM
 }
 
 fun SynchronizableEntity.update() {

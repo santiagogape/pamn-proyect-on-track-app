@@ -11,13 +11,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.on_track_app.model.MockEvent
+import com.example.on_track_app.model.MockTask
 import java.time.LocalDate
-import java.time.YearMonth.*
+import java.time.YearMonth.now
 
 @Composable
 fun Calendar(
-    tasksByDate: Map<LocalDate, List<MockEvent>>,
-    onDayClick: (LocalDate) -> Unit
+    eventsByDates: Map<LocalDate, List<MockEvent>>,
+    onDayClick: (LocalDate) -> Unit,
+    tasksByDate: Map<LocalDate, List<MockTask>>
 ) {
     var currentMonth by remember { mutableStateOf(now()) }
     val today = LocalDate.now()
@@ -39,6 +41,7 @@ fun Calendar(
             month = currentMonth,
             today = today,
             tasksByDate = tasksByDate,
+            eventsByDates = eventsByDates,
             onDayClick = onDayClick
         )
     }

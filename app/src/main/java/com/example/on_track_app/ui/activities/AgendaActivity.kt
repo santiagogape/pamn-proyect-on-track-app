@@ -25,8 +25,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.OnTrackApp
 import com.example.on_track_app.R
-import com.example.on_track_app.model.toExpandable
-import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
+import com.example.on_track_app.model.MockEvent
+import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.TimedExpandable
+import com.example.on_track_app.model.sort
+import com.example.on_track_app.ui.fragments.dialogs.EditEvent
+import com.example.on_track_app.ui.fragments.dialogs.EditTask
+import com.example.on_track_app.ui.fragments.reusable.cards.TimedExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.LocalConfig
@@ -34,7 +39,7 @@ import com.example.on_track_app.utils.LocalOwnership
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.utils.SettingsDataStore
-import com.example.on_track_app.viewModels.main.CalendarViewModel
+import com.example.on_track_app.viewModels.main.AgendaViewModel
 import com.example.on_track_app.viewModels.main.ItemStatus
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -83,46 +88,109 @@ fun Agenda(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
     date: LocalDate = now(),
-){
+) {
     val viewModelFactory = LocalViewModelFactory.current
     var currentDate by remember { mutableStateOf(date) }
 
-    val viewModel: CalendarViewModel = viewModel(factory = viewModelFactory)
-    //todo modify calendar viewmodel
+    val config = LocalOwnership.current
 
-    val tasksToday by viewModel.eventsFor(currentDate)
-        .collectAsStateWithLifecycle()
+    val viewModel: AgendaViewModel = viewModel(factory = viewModelFactory)
+    val sourceFlow = remember(config.currentProject, config.currentGroup) {
+        when {
+            config.currentGroup != null && config.currentProject == null -> viewModel.byGroup(config.currentGroup)
+            config.currentProject != null -> viewModel.byProject(config.currentProject)
+            else -> viewModel.eventsByDates
+        }
+    }
+
+    val tasksSourceFlow = remember(config.currentProject, config.currentGroup) {
+        when {
+            config.currentGroup != null && config.currentProject == null -> viewModel.tasksByGroup(
+                config.currentGroup
+            )
+
+            config.currentProject != null -> viewModel.tasksByProject(config.currentProject)
+            else -> viewModel.tasksByDates
+        }
+    }
+    val events by sourceFlow.collectAsStateWithLifecycle()
+    val tasks by tasksSourceFlow.collectAsStateWithLifecycle()
+
+    var taskToEdit by remember { mutableStateOf<MockTask?>(null) }
+    var eventToEdit by remember { mutableStateOf<MockEvent?>(null) }
+
+    val state by viewModel.projects(config.currentGroup).collectAsStateWithLifecycle()
+
+
 
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
             header = {
-                AgendaHeader(currentDate,darkTheme,onToggleTheme)
-                     },
-            footer = { NextPrev(
-                { currentDate = currentDate.minusDays(1) },
-                { currentDate = currentDate.plusDays(1) }
-            ) }
-        ){
+                AgendaHeader(currentDate, darkTheme, onToggleTheme)
+            },
+            footer = {
+                NextPrev(
+                    { currentDate = currentDate.minusDays(1) },
+                    { currentDate = currentDate.plusDays(1) }
+                )
+            }
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                when (val state = tasksToday){
-                    ItemStatus.Error -> {}
-                    ItemStatus.Loading -> CircularProgressIndicator()
-                    is ItemStatus.Success ->
-                        if (state.elements.isEmpty()){
-                            Text(text = stringResource(R.string.no_tasks_today), style = MaterialTheme.typography.headlineSmall)
+                when {
+                    events is ItemStatus.Loading || tasks is ItemStatus.Loading -> {
+                        CircularProgressIndicator()
+                    }
+
+                    events is ItemStatus.Error || tasks is ItemStatus.Error -> {
+                    }
+
+                    events is ItemStatus.Success && tasks is ItemStatus.Success -> {
+                        val currentEvents =
+                            (events as ItemStatus.Success<Map<LocalDate, List<MockEvent>>>).elements
+                        val currentTask =
+                            (tasks as ItemStatus.Success<Map<LocalDate, List<MockTask>>>).elements
+                        val taskedMap = mutableMapOf<String, MockTask>()
+                        val eventMap = mutableMapOf<String, MockEvent>()
+                        val timedItems: List<TimedExpandable> =
+                            currentEvents[date].orEmpty().map {
+                                eventMap[it.id] = it
+                                it
+                            } +
+                                    currentTask[date].orEmpty().map {
+                                        taskedMap[it.id] = it
+                                        it
+                                    }
+
+                        if (currentTask.isEmpty() && currentEvents.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.day_empty),
+                                style = MaterialTheme.typography.headlineSmall
+                            )
                         } else {
-                            ExpandableCards(state.elements.map { it.toExpandable() })
+                            TimedExpandableCards(timedItems.sort(), {
+                                taskedMap[it.id]?.let { task -> taskToEdit = task }
+                                eventMap[it.id]?.let { event -> eventToEdit = event }
+                            }, {
+                                when(it) {
+                                    is MockTask -> viewModel.delete(it)
+                                    is MockEvent -> viewModel.delete(it)
+                                }
+
+                            })
                         }
+                    }
                 }
+
+                EditTask(taskToEdit, state, viewModel) {taskToEdit = null }
+                EditEvent(eventToEdit, state, viewModel) { eventToEdit = null }
+
             }
 
         }
-
-
     }
 }

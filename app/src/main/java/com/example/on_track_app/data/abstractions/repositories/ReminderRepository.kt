@@ -4,10 +4,14 @@ import com.example.on_track_app.model.Link
 import com.example.on_track_app.model.MockReminder
 import com.example.on_track_app.model.MockTimeField
 import com.example.on_track_app.model.OwnerType
-import java.time.LocalDate
-import java.time.LocalTime
 
-interface ReminderRepository: BasicById<MockReminder>, IndexedByOwner<MockReminder> {
+interface ReminderRepository: 
+    BasicById<MockReminder>,
+    IndexedByLink<MockReminder>,
+    Update<MockReminder>,
+    InTimeInterval<MockReminder>,
+        LinkAndInterval<MockReminder>
+{
     suspend fun addReminder(
         ownerId: String,
         ownerType: OwnerType,
@@ -17,10 +21,4 @@ interface ReminderRepository: BasicById<MockReminder>, IndexedByOwner<MockRemind
         linked: Link?,
         cloudId: String?
     ): String
-    suspend fun updateReminder(
-        id: String,
-        newDate: LocalDate,
-        newTime: LocalTime,
-        withTime: Boolean
-    )
 }

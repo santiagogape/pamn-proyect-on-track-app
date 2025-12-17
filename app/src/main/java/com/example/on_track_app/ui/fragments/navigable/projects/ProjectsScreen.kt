@@ -3,15 +3,22 @@ package com.example.on_track_app.ui.fragments.navigable.projects
 
 
 import android.content.Intent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.model.OwnerType
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
 import com.example.on_track_app.utils.LocalOwnership
@@ -29,7 +36,14 @@ fun ProjectsScreen(
 
     val context = LocalContext.current
     val default = LocalOwnership.current
-    val projects by viewModel.projects().collectAsStateWithLifecycle()
+
+    val projectsSource  =  remember(default.ownerType(), default.currentGroup) {
+        when (default.ownerType()) {
+            OwnerType.USER -> viewModel.projects()
+            OwnerType.GROUP -> viewModel.projectsOf(default.currentGroup!!)
+        }
+    }
+    val projects by projectsSource.collectAsStateWithLifecycle()
     val text by viewModel.text.collectAsStateWithLifecycle()
 
     Box(

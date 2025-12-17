@@ -11,7 +11,6 @@ import com.example.on_track_app.ui.activities.Dialogs
 import com.example.on_track_app.utils.LocalOwnership
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.CreationViewModel
-import com.example.on_track_app.viewModels.main.asSelectable
 import com.example.on_track_app.viewModels.raw.EventsViewModel
 import com.example.on_track_app.viewModels.raw.ProjectsViewModel
 import com.example.on_track_app.viewModels.raw.TasksViewModel
@@ -36,6 +35,9 @@ fun GlobalDialogCoordinator(
             val projectsViewModel: ProjectsViewModel = viewModel(factory = viewModelFactory)
             val state by  projectsViewModel.projects().collectAsStateWithLifecycle()
             TaskCreation(
+                defaultProject = ownershipContext.currentProject?.let {
+                    projectsViewModel.project(it)
+                },
                 availableProjects = state,
                 onDismiss = onDismiss,
                 onSubmit = { name, desc, project, date, hour, min ->
@@ -44,9 +46,6 @@ fun GlobalDialogCoordinator(
                     scope.launch {
                         snackBarHostState.showSnackbar("Task created successfully")
                     }
-                },
-                defaultProject = ownershipContext.currentProject?.let {
-                    projectsViewModel.project(it)
                 }
             )
 
@@ -56,22 +55,26 @@ fun GlobalDialogCoordinator(
             val projectsViewModel: ProjectsViewModel = viewModel(factory = viewModelFactory)
             val state by  projectsViewModel.projects().collectAsStateWithLifecycle()
 
-            EventCreation(ownershipContext.currentProject?.let {projectsViewModel.project(it)},state,onDismiss) {
-                name, desc, project, start, end ->
-                creator.addNewEvent(
-                    name,
-                    desc,
-                    project,
-                    ownershipContext.owner(),
-                    ownershipContext.ownerType(),
-                    start,
-                    end
-                )
-                onDismiss()
-                scope.launch {
-                    snackBarHostState.showSnackbar("Task created successfully")
-                }
-            }
+            EventCreation(
+                ownershipContext.currentProject?.let {projectsViewModel.project(it)},
+                state,
+                onDismiss,
+                { name, desc, project, start, end ->
+                    creator.addNewEvent(
+                        name,
+                        desc,
+                        project,
+                        ownershipContext.owner(),
+                        ownershipContext.ownerType(),
+                        start,
+                        end
+                    )
+                    onDismiss()
+                    scope.launch {
+                        snackBarHostState.showSnackbar("Task created successfully")
+                    }
+                },
+            )
         }
 
         Dialogs.PROJECT ->  {
@@ -110,8 +113,8 @@ fun GlobalDialogCoordinator(
                 },
                 builder = ReminderCreationBuilder(
                     sources = mapOf(
-                        LinkedType.TASK to selectableTasks.asSelectable(),
-                        LinkedType.EVENT to selectableEvents.asSelectable()
+                        LinkedType.TASK to selectableTasks,
+                        LinkedType.EVENT to selectableEvents
                     )
                 ),
             )

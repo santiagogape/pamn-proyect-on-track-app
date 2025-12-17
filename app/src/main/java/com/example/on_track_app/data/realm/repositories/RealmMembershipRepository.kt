@@ -2,7 +2,7 @@ package com.example.on_track_app.data.realm.repositories
 
 import com.example.on_track_app.data.abstractions.repositories.MembershipRepository
 import com.example.on_track_app.data.realm.entities.RealmMembershipEntity
-import com.example.on_track_app.data.realm.entities.SyncMapper
+import com.example.on_track_app.data.realm.repositories.decorated.SyncMapper
 import com.example.on_track_app.data.synchronization.MembershipDTO
 import com.example.on_track_app.data.synchronization.ReferenceIntegrityManager
 import com.example.on_track_app.data.synchronization.toObjectId
@@ -47,11 +47,11 @@ class RealmMembershipRepository(
 
     override suspend fun synchronizeReferences(id: String, cloudId: String) {
         db.write {
-            filter(Filter.MEMBERSHIP_ENTITY, id).map { entity ->
+            filter(this,Filter.MEMBERSHIP_ENTITY, id).map { entity ->
                 entity.cloudEntityId = cloudId
             }
 
-            filter(Filter.MEMBERSHIP_MEMBER, id).map { entity ->
+            filter(this,Filter.MEMBERSHIP_MEMBER, id).map { entity ->
                 entity.cloudMemberId = cloudId
             }
         }

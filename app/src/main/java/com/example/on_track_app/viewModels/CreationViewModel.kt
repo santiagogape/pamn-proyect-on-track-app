@@ -13,7 +13,6 @@ import com.example.on_track_app.model.MockTimeField
 import com.example.on_track_app.model.OwnerType
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 
 class CreationViewModel(val projectRepository: ProjectRepository, val eventRepository: EventRepository, val taskRepository: TaskRepository, val reminderRepository: ReminderRepository
@@ -30,13 +29,13 @@ class CreationViewModel(val projectRepository: ProjectRepository, val eventRepos
         }
     }
 
-    fun addNewEvent(name: String, description: String, project: String?, owner:String, type: OwnerType, startDateTime: LocalDateTime, endDateTime: LocalDateTime) {
+    fun addNewEvent(name: String, description: String, project: String?, owner:String, type: OwnerType, start: MockTimeField, end: MockTimeField) {
         viewModelScope.launch {
             eventRepository.addEvent(
                 name = name,
                 description = description,
-                start = MockTimeField(startDateTime.toInstant(), true),
-                end = MockTimeField(endDateTime.toInstant(), true),
+                start = start,
+                end = end,
                 projectId = project,
                 cloudId = null,
                 ownerId = owner,

@@ -29,9 +29,9 @@ class EventRealmEntity : RealmObject, SynchronizableEntity, SynchronizableOwners
     override var projectId: ObjectId? = null
 
     @Index
-    var startDate: RealmInstant = RealmInstant.now()
+    var start: RealmInstant = RealmInstant.now()
     var startWithTime: Boolean = false
-    var endDate: RealmInstant = RealmInstant.now()
+    var end: RealmInstant = RealmInstant.now()
     var endWithTime: Boolean = false
 
     @Index
@@ -52,8 +52,8 @@ fun EventRealmEntity.toDomain(): MockEvent {
         name = name,
         description = description,
         projectId = projectId?.toHexString(),
-        start = MockTimeField(startDate.toInstant(), startWithTime),
-        end = MockTimeField(endDate.toInstant(), endWithTime),
+        start = MockTimeField(start.toInstant(), startWithTime),
+        end = MockTimeField(end.toInstant(), endWithTime),
         cloudId = cloudId,
         ownerId = ownerId.toHexString(),
         ownerType = OwnerType.valueOf(ownerType),

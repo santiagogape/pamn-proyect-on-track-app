@@ -4,7 +4,10 @@ import com.example.on_track_app.model.MockEvent
 import com.example.on_track_app.model.MockTimeField
 import com.example.on_track_app.model.OwnerType
 
-interface EventRepository: BasicById<MockEvent>, IndexedByProject<MockEvent> {
+interface EventRepository: BasicById<MockEvent>,
+    IndexedByProject<MockEvent>,
+    IndexedByOwner<MockEvent>,
+    Update<MockEvent>, InTimeInterval<MockEvent>, GroupAndInterval<MockEvent>, ProjectAndInterval<MockEvent> {
     suspend fun addEvent(
         name: String,
         description: String,
@@ -15,10 +18,5 @@ interface EventRepository: BasicById<MockEvent>, IndexedByProject<MockEvent> {
         ownerId: String,
         ownerType: OwnerType
     ): String
-    suspend fun updateEvent(
-        id: String,
-        newName: String,
-        newDescription: String
-    )
 
 }

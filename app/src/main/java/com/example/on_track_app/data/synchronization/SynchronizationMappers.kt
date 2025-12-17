@@ -22,9 +22,9 @@ fun EventRealmEntity.toDTO(): EventDTO =
         description = description,
 
         cloudProjectId = cloudProjectId,
-        startDate = startDate.toMillis(),
+        startDate = start.toMillis(),
         startWithTime = startWithTime,
-        endDate = endDate.toMillis(),
+        endDate = end.toMillis(),
         endWithTime = endWithTime,
 
         version = version.toMillis(),
@@ -42,9 +42,9 @@ fun EventDTO.toRealm(entity: EventRealmEntity) {
     entity.cloudOwnerId = cloudOwnerId
     entity.ownerType = ownerType
 
-    entity.startDate = startDate.toRealmInstant()
+    entity.start = startDate.toRealmInstant()
     entity.startWithTime = startWithTime
-    entity.endDate = endDate.toRealmInstant()
+    entity.end = endDate.toRealmInstant()
     entity.endWithTime = endWithTime
 
     entity.cloudId = cloudId
@@ -141,7 +141,7 @@ fun TaskRealmEntity.toDTO(): TaskDTO =
         cloudId = cloudId,
 
         name = name,
-        date = date.toMillis(),
+        date = due.toMillis(),
         withTime = withTime,
         description = description,
         status = status,
@@ -154,7 +154,7 @@ fun TaskRealmEntity.toDTO(): TaskDTO =
 
 fun TaskDTO.toRealm(entity: TaskRealmEntity) {
     entity.name = name
-    entity.date = date.toRealmInstant()
+    entity.due = date.toRealmInstant()
     entity.withTime = withTime
     entity.description = description
     entity.status = status

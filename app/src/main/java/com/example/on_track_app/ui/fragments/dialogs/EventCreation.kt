@@ -32,15 +32,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.on_track_app.model.MockEvent
 import com.example.on_track_app.model.MockProject
+import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.toDate
+import com.example.on_track_app.model.toTime
+import com.example.on_track_app.ui.ConsultProject
+import com.example.on_track_app.ui.ModifyEvent
 import com.example.on_track_app.ui.fragments.reusable.Selector
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
 import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
+import com.example.on_track_app.utils.DebugLogcatLogger
 import com.example.on_track_app.viewModels.main.ItemStatus
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.LocalDate.now as today
 import java.time.LocalTime.now as currently
@@ -51,30 +57,31 @@ enum class DateType {
 
 @Composable
 fun EventCreation(
-    defaultProject: MockProject?,
+    defaultProject: MockProject? = null,
     availableProjects: ItemStatus<List<MockProject>>,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String?, LocalDateTime, LocalDateTime) -> Unit
+    onSubmit: (String, String, String?, MockTimeField, MockTimeField) -> Unit,
+    existingEvent: MockEvent? = null
 ) {
     var deadlineOpen: DateType? by remember {mutableStateOf(null)}
-    var oneDayEvent by remember { mutableStateOf(false) }
+    var oneDayEvent by remember { mutableStateOf(existingEvent?.onDayEvent ?: false) }
 
-    var startDate: LocalDate by remember { mutableStateOf(today()) }
-    var endDate: LocalDate by remember { mutableStateOf(today().plusDays(1)) }
+    var startDate: LocalDate by remember { mutableStateOf(existingEvent?.start?.toDate() ?: today()) }
+    var endDate: LocalDate by remember { mutableStateOf(existingEvent?.end?.toDate() ?: today().plusDays(1)) }
 
-    var startTime by remember { mutableStateOf(currently()) }
-    var endTime by remember { mutableStateOf(currently()) }
+    var startTime by remember { mutableStateOf(existingEvent?.start?.toTime() ?: currently()) }
+    var endTime by remember { mutableStateOf(existingEvent?.end?.toTime() ?:currently()) }
 
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var project by remember { mutableStateOf<String?>("") }
-    val start: LocalDateTime by remember { derivedStateOf {
-        if (oneDayEvent) LocalDateTime.of(startDate, LocalTime.of(0,0))
-        else LocalDateTime.of(startDate,startTime)
+    var name by remember { mutableStateOf(existingEvent?.name ?:"") }
+    var description by remember { mutableStateOf(existingEvent?.description?:"") }
+    var project by remember { mutableStateOf(defaultProject?.id) }
+    val start: MockTimeField by remember { derivedStateOf {
+        if (oneDayEvent) MockTimeField(startDate)
+        else MockTimeField(startDate,startTime.hour, startTime.minute)
     }}
-    val end: LocalDateTime by remember { derivedStateOf {
-        if (oneDayEvent) LocalDateTime.of(endDate, LocalTime.of(23,59))
-        else LocalDateTime.of(endDate,endTime)
+    val end: MockTimeField by remember { derivedStateOf {
+        if (oneDayEvent) MockTimeField(startDate)
+        else MockTimeField(endDate,endTime.hour, endTime.minute)
     }}
 
 
@@ -114,16 +121,24 @@ fun EventCreation(
                 
                 when (deadlineOpen){
                     DateType.START -> 
-                        Calendar(mapOf()) { chosen ->
-                            startDate = chosen
-                            deadlineOpen = null
-                        }
-                    DateType.END -> 
-                        Calendar(mapOf()) { chosen ->
-                            endDate = chosen
-                            deadlineOpen = null
-                        }
-                    null -> 
+                        Calendar(
+                            mapOf(),
+                            { chosen ->
+                                startDate = chosen
+                                deadlineOpen = null
+                            },mapOf()
+                        )
+
+                    DateType.END ->
+                        Calendar(
+                            mapOf(),
+                            { chosen ->
+                                endDate = chosen
+                                deadlineOpen = null
+                            },mapOf()
+                        )
+
+                    null ->
                         {
                             OutlinedTextFieldColors {
                                     colors ->
@@ -157,7 +172,8 @@ fun EventCreation(
                                     "Select a Project (Optional)",
                                     "Selection",
                                     "No project selected"
-                                ){  project = it?.id }
+                                ){  DebugLogcatLogger.log("received selected $it")
+                                    project = it?.id }
                             }
 
                             Row(modifier = Modifier.fillMaxWidth(),
@@ -209,6 +225,7 @@ fun EventCreation(
                                 // SUBMIT
                                 Button(
                                     onClick = {
+                                        DebugLogcatLogger.log("project $project")
                                         onSubmit(
                                             name, description, project,
                                             start,end
@@ -235,3 +252,31 @@ fun EventCreation(
     }
 }
 
+@Composable
+fun <T> EditEvent(
+    eventToEdit: MockEvent?,
+    state: ItemStatus<List<MockProject>>,
+    viewModel: T,
+    dismiss: () -> Unit,
+) where T: ModifyEvent, T: ConsultProject {
+    if (eventToEdit != null){
+        EventCreation(
+            availableProjects = state,
+            onDismiss = {
+                dismiss()
+            },
+            onSubmit = { name, desc, projId, start, end ->
+                viewModel.update(
+                    eventToEdit.update(
+                        name, desc, start, end, projId
+                    )
+                )
+                dismiss()
+            },
+            existingEvent = eventToEdit,
+            defaultProject = eventToEdit.projectId?.let {
+                viewModel.project(it)
+            }
+        )
+    }
+}

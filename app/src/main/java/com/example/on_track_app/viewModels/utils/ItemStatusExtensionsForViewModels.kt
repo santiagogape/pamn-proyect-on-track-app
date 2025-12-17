@@ -9,6 +9,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 
+fun <T> Flow<T>.asItemStatus(): Flow<ItemStatus<T>> =
+    this.map<T,ItemStatus<T>> { list ->
+        ItemStatus.Success(list)
+    }.onStart {
+            emit(ItemStatus.Loading)
+        }
 
 fun <T> Flow<T>.asItemStatus(
     scope: CoroutineScope,

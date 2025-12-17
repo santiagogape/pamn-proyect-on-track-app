@@ -34,6 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.on_track_app.model.MockProject
+import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.toDate
+import com.example.on_track_app.model.toTime
+import com.example.on_track_app.ui.ConsultProject
+import com.example.on_track_app.ui.ModifyTask
 import com.example.on_track_app.ui.fragments.reusable.Selector
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
@@ -46,21 +52,22 @@ import java.time.LocalDate.now
 @OptIn(ExperimentalMaterial3Api::class) // Required for ExposedDropdownMenuBox
 @Composable
 fun TaskCreation(
-    defaultProject: MockProject?,
+    defaultProject: MockProject? = null,
     availableProjects: ItemStatus<List<MockProject>>,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String?, LocalDate, Int?, Int?) -> Unit
+    onSubmit: (String, String, String?, LocalDate, Int?, Int?) -> Unit,
+    existingTask: MockTask? = null
 ) {
     var deadlineOpen by remember { mutableStateOf(false) }
 
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(existingTask?.name ?: "") }
+    var description by remember { mutableStateOf(existingTask?.description ?: "") }
 
-    var selectedProject by remember { mutableStateOf<MockProject?>(null) }
+    var selectedProject by remember { mutableStateOf(defaultProject) }
 
-    var date by remember { mutableStateOf(now()) }
-    var hour by remember { mutableIntStateOf(-1) }
-    var minute by remember { mutableIntStateOf(-1) }
+    var date by remember { mutableStateOf(existingTask?.due?.toDate() ?: now()) }
+    var hour by remember { mutableIntStateOf(existingTask?.due?.toTime()?.hour ?:-1) }
+    var minute by remember { mutableIntStateOf(existingTask?.due?.toTime()?.minute ?: -1) }
     var pickHour by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -99,10 +106,13 @@ fun TaskCreation(
                 }
 
                 if (deadlineOpen) {
-                    Calendar(mapOf()) { chosen ->
-                        date = chosen
-                        deadlineOpen = false
-                    }
+                    Calendar(
+                        mapOf(),
+                        { chosen ->
+                            date = chosen
+                            deadlineOpen = false
+                        },mapOf()
+                    )
                 } else {
                     OutlinedTextFieldColors { colors ->
                         OutlinedTextField(
@@ -194,5 +204,37 @@ fun TaskCreation(
                 }
             }
         }
+    }
+}
+
+
+
+@Composable
+fun <T> EditTask(
+    taskToEdit: MockTask?,
+    state: ItemStatus<List<MockProject>>,
+    viewModel: T,
+    dismiss: ()->Unit
+) where T: ModifyTask, T: ConsultProject {
+    if (taskToEdit != null) {
+        TaskCreation(
+            availableProjects = state,
+            onDismiss = {
+                dismiss()
+            },
+            onSubmit = { name, desc, projId, date, h, m ->
+                viewModel.update(
+                    taskToEdit.update(
+                        name, desc,
+                        MockTimeField(date, h, m), projId
+                    )
+                )
+                dismiss()
+            },
+            existingTask = taskToEdit,
+            defaultProject = taskToEdit.projectId?.let {
+                viewModel.project(it)
+            }
+        )
     }
 }

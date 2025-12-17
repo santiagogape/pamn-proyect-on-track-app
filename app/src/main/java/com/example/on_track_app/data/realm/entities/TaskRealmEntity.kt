@@ -17,7 +17,7 @@ class TaskRealmEntity : Named, Described, RealmObject, SynchronizableEntity, Syn
     @PrimaryKey
     override var id: ObjectId = ObjectId()
     override var name: String = ""
-    var date: RealmInstant = RealmInstant.now()
+    var due: RealmInstant = RealmInstant.now()
     var withTime: Boolean = false
     override var description: String = ""
     @Index
@@ -44,7 +44,7 @@ fun TaskRealmEntity.toDomain(): MockTask {
         id = id.toHexString(),
         name = name,
         due = MockTimeField(
-            instant = date.toInstant(),
+            instant = due.toInstant(),
             timed = withTime
         ),
         description = description,

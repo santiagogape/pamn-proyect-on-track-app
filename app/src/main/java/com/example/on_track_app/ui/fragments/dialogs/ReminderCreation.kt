@@ -32,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.on_track_app.model.LinkedType
-import com.example.on_track_app.ui.fragments.reusable.Selectable
+import com.example.on_track_app.model.Selectable
 import com.example.on_track_app.ui.fragments.reusable.Selector
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
@@ -107,10 +107,13 @@ fun ReminderCreation(
                 }
 
                 if (calendarOpen) {
-                    Calendar(mapOf()) { chosen ->
-                        date = chosen
-                        calendarOpen = false
-                    }
+                    Calendar(
+                        mapOf(),
+                        { chosen ->
+                            date = chosen
+                            calendarOpen = false
+                        },mapOf()
+                    )
                 } else {
                     // Reuse your custom color wrapper
                     OutlinedTextFieldColors { colors ->
@@ -142,7 +145,10 @@ fun ReminderCreation(
                             selected = builder.reminderDefaultSource; type = builder.defaultType
                         } else {
                             val types = builder.sources.keys
-                                .map { type -> Selectable(type.name, type.name) }
+                                .map { type -> object:Selectable{
+                                    override val id: String = type.name
+                                    override val name: String = type.name
+                                } }
 
                             Selector(
                                 colors,

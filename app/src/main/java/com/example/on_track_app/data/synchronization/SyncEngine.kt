@@ -1,6 +1,6 @@
 package com.example.on_track_app.data.synchronization
 
-import com.example.on_track_app.data.firebase.FirestoreSyncRepository
+import com.example.on_track_app.data.abstractions.repositories.SyncRepository
 import com.example.on_track_app.data.realm.repositories.SynchronizableRepository
 import com.example.on_track_app.utils.DebugLogcatLogger
 import kotlinx.coroutines.CoroutineScope
@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
 data class SyncRepositoryEntry<D : SynchronizableDTO>(
     val dtoClass: KClass<D>,
     val local: SynchronizableRepository<D>,
-    val remote: FirestoreSyncRepository<D>
+    val remote: SyncRepository<D>
 )
 
 //todo after recovering connection
@@ -25,8 +25,11 @@ class SyncRepositoryFactory(
     private val registry: Map<KClass<out SynchronizableDTO>, SyncRepositoryEntry<out SynchronizableDTO>> =
         entries.associateBy { it.dtoClass }
 
-    fun allEntries(): Collection<SyncRepositoryEntry<out SynchronizableDTO>> =
-        registry.values
+    fun allEntries(): Collection<SyncRepositoryEntry<out SynchronizableDTO>> {
+        DebugLogcatLogger.log(registry.values.map { it.dtoClass.simpleName }.toString())
+        return registry.values
+    }
+
 
 
     @Suppress("UNCHECKED_CAST")
@@ -44,9 +47,12 @@ class SyncEngine(
     fun start() {
         factory.allEntries().forEach { rawEntry ->
             scope.launch {
+                DebugLogcatLogger.log("Starting sync for ${rawEntry.dtoClass.simpleName}")
                 rawEntry.local.attachToEngine(this@SyncEngine)
                 rawEntry.remote.observeRemoteChanges()
                     .collect { dto ->
+                        DebugLogcatLogger.log("Received change for ${rawEntry.dtoClass.simpleName}")
+                        DebugLogcatLogger.log(dto.toString())
                         onRemoteChange(dto)
                     }
             }
@@ -63,11 +69,15 @@ class SyncEngine(
         //todo -> algorithm for elimination and synchronization between shared objects
 
         } else if (dto.cloudId == null){
+            DebugLogcatLogger.log("Starting remote push (new) for ${clazz.simpleName}")
+            DebugLogcatLogger.log("-> $dto")
             val generateCloudId = entry.remote.generateCloudId()
             val updated = entry.local.applyCloudId( id,generateCloudId)
             DebugLogcatLogger.logDTOToRemote(updated)
             entry.remote.push(generateCloudId, updated)
         } else {
+            DebugLogcatLogger.log("Starting remote push (update) for ${clazz.simpleName}")
+            DebugLogcatLogger.log("-> $dto")
             dto.cloudId?.let { entry.remote.push(it, dto)}
 
         }

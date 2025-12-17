@@ -21,15 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.on_track_app.model.Identifiable
-import com.example.on_track_app.model.Named
+import com.example.on_track_app.model.Selectable
+import com.example.on_track_app.utils.DebugLogcatLogger
 import com.example.on_track_app.viewModels.main.ItemStatus
 
-data class Selectable(override val id: String, override val name: String ): Identifiable, Named
-
-fun <T> T.toSelectable(): Selectable where T:Identifiable, T:Named{
-    return  Selectable(this.id,this.name)
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,8 +36,8 @@ fun <T> Selector(
     placeholder: String,
     noSelectionLabel:String,
     select: (T?) -> Unit
-) where T: Identifiable,T: Named {
-    var selectedProject by remember { mutableStateOf<T?>(null) }
+) where T: Selectable {
+    var selectedProject by remember { mutableStateOf(default) }
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -86,6 +81,7 @@ fun <T> Selector(
                         onClick = {
                             select(null)
                             expanded = false
+                            DebugLogcatLogger.log("No selection")
                         }
                     )
 
@@ -96,6 +92,7 @@ fun <T> Selector(
                                 select(item)
                                 selectedProject = item
                                 expanded = false
+                                DebugLogcatLogger.log("Selection: ${item.name}, ${item.id}")
                             }
                         )
                     }

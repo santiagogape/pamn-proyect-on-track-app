@@ -33,10 +33,10 @@ sealed interface CreationContext: Ownership {
     val currentProject: String
 }
 
-data class UserContext(
+data class Context(
     val userId: String,
-    override val availableProjects: List<MockProject>,//user
-    override val currentProject: String //user
+    override val availableProjects: List<MockProject>,//user -> all
+    override val currentProject: String //user -> all
 ) : CreationContext {
     override val ownerType = OwnerType.USER
     override val ownerId = userId
@@ -58,7 +58,7 @@ sealed interface ReminderCreationContext: Ownership {
     val availableEvents: List<MockEvent>
 }
 
-data class UserRemindersContext(
+data class RemindersContext(
     val userId: String,
     override val availableTasks: List<MockTask>,
     override val availableEvents: List<MockEvent>

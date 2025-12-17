@@ -13,7 +13,7 @@ import io.realm.kotlin.types.annotations.Index
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class ReminderRealmEntity : RealmObject, Named, Described, SynchronizableEntity,  SynchronizableOwnershipEntity, SynchronizableLinkEntity {
+class ReminderRealmEntity : RealmObject, Named, Described, SynchronizableEntity,  SynchronizableOwnershipEntity, SynchronizableLinkedEntity {
     @PrimaryKey
     override var id: ObjectId = ObjectId()
     @Index

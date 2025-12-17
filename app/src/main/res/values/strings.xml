@@ -6,5 +6,6 @@
     <string name="title_calendar">Calendar</string>
     <string name="theme_toggle">change theme</string>
     <string name="get_back">back to projects</string>
-    <string name="no_tasks_today">no tasks today</string>
+    <string name="day_empty">nothing is due</string>
+    <string name="calendar_empty">Nothings is happening today or ever, create a task or something, be productive</string>
 </resources>

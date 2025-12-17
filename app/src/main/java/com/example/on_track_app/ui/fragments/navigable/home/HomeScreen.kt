@@ -3,36 +3,94 @@ package com.example.on_track_app.ui.fragments.navigable.home
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.model.Expandable
-import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
+import com.example.on_track_app.model.MockEvent
+import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.ui.fragments.dialogs.EditEvent
+import com.example.on_track_app.ui.fragments.dialogs.EditTask
+import com.example.on_track_app.ui.fragments.reusable.cards.SectionedExpandableCards
+import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.HomeViewModel
+import com.example.on_track_app.viewModels.main.ItemStatus
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel()
 ) {
+    val viewModel: HomeViewModel = viewModel(factory = LocalViewModelFactory.current)
     val text by viewModel.text.collectAsStateWithLifecycle()
-    val items by viewModel.items.collectAsStateWithLifecycle()
+
+    val events by viewModel.events.collectAsStateWithLifecycle()
+    val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    var taskToEdit by remember { mutableStateOf<MockTask?>(null) }
+    var eventToEdit by remember { mutableStateOf<MockEvent?>(null) }
+
+    val state by viewModel.projects(null).collectAsStateWithLifecycle()
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (items.isEmpty()){
-            Text(text = text, style = MaterialTheme.typography.headlineSmall)
-        } else {
-            ExpandableCards(items.map { Expandable(it,it,it) })
+        when {
+            events is ItemStatus.Loading || tasks is ItemStatus.Loading -> {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+            }
+
+            events is ItemStatus.Error || tasks is ItemStatus.Error -> {
+            }
+
+            events is ItemStatus.Success && tasks is ItemStatus.Success -> {
+                val currentEvents = (events as ItemStatus.Success<List<MockEvent>>).elements
+                val currentTask = (tasks as ItemStatus.Success<List<MockTask>>).elements
+                if (currentTask.isEmpty() && currentEvents.isEmpty()) {
+                    Text(text = text, style = MaterialTheme.typography.headlineSmall)
+                } else {
+                    val contents: Map<String, List<Expandable>> = mapOf(
+                        "Tasks" to currentTask,
+                        "Events" to currentEvents
+                    )
+
+                    SectionedExpandableCards(
+                        groupedContents = contents,
+                        onEditItem = { item ->
+                            when(item) {
+                                is MockTask -> {
+                                    taskToEdit = item
+                                }
+                                is MockEvent -> {
+                                    eventToEdit = item
+                                }
+                            }
+                        },
+                        onDeleteItem = { item ->
+                            when(item) {
+                                is MockTask -> viewModel.delete(item)
+                                is MockEvent -> viewModel.delete(item)
+                            }
+
+                        }
+                    )
+                }
+            }
         }
+
+        EditTask(taskToEdit, state, viewModel,{taskToEdit=null})
+        EditEvent(eventToEdit, state, viewModel,{eventToEdit=null})
     }
 }
 

@@ -1,16 +1,33 @@
 package com.example.on_track_app.model
 
+import com.example.on_track_app.data.realm.utils.toInstant
 import com.example.on_track_app.data.realm.utils.toLocalDate
 import com.example.on_track_app.data.realm.utils.toLocalTime
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 
+interface Timed{
+    fun toTime(): LocalTime?
+    fun isDatedAt(day:LocalDate): Boolean
+}
+
+interface ExtendedTimed: Timed {
+    fun toTimeAt(day: LocalDate): LocalTime?
+}
+
+
 data class MockTimeField(
     val instant: Instant,
     val timed: Boolean = false
-)
+){
+    constructor(date: LocalDate, h: Int? = null, m: Int? = null) :
+            this(
+            date.toInstant(h, m),
+            h != null && m != null
+            )
 
+}
 
 fun MockTimeField.toDate(): LocalDate {
     return this.instant.toLocalDate()
@@ -30,11 +47,11 @@ interface Identifiable {
 }
 
 
-interface UserOwned {
+interface Owned {
     val ownerId: String
 }
 
-interface Ownership: UserOwned {
+interface Ownership: Owned {
     val ownerType: OwnerType
 }
 
@@ -48,6 +65,10 @@ interface Named {
 
 interface Described {
     val description: String
+}
+
+interface Linked {
+    val linked: Link?
 }
 
 data class Link(
@@ -69,11 +90,19 @@ data class MockReminder(
     override val name: String,
     override val description: String,
     val at: MockTimeField,
-    val linked: Link?,
+    override val linked: Link?,
     override val cloudId: String?,
 ): Identifiable,
     Ownership,
-    CloudIdentifiable, Named, Described
+    CloudIdentifiable, Named, Described, Linked, Selectable, TimedExpandable {
+    override fun toTime(): LocalTime? = at.toTime()
+    override fun isDatedAt(day: LocalDate): Boolean = at.toDate() == day
+    fun update(name: String,
+               description: String,
+               at: MockTimeField,
+               linked: Link?) = copy(name = name,
+        description = description, at = at, linked = linked)
+}
 
 data class MockEvent(
     override val id: String,
@@ -90,7 +119,22 @@ data class MockEvent(
     ProjectOwned,
     Named,
     Described,
-    CloudIdentifiable
+    CloudIdentifiable, TimedExpandable, Selectable {
+    override fun toTime(): LocalTime? = start.toTime()
+
+    override fun isDatedAt(day: LocalDate): Boolean =
+        start.toDate() <= day && end.toDate() >= day
+
+    fun update(name: String,
+               description: String,
+               start: MockTimeField,
+               end: MockTimeField,
+               projectId: String?) = copy(name = name,
+        description = description, start = start, end = end, projectId = projectId)
+
+    val onDayEvent = start.toDate() == end.toDate() && start.toTime() == null && end.toTime() == null
+
+}
 
 data class MockTask (
     override val id: String,
@@ -106,7 +150,15 @@ data class MockTask (
     ProjectOwned,
     Named,
     Described,
-    CloudIdentifiable
+    CloudIdentifiable, Selectable, TimedExpandable {
+    override fun toTime(): LocalTime? = due.toTime()
+    override fun isDatedAt(day: LocalDate): Boolean = due.toDate() == day
+    fun update(name: String,
+               description: String,
+               due: MockTimeField,
+               projectId: String?) = copy(name = name,
+        description = description, due = due, projectId = projectId)
+}
 
 data class MockGroup (
     override val id: String,
@@ -117,8 +169,12 @@ data class MockGroup (
 ): Identifiable,
     Named,
     Described,
-    UserOwned,
-    CloudIdentifiable
+    Owned,
+    CloudIdentifiable, Expandable, Selectable {
+    fun update(name: String,
+               description: String) = copy(name = name,
+        description = description)
+}
 
 data class MockProject (
     override val id: String,
@@ -131,7 +187,11 @@ data class MockProject (
     Ownership,
     Named,
     Described,
-    CloudIdentifiable
+    CloudIdentifiable, Expandable, Selectable {
+    fun update(name: String,
+               description: String) = copy(name = name,
+        description = description)
+}
 
 data class MockUser (
     override val id: String = "",
@@ -140,4 +200,4 @@ data class MockUser (
     override val cloudId: String? = null
 ):  Identifiable,
     Named,
-    CloudIdentifiable
+    CloudIdentifiable, Selectable

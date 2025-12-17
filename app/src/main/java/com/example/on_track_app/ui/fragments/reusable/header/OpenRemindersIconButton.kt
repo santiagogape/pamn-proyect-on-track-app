@@ -42,12 +42,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.model.LinkedType
+import com.example.on_track_app.model.MockReminder
+import com.example.on_track_app.model.sortByTime
 import com.example.on_track_app.model.toDate
 import com.example.on_track_app.model.toTime
 import com.example.on_track_app.utils.LocalOwnership
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.raw.RemindersViewModel
+import kotlinx.coroutines.flow.StateFlow
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,8 +61,16 @@ fun OpenRemindersIconButton(
 ) {
     val ownership = LocalOwnership.current
     val viewModel: RemindersViewModel = viewModel(factory = LocalViewModelFactory.current)
-    val sourceFlow = remember(ownership.currentProject,ownership.currentGroup) {
-        viewModel.all
+    val sourceFlow: StateFlow<ItemStatus<List<MockReminder>>> = remember(ownership.currentProject,ownership.currentGroup) {
+        when {
+            ownership.currentGroup != null && ownership.currentProject == null ->
+                viewModel.byGroup(ownership.currentGroup)
+
+            ownership.currentProject != null ->
+                viewModel.byProject(ownership.currentProject)
+            else -> viewModel.all(ownership.userId)
+
+        }
     }
     val reminders by sourceFlow.collectAsStateWithLifecycle()
     var showPopup by remember { mutableStateOf(false) }
@@ -134,7 +145,7 @@ fun OpenRemindersIconButton(
                             }
                         } else {
                             LazyColumn {
-                                items(state.elements) { item ->
+                                items(state.elements.sortByTime()) { item ->
 
                                     ListItem(
                                         // CHANGE 2: Added explicit size and standard icons

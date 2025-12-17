@@ -14,6 +14,12 @@ object DebugLogcatLogger {
 
     private const val TAG = "SyncDebug"
 
+    fun log(message: String) = Log.d(TAG, """
+            ---- LOGGING MESSAGE ----
+            ${"\t"} $message ${"\n\n"}
+            --------------------------------
+            """)
+
     fun logConfig(conf: MockUser, where: String){
         Log.d(
             TAG,

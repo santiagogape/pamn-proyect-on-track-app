@@ -4,7 +4,14 @@ import com.example.on_track_app.model.MockTask
 import com.example.on_track_app.model.MockTimeField
 import com.example.on_track_app.model.OwnerType
 
-interface TaskRepository: BasicById<MockTask>, IndexedByProject<MockTask> {
+interface TaskRepository: BasicById<MockTask>,
+	IndexedByProject<MockTask>,
+	IndexedByOwner<MockTask>,
+    Update<MockTask>,
+    InTimeInterval<MockTask>,
+    GroupAndInterval<MockTask>,
+        ProjectAndInterval<MockTask>
+{
 
     suspend fun addTask(
         name: String,
@@ -15,9 +22,5 @@ interface TaskRepository: BasicById<MockTask>, IndexedByProject<MockTask> {
         ownerId: String,
         ownerType: OwnerType
     ): String
-    suspend fun updateTask(
-        id: String,
-        newName: String,
-        newDescription: String
-    )
+
 }

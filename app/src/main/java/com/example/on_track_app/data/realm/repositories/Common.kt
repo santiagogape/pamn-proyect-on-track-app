@@ -3,9 +3,9 @@ package com.example.on_track_app.data.realm.repositories
 import com.example.on_track_app.data.abstractions.repositories.BasicById
 import com.example.on_track_app.data.realm.entities.Entity
 import com.example.on_track_app.data.realm.entities.LocalConfig
-import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.realm.entities.delete
+import com.example.on_track_app.data.realm.repositories.decorated.SyncMapper
 import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.synchronization.ReferenceIntegrityManager
 import com.example.on_track_app.data.synchronization.SyncEngine
@@ -27,7 +27,16 @@ enum class Filter{
     OWNER("ownerId == $0"),
     PROJECT("projectId == $0"),
     LINK("linkedTo == $0"),
-    MEMBERSHIP_ENTITY("entityId == $0"),
+    LINKS("linkedTo IN $0"),
+    TASK_DUE_IN("due >= $0 AND due <= $1"),
+    GROUP_TASK_DUE_IN("ownerId == $0 AND due >= $1 AND due <= $2"),
+    PROJECT_TASK_DUE_IN("projectId == $0 AND due >= $1 AND due <= $2"),
+    EVENT_IN("start >= $0 AND end <= $1"),
+    GROUP_EVENT_IN("ownerId == $0 AND start >= $1 AND end <= $2"),
+    PROJECT_EVENT_IN("projectId == $0 AND start >= $1 AND end <= $2"),
+    REMINDER_IN("at >= $0 AND at <= $1"),
+    LINKED_REMINDER_IN("linkedTo IN $0 AND at >= $1 AND at <= $2"),
+    MEMBERSHIP_ENTITY("entityId == $0 "),
     MEMBERSHIP_MEMBER("memberId == $0"),
 
     REMOTE("cloudId == $0"),
@@ -48,25 +57,30 @@ abstract class RealmRepository<K> where K : TypedRealmObject, K : Entity {
 
     abstract val localClass: KClass<K>
 
-    protected fun Realm.config(): LocalConfig? = query(LocalConfig::class).first().find()
+    fun config(realm: Realm): LocalConfig? = realm.query(LocalConfig::class).first().find()
 
-    protected fun Realm.entity(id:String): K? =
-        query(localClass, Filter.ENTITY.query, ObjectId(id))
+    fun entity(realm: Realm,id:String): K? =
+        realm.query(localClass, Filter.ENTITY.query, ObjectId(id))
             .first()
             .find()
-    protected fun Realm.entityByCloudId(id:String): K? =
-        query(localClass, Filter.REMOTE.query, id)
+    fun entityByCloudId(realm: Realm,id:String): K? =
+        realm.query(localClass, Filter.REMOTE.query, id)
             .first()
             .find()
 
-    protected fun MutableRealm.entity(id: String): K? {
-        return query(localClass, Filter.ENTITY.query, ObjectId(id))
+    fun entityByCloudId(realm: MutableRealm,id:String): K? =
+        realm.query(localClass, Filter.REMOTE.query, id)
+            .first()
+            .find()
+
+    fun entity(realm: MutableRealm,id: String): K? {
+        return realm.query(localClass, Filter.ENTITY.query, ObjectId(id))
             .first()
             .find()
     }
 
-    protected fun MutableRealm.filter(filter: Filter, id: String): RealmResults<K> {
-        return query(localClass, filter.query, ObjectId(id))
+    fun filter(realm: MutableRealm,filter: Filter, id: String): RealmResults<K> {
+        return realm.query(localClass, filter.query, ObjectId(id))
             .find()
     }
 }
@@ -96,6 +110,8 @@ interface SynchronizableRepository<D : SynchronizableDTO>: SynchronizableReposit
     suspend fun getDTO(id:String): D?
     fun getRemoteOf(id:String): String?
 
+    suspend fun onLocalChange(id:String)
+
 }
 
 open class RealmSynchronizableRepository<
@@ -103,12 +119,12 @@ open class RealmSynchronizableRepository<
         DTO,
         DOM
         >(
-    protected val db: Realm,
-    protected val mapper: SyncMapper<RE, DTO, DOM>,
-    protected val maker: ()->RE,
+    val db: Realm,
+    val mapper: SyncMapper<RE, DTO, DOM>,
+    val maker: ()->RE,
     override val localClass: KClass<RE>,
-    protected val transferClass: KClass<DTO>,
-    protected val integrityManager: ReferenceIntegrityManager
+    val transferClass: KClass<DTO>,
+    val integrityManager: ReferenceIntegrityManager
 ) : RealmRepository<RE>(),
     BasicById<DOM>,
     SynchronizableRepository<DTO>
@@ -117,7 +133,7 @@ open class RealmSynchronizableRepository<
               DOM : Identifiable,
               DTO : SynchronizableDTO {
 
-    protected var syncEngine: SyncEngine? = null
+    var syncEngine: SyncEngine? = null
 
 
     // ---------------------------
@@ -130,7 +146,7 @@ open class RealmSynchronizableRepository<
             .map { result -> result.list.map { mapper.toDomain(it)  } }
 
     override fun getById(id: String): DOM? =
-        db.entity(id)?.let { mapper.toDomain(it) }
+        entity(db,id)?.let { mapper.toDomain(it) }
 
     override fun liveById(id: String): Flow<DOM?> {
         return db.query(localClass, Filter.ENTITY.query, ObjectId(id)).first()
@@ -140,7 +156,7 @@ open class RealmSynchronizableRepository<
     override suspend fun markAsDeleted(id: String) {
 
         db.write {
-            val local = entity(id) ?: return@write
+            val local = entity(this,id) ?: return@write
             local.delete()
         }
         syncEngine?.onLocalChange(id, transferClass)
@@ -148,7 +164,7 @@ open class RealmSynchronizableRepository<
 
     override suspend fun delete(id: String) {
         db.write {
-            val local:RE? = entity(id)
+            val local:RE? = entity(this,id)
             local?.let { delete(findLatest(it)!!) }
         }
     }
@@ -167,7 +183,7 @@ open class RealmSynchronizableRepository<
     }
 
     override suspend fun applyRemoteUpdate(dto: DTO) {
-        val local = db.entityByCloudId(dto.cloudId!!)
+        val local = entityByCloudId(db,dto.cloudId!!)
         if (local == null) {
             applyRemoteInsert(dto)
             return
@@ -184,7 +200,7 @@ open class RealmSynchronizableRepository<
 
     override suspend fun applyRemoteDelete(dto: DTO) {
         db.write {
-            db.entityByCloudId(dto.cloudId!!)?.let {
+            entityByCloudId(this,dto.cloudId!!)?.let {
                 delete(findLatest(it)!!)
             }
         }
@@ -202,7 +218,7 @@ open class RealmSynchronizableRepository<
         lateinit var result: DTO
 
         db.write {
-            val local = entity(id) ?: return@write
+            val local = entity(this,id) ?: return@write
             local.cloudId = cloudId
             local.synchronizationStatus = SynchronizationState.CURRENT.name
             result = mapper.toDTO(local)
@@ -221,11 +237,15 @@ open class RealmSynchronizableRepository<
     }
 
     override suspend fun getDTO(id: String): DTO? {
-        return db.entity(id)?.let { mapper.toDTO(it) }
+        return entity(db,id)?.let { mapper.toDTO(it) }
     }
 
     override fun getRemoteOf(id: String): String? {
-        return db.entity(id)?.cloudId
+        return entity(db,id)?.cloudId
+    }
+
+    override suspend fun onLocalChange(id: String) {
+        syncEngine?.onLocalChange(id, transferClass)
     }
 }
 

@@ -20,7 +20,7 @@ class LocalConfigRepository(private val db: Realm) : UniqueRepository<LocalConfi
 
     override suspend fun init(remote: MockUser): UserDTO {
         var dto = UserDTO()
-        if (db.config() == null) {
+        if (config(db) == null) {
             db.write {
                 val managedUser = copyToRealm(
                     UserRealmEntity().apply {
@@ -39,7 +39,7 @@ class LocalConfigRepository(private val db: Realm) : UniqueRepository<LocalConfi
                 dto = managedUser.toDTO()
             }
         } else {
-            val userConf = db.config()!!.user!!
+            val userConf = config(db)!!.user!!
             _config.value = LocalConfigurations(userConf.id.toHexString())
             dto = userConf.toDTO()
         }

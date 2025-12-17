@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class ProjectsViewModel(private val repo: ProjectRepository
 ) : ViewModel() {
@@ -32,4 +33,14 @@ class ProjectsViewModel(private val repo: ProjectRepository
     fun projects(): StateFlow<ItemStatus<List<MockProject>>> =
         this.repo.getAll()
             .asItemStatus(viewModelScope, SharingStarted.Eagerly)
+
+    fun projectsOf(id:String):StateFlow<ItemStatus<List<MockProject>>> {
+        return this.repo.of(id).asItemStatus(viewModelScope, SharingStarted.Eagerly)
+    }
+
+    fun update(task: MockProject){
+        viewModelScope.launch {
+            repo.update(task)
+        }
+    }
 }

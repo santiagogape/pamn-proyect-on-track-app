@@ -11,7 +11,7 @@ import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
 class GroupRealmEntity : RealmObject, Named, Described,SynchronizableEntity,
-    SynchronizableUserOwnershipEntity  {
+    SynchronizableOwnedEntity  {
     @PrimaryKey
     override var id: ObjectId = ObjectId()
 

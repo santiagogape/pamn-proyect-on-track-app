@@ -4,6 +4,7 @@ package com.example.on_track_app
 import android.app.Application
 import com.example.on_track_app.data.abstractions.repositories.UniqueRepository
 import com.example.on_track_app.data.auth.GoogleAuthClient
+import com.example.on_track_app.data.dependencyInjections.builders.RepositoryBuilderFactory
 import com.example.on_track_app.data.firebase.FirestoreService
 import com.example.on_track_app.data.firebase.FirestoreSyncRepository
 import com.example.on_track_app.data.realm.RealmDatabase
@@ -12,19 +13,13 @@ import com.example.on_track_app.data.realm.entities.GroupRealmEntity
 import com.example.on_track_app.data.realm.entities.ProjectRealmEntity
 import com.example.on_track_app.data.realm.entities.RealmMembershipEntity
 import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
-import com.example.on_track_app.data.realm.entities.SyncMapper
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.UserRealmEntity
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.repositories.Filter
 import com.example.on_track_app.data.realm.repositories.LocalConfigRepository
-import com.example.on_track_app.data.realm.repositories.RealmEventRepository
-import com.example.on_track_app.data.realm.repositories.RealmGroupRepository
 import com.example.on_track_app.data.realm.repositories.RealmMembershipRepository
-import com.example.on_track_app.data.realm.repositories.RealmProjectRepository
-import com.example.on_track_app.data.realm.repositories.RealmReminderRepository
-import com.example.on_track_app.data.realm.repositories.RealmTaskRepository
-import com.example.on_track_app.data.realm.repositories.RealmUserRepository
+import com.example.on_track_app.data.realm.repositories.decorated.SyncMapper
 import com.example.on_track_app.data.synchronization.EventDTO
 import com.example.on_track_app.data.synchronization.GroupDTO
 import com.example.on_track_app.data.synchronization.MembershipDTO
@@ -35,6 +30,7 @@ import com.example.on_track_app.data.synchronization.ReminderDTO
 import com.example.on_track_app.data.synchronization.SyncEngine
 import com.example.on_track_app.data.synchronization.SyncRepositoryEntry
 import com.example.on_track_app.data.synchronization.SyncRepositoryFactory
+import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.data.synchronization.TaskDTO
 import com.example.on_track_app.data.synchronization.UserDTO
 import com.example.on_track_app.data.synchronization.toDTO
@@ -52,6 +48,7 @@ import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.viewModels.CreationViewModel
 import com.example.on_track_app.viewModels.factory.ViewModelsFactoryMock
 import com.example.on_track_app.viewModels.login.LoginViewModel
+import com.example.on_track_app.viewModels.main.AgendaViewModel
 import com.example.on_track_app.viewModels.main.CalendarViewModel
 import com.example.on_track_app.viewModels.main.HomeViewModel
 import com.example.on_track_app.viewModels.raw.EventsViewModel
@@ -97,44 +94,35 @@ class OnTrackApp : Application() {
 
         val integrityManager = ReferenceIntegrityManager(mutableMapOf())
 
-
+        //todo refactor this
 
 
         //local repositories
-        val repoUser = RealmUserRepository(
-            RealmDatabase.realm, USER_MAPPER, { UserRealmEntity() },
-            UserRealmEntity::class, UserDTO::class,integrityManager
-        )
-        val repoGroup = RealmGroupRepository(
-            RealmDatabase.realm, GROUP_MAPPER, { GroupRealmEntity() },
-            GroupRealmEntity::class, GroupDTO::class, integrityManager
-        )
-        val repoProject = RealmProjectRepository(RealmDatabase.realm,PROJECT_MAPPER,{ ProjectRealmEntity() },
-            ProjectRealmEntity::class, ProjectDTO::class,integrityManager )
         val repoMembership = RealmMembershipRepository(RealmDatabase.realm,MEMBERSHIP_MAPPER, { RealmMembershipEntity() },
             RealmMembershipEntity::class, MembershipDTO::class,integrityManager)
-        val repoEvent = RealmEventRepository(
-            RealmDatabase.realm, EVENT_MAPPER, { EventRealmEntity() },
-            EventRealmEntity::class, EventDTO::class, integrityManager
+
+        val factory = RepositoryBuilderFactory(
+            realm = RealmDatabase.realm,
+            integrityManager = integrityManager
         )
-        val repoTask = RealmTaskRepository(
-            RealmDatabase.realm, TASK_MAPPER, { TaskRealmEntity() },
-            TaskRealmEntity::class, TaskDTO::class, integrityManager
-        )
-        val repoReminder = RealmReminderRepository(
-            RealmDatabase.realm, REMINDER_MAPPER, { ReminderRealmEntity() },
-            ReminderRealmEntity::class, ReminderDTO::class, integrityManager
-        )
+
+        val userHandler = factory.user(USER_MAPPER).build()
+        val groupHandler = factory.group(GROUP_MAPPER).build()
+        val projectHandler = factory.project(PROJECT_MAPPER).build()
+        val taskHandler = factory.task(TASK_MAPPER).build()
+        val reminderHandler = factory.reminder(REMINDER_MAPPER).build()
+        val eventHandler = factory.event(EVENT_MAPPER).build()
+
 
         integrityManager.addClassAndEntry(UserDTO::class, ReferenceIntegrityManagerEntry(
                 dtoClass = UserDTO::class,
                 propagate = { localId, cloudId ->
-                    repoGroup.synchronizeReferences(localId,cloudId)
-                    repoProject.synchronizeReferences(localId,cloudId)
+                    groupHandler.reference?.synchronizeReferences(localId,cloudId)
+                    projectHandler.reference?.synchronizeReferences(localId,cloudId)
                     repoMembership.synchronizeReferences(localId,cloudId)
-                    repoTask.synchronizeReferences(localId,cloudId)
-                    repoEvent.synchronizeReferences(localId,cloudId)
-                    repoReminder.synchronizeReferences(localId,cloudId)
+                    taskHandler.reference?.synchronizeReferences(localId,cloudId)
+                    eventHandler.reference?.synchronizeReferences(localId,cloudId)
+                    reminderHandler.reference?.synchronizeReferences(localId,cloudId)
                 },
                 mapOf()
             )
@@ -143,13 +131,13 @@ class OnTrackApp : Application() {
         integrityManager.addClassAndEntry(GroupDTO::class, ReferenceIntegrityManagerEntry(
             dtoClass = GroupDTO::class,
             propagate = { localId, cloudId ->
-                repoProject.synchronizeReferences(localId,cloudId)
+                projectHandler.reference?.synchronizeReferences(localId,cloudId)
                 repoMembership.synchronizeReferences(localId,cloudId)
-                repoTask.synchronizeReferences(localId,cloudId)
-                repoEvent.synchronizeReferences(localId,cloudId)
-                repoReminder.synchronizeReferences(localId,cloudId)
+                taskHandler.reference?.synchronizeReferences(localId,cloudId)
+                eventHandler.reference?.synchronizeReferences(localId,cloudId)
+                reminderHandler.reference?.synchronizeReferences(localId,cloudId)
             },mapOf(
-                Filter.OWNER to {id->repoUser.getRemoteOf(id)}
+                Filter.OWNER to {id->userHandler.sync?.getRemoteOf(id)}
             )
         ))
 
@@ -157,11 +145,11 @@ class OnTrackApp : Application() {
             dtoClass = ProjectDTO::class,
             propagate = {localId, cloudId ->
                 repoMembership.synchronizeReferences(localId,cloudId)
-                repoTask.synchronizeReferences(localId,cloudId)
-                repoEvent.synchronizeReferences(localId,cloudId)
+                taskHandler.reference?.synchronizeReferences(localId,cloudId)
+                eventHandler.reference?.synchronizeReferences(localId,cloudId)
             },
             resolve = mapOf(
-                Filter.OWNER to {id->repoUser.getRemoteOf(id) ?: repoGroup.getRemoteOf(id)}
+                Filter.OWNER to {id->userHandler.sync?.getRemoteOf(id) ?: groupHandler.sync?.getRemoteOf(id)}
             )
         ))
 
@@ -169,8 +157,8 @@ class OnTrackApp : Application() {
                 dtoClass = MembershipDTO::class,
                 propagate = { _,_ -> },
                 resolve = mapOf(
-                    Filter.MEMBERSHIP_ENTITY to {id->repoGroup.getRemoteOf(id) ?: repoProject.getRemoteOf(id)},
-                    Filter.MEMBERSHIP_MEMBER to {id->repoUser.getRemoteOf(id)}
+                    Filter.MEMBERSHIP_ENTITY to {id->groupHandler.sync?.getRemoteOf(id) ?: projectHandler.sync?.getRemoteOf(id)},
+                    Filter.MEMBERSHIP_MEMBER to {id->userHandler.sync?.getRemoteOf(id)}
                 )
             )
         )
@@ -178,10 +166,10 @@ class OnTrackApp : Application() {
         integrityManager.addClassAndEntry(TaskDTO::class, ReferenceIntegrityManagerEntry(
                 dtoClass = TaskDTO::class,
                 propagate = { localId, cloudId ->
-                    repoReminder.synchronizeReferences(localId,cloudId)},
+                    reminderHandler.reference?.synchronizeReferences(localId,cloudId)},
                 resolve = mapOf(
-                    Filter.PROJECT to {id->repoProject.getRemoteOf(id)},
-                    Filter.OWNER to {id->repoUser.getRemoteOf(id) ?: repoGroup.getRemoteOf(id)}
+                    Filter.PROJECT to {id->projectHandler.sync?.getRemoteOf(id)},
+                    Filter.OWNER to {id->userHandler.sync?.getRemoteOf(id) ?: groupHandler.sync?.getRemoteOf(id)}
                 )
             )
         )
@@ -189,10 +177,10 @@ class OnTrackApp : Application() {
         integrityManager.addClassAndEntry(EventDTO::class, ReferenceIntegrityManagerEntry(
                 dtoClass = EventDTO::class,
                 propagate = { localId, cloudId ->
-                    repoReminder.synchronizeReferences(localId,cloudId)},
+                    reminderHandler.reference?.synchronizeReferences(localId,cloudId)},
                 resolve = mapOf(
-                    Filter.PROJECT to {id->repoProject.getRemoteOf(id)},
-                    Filter.OWNER to {id->repoUser.getRemoteOf(id) ?: repoGroup.getRemoteOf(id)}
+                    Filter.PROJECT to {id->projectHandler.sync?.getRemoteOf(id)},
+                    Filter.OWNER to {id->userHandler.sync?.getRemoteOf(id) ?: groupHandler.sync?.getRemoteOf(id)}
                 )
             )
         )
@@ -201,9 +189,8 @@ class OnTrackApp : Application() {
             dtoClass = ReminderDTO::class,
             propagate = {_,_ ->},
             resolve = mapOf(
-                Filter.OWNER to {id->repoUser.getRemoteOf(id) ?: repoGroup.getRemoteOf(id)} ,
-                Filter.LINK to {id->repoTask.getRemoteOf(id) ?: repoEvent.getRemoteOf(id)}
-
+                Filter.OWNER to {id->userHandler.sync?.getRemoteOf(id) ?: groupHandler.sync?.getRemoteOf(id)} ,
+                Filter.LINK to {id->taskHandler.sync?.getRemoteOf(id) ?: eventHandler.sync?.getRemoteOf(id)}
             )
         ))
 
@@ -253,19 +240,24 @@ class OnTrackApp : Application() {
             mapOf(
                 CreationViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = CreationViewModel::class.java,
-                    creator = { CreationViewModel(repoProject, repoEvent, repoTask,repoReminder) }
+                    creator = { CreationViewModel(
+                        projectHandler.repo,
+                        eventHandler.repo,
+                        taskHandler.repo,
+                        reminderHandler.repo
+                    ) }
                 ),
                 UsersViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = UsersViewModel::class.java,
-                    creator = { UsersViewModel(repoUser) }
+                    creator = { UsersViewModel(userHandler.repo) }
                 ),
                 GroupsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = GroupsViewModel::class.java,
-                    creator = { GroupsViewModel(repoGroup) }
+                    creator = { GroupsViewModel(groupHandler.repo) }
                 ),
                 ProjectsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = ProjectsViewModel::class.java,
-                    creator = { ProjectsViewModel(repoProject) }
+                    creator = { ProjectsViewModel(projectHandler.repo) }
                 ),
                 MembershipsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = MembershipsViewModel::class.java,
@@ -273,67 +265,93 @@ class OnTrackApp : Application() {
                 ),
                 TasksViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = TasksViewModel::class.java,
-                    creator = { TasksViewModel(repoTask) }
+                    creator = { TasksViewModel(taskHandler.repo, projectHandler.repo) }
                 ),
                 EventsViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = EventsViewModel::class.java,
-                    creator = { EventsViewModel(repoEvent) }
+                    creator = { EventsViewModel(eventHandler.repo) }
                 ),
                 RemindersViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = RemindersViewModel::class.java,
-                    creator = { RemindersViewModel(repoReminder) }
+                    creator = { RemindersViewModel(reminderHandler.repo, taskHandler.repo, eventHandler.repo) }
                 ),
                 CalendarViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = CalendarViewModel::class.java,
-                    creator = { CalendarViewModel(repoEvent) }
+                    creator = { CalendarViewModel(eventHandler.repo, taskHandler.repo) }
+                ),
+                AgendaViewModel::class to ViewModelsFactoryMock.FactoryEntry(
+                    vmClass = AgendaViewModel::class.java,
+                    creator = { AgendaViewModel(eventHandler.repo, taskHandler.repo, projectHandler.repo) }
                 ), HomeViewModel::class to ViewModelsFactoryMock.FactoryEntry(
                     vmClass = HomeViewModel::class.java,
-                    creator = { HomeViewModel() }
+                    creator = { HomeViewModel(taskHandler.repo, eventHandler.repo,projectHandler.repo) }
                 )
             )
         )
 
+        val syncRepositoryEntries = mutableListOf<SyncRepositoryEntry<out SynchronizableDTO>>()
 
-        val syncRepositoryFactory by lazy {
-            SyncRepositoryFactory(
-                listOf(
-                    SyncRepositoryEntry(
-                        dtoClass = UserDTO::class,
-                        local = repoUser,
-                        remote = remoteUserRepo),
-                    SyncRepositoryEntry(
-                        dtoClass = GroupDTO::class,
-                        local = repoGroup,
-                        remote = remoteGroupRepo
-                    ),
-                    SyncRepositoryEntry(
-                        dtoClass = ProjectDTO::class,
-                        local = repoProject,
-                        remote = remoteProjectRepo
-                    ),
-                    SyncRepositoryEntry(
-                        dtoClass = MembershipDTO::class,
-                        local = repoMembership,
-                        remote = remoteMembershipRepo
-                    ),
-                    SyncRepositoryEntry(
-                        dtoClass = TaskDTO::class,
-                        local = repoTask,
-                        remote = remoteTaskRepo
-                    ),
-                    SyncRepositoryEntry(
-                        dtoClass = EventDTO::class,
-                        local = repoEvent,
-                        remote = remoteEventRepo
-                    ),
-                    SyncRepositoryEntry(
-                        dtoClass = ReminderDTO::class,
-                        local = repoReminder,
-                        remote = remoteReminderRepo
-                    )
-                )
-            )
+        userHandler.sync?.let {
+            DebugLogcatLogger.log("User handler has sync")
+            syncRepositoryEntries.add(SyncRepositoryEntry(
+                dtoClass = UserDTO::class,
+                local = it,
+                remote = remoteUserRepo
+            ))
         }
+
+        groupHandler.sync?.let {
+            DebugLogcatLogger.log("Group handler has sync")
+            syncRepositoryEntries.add(SyncRepositoryEntry(
+                dtoClass = GroupDTO::class,
+                local = it,
+                remote = remoteGroupRepo
+            ))
+        }
+
+        projectHandler.sync?.let {
+            DebugLogcatLogger.log("Project handler has sync")
+            syncRepositoryEntries.add(SyncRepositoryEntry(
+                dtoClass = ProjectDTO::class,
+                local = it,
+                remote = remoteProjectRepo
+            ))
+        }
+
+        syncRepositoryEntries.add(SyncRepositoryEntry(
+            dtoClass = MembershipDTO::class,
+            local = repoMembership,
+            remote = remoteMembershipRepo
+        ))
+
+        taskHandler.sync?.let {
+            DebugLogcatLogger.log("Task handler has sync")
+            syncRepositoryEntries.add(SyncRepositoryEntry(
+                dtoClass = TaskDTO::class,
+                local = it,
+                remote = remoteTaskRepo
+            ))
+        }
+
+        eventHandler.sync?.let {
+            DebugLogcatLogger.log("Event handler has sync")
+            syncRepositoryEntries.add(SyncRepositoryEntry(
+                dtoClass = EventDTO::class,
+                local = it,
+                remote = remoteEventRepo
+            ))
+        }
+
+        reminderHandler.sync?.let {
+            DebugLogcatLogger.log("Reminder handler has sync")
+            syncRepositoryEntries.add(SyncRepositoryEntry(
+                dtoClass = ReminderDTO::class,
+                local = it,
+                remote = remoteReminderRepo
+            ))
+        }
+
+        val syncRepositoryFactory by lazy { SyncRepositoryFactory(syncRepositoryEntries) }
 
         // Sync Engine
         val syncEngine by lazy {
@@ -343,16 +361,23 @@ class OnTrackApp : Application() {
             )
         }
         val auth = GoogleAuthClient(this)
-        authViewModelFactory = {LoginViewModel(
-            localConfigRepo,
-            auth,
-            syncEngine
-        ) { dto -> remoteUserRepo.push(dto.cloudId!!, dto)
-            DebugLogcatLogger.logDTOToRemote(dto)
-        }
+        authViewModelFactory = {
+            LoginViewModel(
+                localConfigRepo,
+                auth,
+                syncEngine
+            ) { dto -> remoteUserRepo.push(dto.cloudId!!, dto)
+                DebugLogcatLogger.logDTOToRemote(dto)
+            }
         }
 
-        authenticationCheck = {if(localConfig.ready()) repoUser.getById(localConfig.get().userID) else auth.getUser()}
+        authenticationCheck = {
+            DebugLogcatLogger.log("Authentication check")
+            DebugLogcatLogger.log("Local config: ${localConfig.ready()}")
+            DebugLogcatLogger.log("auth config: ${auth.getUser()}")
+            if(localConfig.ready()) userHandler.repo.getById(localConfig.get().userID)
+            else auth.getUser()
+        }
 
     }
 }
