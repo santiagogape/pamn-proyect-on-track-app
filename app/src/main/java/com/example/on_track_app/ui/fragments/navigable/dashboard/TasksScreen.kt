@@ -16,32 +16,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.fragments.dialogs.EditTask
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
+import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.viewModels.GroupCreationContext
+import com.example.on_track_app.viewModels.GroupOwnerContext
+import com.example.on_track_app.viewModels.ProjectCreationContext
+import com.example.on_track_app.viewModels.UserCreationContext
+import com.example.on_track_app.viewModels.UserOwnerContext
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.raw.TasksViewModel
 
 @Composable
 fun DashboardScreen(
 ) {
-    val config = LocalOwnership.current
+    val ownerContext = LocalOwnerContext.current
+    val creationContext = LocalCreationContext.current
     val viewModelFactory = LocalViewModelFactory.current
 
     val viewModel: TasksViewModel = viewModel(factory = viewModelFactory)
     val text by viewModel.text.collectAsStateWithLifecycle()
-    val sourceFlow = remember(config.currentProject, config.currentGroup) {
-        when {
-            config.currentGroup != null && config.currentProject == null -> viewModel.byGroup(config.currentGroup)
-            config.currentProject != null -> viewModel.byProject(config.currentProject)
-            else -> viewModel.allTasks
+    val sourceFlow = remember(creationContext) {
+        when(creationContext){
+            is ProjectCreationContext -> viewModel.byProject(creationContext.projectId)
+            is GroupCreationContext -> viewModel.byGroup(creationContext.ownerId)
+            is UserCreationContext -> viewModel.allTasks
         }
     }
     val items by sourceFlow.collectAsStateWithLifecycle()
-    val projectsState by viewModel.projects(config.currentGroup).collectAsStateWithLifecycle()
-    var taskToEdit by remember { mutableStateOf<MockTask?>(null) }
+    val projectsSourceFlow = remember(ownerContext) {
+        when(ownerContext){
+            is GroupOwnerContext -> viewModel.projects(ownerContext.ownerId)
+            is UserOwnerContext -> viewModel.projects(null)
+        }
+    }
+    val projectsState by projectsSourceFlow.collectAsStateWithLifecycle()
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
 
 
     Box(

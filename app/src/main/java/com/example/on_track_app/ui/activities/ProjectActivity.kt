@@ -17,11 +17,16 @@ import com.example.on_track_app.ui.navigation.Destinations
 import com.example.on_track_app.ui.navigation.ProjectNavigation
 import com.example.on_track_app.ui.navigation.routes
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
-import com.example.on_track_app.utils.LocalConfig
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
+import com.example.on_track_app.utils.LocalOwnerContext
+import com.example.on_track_app.utils.LocalReminderCreationContext
 import com.example.on_track_app.utils.LocalViewModelFactory
-import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.viewModels.GroupOwnerContext
+import com.example.on_track_app.viewModels.GroupReminderCreationContext
+import com.example.on_track_app.viewModels.ProjectCreationContext
+import com.example.on_track_app.viewModels.UserOwnerContext
+import com.example.on_track_app.viewModels.UserReminderCreationContext
 import com.example.on_track_app.viewModels.raw.ProjectsViewModel
 import kotlinx.coroutines.launch
 
@@ -44,15 +49,26 @@ class ProjectActivity : ComponentActivity() {
             val projectId = intent.getStringExtra("PROJECT_ID")!!
             val groupId = intent.getStringExtra("GROUP_ID")
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
-            val context = OwnershipContext(
-                conf.userID,
-                projectId,
-                groupId
+
+
+            val ownerContext = when{
+                groupId != null -> GroupOwnerContext(groupId)
+                else -> UserOwnerContext(conf.user)
+            }
+            val creationContext = ProjectCreationContext(
+                ownerId = ownerContext.ownerId,
+                projectId = projectId
             )
+            val reminderContext = when(ownerContext){
+                is GroupOwnerContext -> GroupReminderCreationContext(ownerContext.ownerId)
+                is UserOwnerContext -> UserReminderCreationContext(conf.user)
+            }
+
             CompositionLocalProvider(
                 LocalViewModelFactory provides factory,
-                LocalConfig provides conf,
-                LocalOwnership provides context
+                LocalOwnerContext provides ownerContext,
+                LocalCreationContext provides creationContext,
+                LocalReminderCreationContext provides reminderContext
             ) {
                 Project(
                     label = projectName,
@@ -74,9 +90,13 @@ fun Project(
     darkTheme: Boolean,
     onToggleTheme: () -> Unit,
 ) {
-    val viewModel: ProjectsViewModel = viewModel(factory = LocalViewModelFactory.current)
+    val factory = LocalViewModelFactory.current
+    val viewModel: ProjectsViewModel = viewModel(factory = factory)
 
-    val project by LocalOwnership.current.currentProject!!.let { viewModel.liveProject(it).collectAsStateWithLifecycle() }
+    val creationContext = LocalCreationContext.current
+
+
+    val project by creationContext.projectId!!.let { viewModel.liveProject(it).collectAsStateWithLifecycle() }
     OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()
 
@@ -90,7 +110,7 @@ fun Project(
             header = {
                 ProjectsHeader(project?.name ?: label,darkTheme,onToggleTheme)
                 },
-            footer = { NavBar(navController,items) }
+            footer = { NavBar(navController,items) },
         ){
             ProjectNavigation(navController)
         }

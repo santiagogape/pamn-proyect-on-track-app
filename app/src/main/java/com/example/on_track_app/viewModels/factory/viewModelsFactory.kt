@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import kotlin.reflect.KClass
 
 
-class ViewModelsFactoryMock(
+class ViewModelsFactory(
     private val factoryMap: Map<KClass<out ViewModel>,FactoryEntry<out ViewModel>>,
 ): ViewModelProvider.Factory {
     data class FactoryEntry<V>(

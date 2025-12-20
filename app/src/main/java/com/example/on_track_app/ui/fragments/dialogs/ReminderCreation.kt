@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.on_track_app.model.Linkable
 import com.example.on_track_app.model.LinkedType
 import com.example.on_track_app.model.Selectable
 import com.example.on_track_app.ui.fragments.reusable.Selector
@@ -43,8 +44,8 @@ import java.time.LocalTime
 
 
 data class ReminderCreationBuilder(
-    val sources: Map<LinkedType, ItemStatus<List<Selectable>>>,
-    val reminderDefaultSource: Selectable? = null,
+    val sources: Map<LinkedType, ItemStatus<List<Linkable>>>,
+    val reminderDefaultSource: Linkable? = null,
     val defaultType: LinkedType? = null
 )
 
@@ -54,7 +55,8 @@ fun ReminderCreation(
     builder: ReminderCreationBuilder,
     onDismiss: () -> Unit,
     // onSubmit passes: Name, Desc, linkTo, type, Date, Hour, Minute
-    onSubmit: (String, String, String?, LinkedType?, LocalDate, Int, Int) -> Unit
+    onSubmit: (String, String, Linkable?, LocalDate, Int, Int) -> Unit,
+    currentDate: LocalDate? = null
 ) {
     var calendarOpen by remember { mutableStateOf(false) }
 
@@ -63,14 +65,13 @@ fun ReminderCreation(
     var description by remember { mutableStateOf("") }
 
     var selectedType by remember { mutableStateOf<Selectable?>(null) }
-    var type by remember { mutableStateOf<LinkedType?>(null) }
-    var selected by remember { mutableStateOf<Selectable?>(null) }
+    var selected by remember { mutableStateOf<Linkable?>(null) }
 
 
     // Date/Time State (Default to now + 1 hour)
-    var date by remember { mutableStateOf(LocalDate.now()) }
-    var hour by remember { mutableIntStateOf(LocalTime.now().hour + 1) }
-    var minute by remember { mutableIntStateOf(0) }
+    var date by remember { mutableStateOf(currentDate ?: LocalDate.now()) }
+    var hour by remember { mutableIntStateOf(LocalTime.now().hour) }
+    var minute by remember { mutableIntStateOf(LocalTime.now().minute) }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -142,7 +143,7 @@ fun ReminderCreation(
                         )
 
                         if (builder.reminderDefaultSource != null && builder.defaultType != null) {
-                            selected = builder.reminderDefaultSource; type = builder.defaultType
+                            selected = builder.reminderDefaultSource
                         } else {
                             val types = builder.sources.keys
                                 .map { type -> object:Selectable{
@@ -173,7 +174,6 @@ fun ReminderCreation(
                                     noSelectionLabel = "no link selected",
                                 ) { selection ->
                                     selected = selection
-                                    type = LinkedType.valueOf(selectedType!!.name)
                                 }
                             }
                         }
@@ -192,17 +192,11 @@ fun ReminderCreation(
                                 minute = m
                             },
                             withTime = true,
-                            label = "${
-                                date
-                                    .toString()
-                                    .split("-")
-                                    .reversed()
-                                    .joinToString("/")
-                            }\nAt $hour:${
-                                minute
-                                    .toString()
-                                    .padStart(2, '0')
-                            }"
+                            label = date
+                                .toString()
+                                .split("-")
+                                .reversed()
+                                .joinToString("/")
                         )
                     }
 
@@ -216,17 +210,14 @@ fun ReminderCreation(
                         Button(
                             onClick = {
                                 if (name.isNotEmpty()) {
-                                    selected?.id?.let {
-                                        onSubmit(
-                                            name,
-                                            description,
-                                            selected?.id,
-                                            type,
-                                            date,
-                                            hour,
-                                            minute
-                                        )
-                                    }
+                                    onSubmit(
+                                        name,
+                                        description,
+                                        selected,
+                                        date,
+                                        hour,
+                                        minute
+                                    )
                                 }
                             },
                             enabled = name.isNotEmpty(),

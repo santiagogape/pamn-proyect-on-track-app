@@ -4,16 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.on_track_app.data.abstractions.repositories.ProjectRepository
 import com.example.on_track_app.data.abstractions.repositories.TaskRepository
-import com.example.on_track_app.model.MockProject
-import com.example.on_track_app.model.MockTask
-import com.example.on_track_app.ui.DelegateConsultProject
-import com.example.on_track_app.ui.DelegateModifyTask
-import com.example.on_track_app.ui.ModifyTask
-import com.example.on_track_app.ui.ProjectsConsult
+import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.Task
+import com.example.on_track_app.viewModels.DelegateConsultProject
+import com.example.on_track_app.viewModels.DelegateModifyTask
+import com.example.on_track_app.viewModels.ModifyTask
+import com.example.on_track_app.viewModels.ProjectsConsult
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.utils.asItemStatus
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 
 
@@ -25,26 +24,26 @@ class TasksViewModel(
     private val projects = DelegateConsultProject(projectRepo)
     private val updateTask = DelegateModifyTask(repo, viewModelScope)
 
-    override fun projects(group: String?): StateFlow<ItemStatus<List<MockProject>>> =
-        projects.projects(group).asItemStatus(viewModelScope, SharingStarted.Eagerly)
-    override fun project(id: String): MockProject? = projects.project(id)
-    override fun update(task: MockTask) = updateTask.update(task)
-    override fun delete(task: MockTask) = updateTask.delete(task)
+    override fun projects(group: String?): StateFlow<ItemStatus<List<Project>>> =
+        projects.projects(group).asItemStatus(viewModelScope)
+    override fun project(id: String): Project? = projects.project(id)
+    override fun update(task: Task) = updateTask.update(task)
+    override fun delete(task: Task) = updateTask.delete(task)
 
     private val _text = MutableStateFlow("Your task list is empty")
-    private val tasks: StateFlow<ItemStatus<List<MockTask>>> = this.repo.getAll()
-        .asItemStatus(viewModelScope, SharingStarted.Eagerly)
+    private val tasks: StateFlow<ItemStatus<List<Task>>> = this.repo.getAll()
+        .asItemStatus(viewModelScope)
 
 
     val text: StateFlow<String> = _text
 
-    val allTasks: StateFlow<ItemStatus<List<MockTask>>> = tasks
+    val allTasks: StateFlow<ItemStatus<List<Task>>> = tasks
 
-    fun byProject(id: String): StateFlow<ItemStatus<List<MockTask>>> = this.repo.byProject(id)
-        .asItemStatus(viewModelScope, SharingStarted.Eagerly)
+    fun byProject(id: String): StateFlow<ItemStatus<List<Task>>> = this.repo.byProject(id)
+        .asItemStatus(viewModelScope)
 
-    fun byGroup(id: String): StateFlow<ItemStatus<List<MockTask>>> = this.repo.of(id)
-        .asItemStatus(viewModelScope, SharingStarted.Eagerly)
+    fun byGroup(id: String): StateFlow<ItemStatus<List<Task>>> = this.repo.of(id)
+        .asItemStatus(viewModelScope)
 
 
 

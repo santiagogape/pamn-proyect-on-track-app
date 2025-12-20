@@ -5,7 +5,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import com.example.on_track_app.data.firebase.FirestoreService
-import com.example.on_track_app.model.MockUser
+import com.example.on_track_app.model.User
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
@@ -13,14 +13,14 @@ import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
 
 sealed class EnsureUserResult {
-    data class Created(val user: MockUser) : EnsureUserResult()
-    data class Exists(val cloudId: String) : EnsureUserResult()
+    data class Created(val user: User) : EnsureUserResult()
+    data class Exists(val user: User) : EnsureUserResult()
 }
 
 
 abstract class AuthClient(protected val context: Context) {
     abstract suspend fun signIn(activityContext: Context): Boolean
-    abstract fun getUser(): MockUser?
+    abstract fun getUser(): User?
     abstract suspend fun ensureUserExists(): EnsureUserResult
 }
 class GoogleAuthClient(context: Context):AuthClient(context) {
@@ -67,8 +67,8 @@ class GoogleAuthClient(context: Context):AuthClient(context) {
         return false
     }
 
-    override fun getUser(): MockUser? = auth.currentUser?.let {
-        MockUser("",it.displayName ?: "", it.email ?: "",it.uid)
+    override fun getUser(): User? = auth.currentUser?.let {
+        User("",it.displayName ?: "", it.email ?: "",it.uid)
     }
 
     override suspend fun ensureUserExists(): EnsureUserResult {
@@ -76,17 +76,17 @@ class GoogleAuthClient(context: Context):AuthClient(context) {
         val userDocRef = db.collection("Users").document(firebaseUser.uid)
 
         val snapshot = userDocRef.get().await()
-
+        val user = User(
+            id = "",
+            email = firebaseUser.email ?: "",
+            name = firebaseUser.displayName ?: "",
+            cloudId = firebaseUser.uid
+        )
         return if (!snapshot.exists()) {
-            val newUser = MockUser(
-                id = "",
-                email = firebaseUser.email ?: "",
-                name = firebaseUser.displayName ?: "",
-                cloudId = firebaseUser.uid
-            )
-            EnsureUserResult.Created(newUser)
+
+            EnsureUserResult.Created(user)
         } else {
-            EnsureUserResult.Exists(firebaseUser.uid)
+            EnsureUserResult.Exists(user)
         }
     }
 

@@ -16,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Expandable
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.fragments.dialogs.EditEvent
 import com.example.on_track_app.ui.fragments.dialogs.EditTask
 import com.example.on_track_app.ui.fragments.reusable.cards.SectionedExpandableCards
@@ -34,8 +34,8 @@ fun HomeScreen(
 
     val events by viewModel.events.collectAsStateWithLifecycle()
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    var taskToEdit by remember { mutableStateOf<MockTask?>(null) }
-    var eventToEdit by remember { mutableStateOf<MockEvent?>(null) }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
+    var eventToEdit by remember { mutableStateOf<Event?>(null) }
 
     val state by viewModel.projects(null).collectAsStateWithLifecycle()
 
@@ -55,8 +55,8 @@ fun HomeScreen(
             }
 
             events is ItemStatus.Success && tasks is ItemStatus.Success -> {
-                val currentEvents = (events as ItemStatus.Success<List<MockEvent>>).elements
-                val currentTask = (tasks as ItemStatus.Success<List<MockTask>>).elements
+                val currentEvents = (events as ItemStatus.Success<List<Event>>).elements
+                val currentTask = (tasks as ItemStatus.Success<List<Task>>).elements
                 if (currentTask.isEmpty() && currentEvents.isEmpty()) {
                     Text(text = text, style = MaterialTheme.typography.headlineSmall)
                 } else {
@@ -69,18 +69,18 @@ fun HomeScreen(
                         groupedContents = contents,
                         onEditItem = { item ->
                             when(item) {
-                                is MockTask -> {
+                                is Task -> {
                                     taskToEdit = item
                                 }
-                                is MockEvent -> {
+                                is Event -> {
                                     eventToEdit = item
                                 }
                             }
                         },
                         onDeleteItem = { item ->
                             when(item) {
-                                is MockTask -> viewModel.delete(item)
-                                is MockEvent -> viewModel.delete(item)
+                                is Task -> viewModel.delete(item)
+                                is Event -> viewModel.delete(item)
                             }
 
                         }

@@ -17,12 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.R
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.activities.AgendaActivity
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
 import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.viewModels.GroupCreationContext
+import com.example.on_track_app.viewModels.ProjectCreationContext
+import com.example.on_track_app.viewModels.UserCreationContext
 import com.example.on_track_app.viewModels.main.CalendarViewModel
 import com.example.on_track_app.viewModels.main.ItemStatus
 import java.time.LocalDate
@@ -33,26 +36,26 @@ fun CalendarScreen(
     val context = LocalContext.current
 
     val viewModelFactory = LocalViewModelFactory.current
-    val config = LocalOwnership.current
+    val creationContext = LocalCreationContext.current
 
     val viewModel: CalendarViewModel = viewModel(factory = viewModelFactory)
-    val sourceFlow = remember(config.currentProject, config.currentGroup) {
-        when {
-            config.currentGroup != null && config.currentProject == null -> viewModel.byGroup(config.currentGroup)
-            config.currentProject != null -> viewModel.byProject(config.currentProject)
-            else -> viewModel.eventsByDates
-        }
-    }
 
-    val tasksSourceFlow = remember(config.currentProject, config.currentGroup) {
-        when {
-            config.currentGroup != null && config.currentProject == null -> viewModel.tasksByGroup(config.currentGroup)
-            config.currentProject != null -> viewModel.tasksByProject(config.currentProject)
-            else -> viewModel.tasksByDates
+    val sourceFlow = remember(creationContext) {
+        when(creationContext){
+            is ProjectCreationContext -> viewModel.byProject(creationContext.projectId)
+            is GroupCreationContext -> viewModel.byGroup(creationContext.ownerId)
+            is UserCreationContext -> viewModel.eventsByDates
         }
     }
-    val items by sourceFlow.collectAsStateWithLifecycle()
-    val tasks by tasksSourceFlow.collectAsStateWithLifecycle()
+    val tasksSourceFlow = remember(creationContext) {
+        when(creationContext){
+            is ProjectCreationContext -> viewModel.tasksByProject(creationContext.projectId)
+            is GroupCreationContext -> viewModel.tasksByGroup(creationContext.ownerId)
+            is UserCreationContext -> viewModel.tasksByDates
+        }
+    }
+    val eventsStatus by sourceFlow.collectAsStateWithLifecycle()
+    val tasksStatus by tasksSourceFlow.collectAsStateWithLifecycle()
 
 
     Box(
@@ -62,28 +65,29 @@ fun CalendarScreen(
         contentAlignment = Alignment.Center
     ) {
         when {
-            items is ItemStatus.Loading || tasks is ItemStatus.Loading -> {
+            eventsStatus is ItemStatus.Loading || tasksStatus is ItemStatus.Loading -> {
                 CircularProgressIndicator()
             }
 
-            items is ItemStatus.Error || tasks is ItemStatus.Error -> {
+            eventsStatus is ItemStatus.Error || tasksStatus is ItemStatus.Error -> {
             }
 
-            items is ItemStatus.Success && tasks is ItemStatus.Success -> {
-                val currentEvents = (items as ItemStatus.Success<Map<LocalDate, List<MockEvent>>>).elements
-                val currentTask = (tasks as ItemStatus.Success<Map<LocalDate, List<MockTask>>>).elements
+            eventsStatus is ItemStatus.Success && tasksStatus is ItemStatus.Success -> {
+                val events = (eventsStatus as ItemStatus.Success<Map<LocalDate, List<Event>>>).elements
+                val tasks = (tasksStatus as ItemStatus.Success<Map<LocalDate, List<Task>>>).elements
 
-                if ( currentTask.isEmpty() && currentEvents.isEmpty()){
+                if ( tasks.isEmpty() && events.isEmpty()){
                     Text(stringResource(R.string.calendar_empty))
                 } else {
                     Calendar(
-                        tasksByDate = currentTask,
-                        eventsByDates = currentEvents,
+                        tasksByDate = tasks,
+                        eventsByDates = events,
                         onDayClick = { date ->
                             val intent = Intent(context, AgendaActivity::class.java)
                             intent.putExtra("LOCAL_DATE", date.toString())
-                            intent.putExtra("PROJECT_ID", config.currentProject)
-                            intent.putExtra("GROUP_ID", config.currentGroup)
+                            intent.putExtra("PROJECT_ID", creationContext.projectId)
+                            if (creationContext is GroupCreationContext)
+                                intent.putExtra("GROUP_ID", creationContext.ownerId)
                             context.startActivity(intent)
                         }
                     )

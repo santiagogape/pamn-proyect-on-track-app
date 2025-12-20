@@ -1,55 +1,39 @@
 package com.example.on_track_app.data.synchronization
 
+/*
+import com.example.on_track_app.data.realm.entities.refactor.*
+import com.example.on_track_app.data.realm.utils.*
+import com.example.on_track_app.data.synchronization.*
+ */
 import com.example.on_track_app.data.realm.entities.EventRealmEntity
 import com.example.on_track_app.data.realm.entities.GroupRealmEntity
+import com.example.on_track_app.data.realm.entities.MembershipRealmEntity
 import com.example.on_track_app.data.realm.entities.ProjectRealmEntity
-import com.example.on_track_app.data.realm.entities.RealmMembershipEntity
 import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.UserRealmEntity
 import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.realm.utils.toMillis
 import com.example.on_track_app.data.realm.utils.toRealmInstant
-import org.mongodb.kbson.ObjectId
+import com.example.on_track_app.model.LinkedType
+import com.example.on_track_app.model.MembershipType
+import com.example.on_track_app.model.OwnerType
 
-fun String.toObjectId(): ObjectId = ObjectId(this)
-
-
-fun EventRealmEntity.toDTO(): EventDTO =
-    EventDTO(
-        cloudId = cloudId,
+fun UserRealmEntity.toDTO(): UserDTO =
+    UserDTO(
+        cloudId = identity!!.cloudId,
         name = name,
-        description = description,
-
-        cloudProjectId = cloudProjectId,
-        startDate = start.toMillis(),
-        startWithTime = startWithTime,
-        endDate = end.toMillis(),
-        endWithTime = endWithTime,
-
-        version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        ownerType = ownerType,
-        cloudOwnerId = cloudOwnerId!!,
+        email = email,
+        version = identity!!.version.toMillis(),
+        deleted = identity!!.synchronizationStatus == SynchronizationState.DELETED.name
     )
 
-
-fun EventDTO.toRealm(entity: EventRealmEntity) {
+fun UserDTO.toRealm(entity: UserRealmEntity) {
     entity.name = name
-    entity.description = description
-
-    entity.cloudProjectId = cloudProjectId
-    entity.cloudOwnerId = cloudOwnerId
-    entity.ownerType = ownerType
-
-    entity.start = startDate.toRealmInstant()
-    entity.startWithTime = startWithTime
-    entity.end = endDate.toRealmInstant()
-    entity.endWithTime = endWithTime
-
-    entity.cloudId = cloudId
-    entity.version = version.toRealmInstant()
-    entity.synchronizationStatus =
+    entity.email = email
+    entity.identity!!.cloudId = cloudId ?: entity.identity!!.cloudId
+    entity.identity!!.version = version.toRealmInstant()
+    entity.identity!!.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
 }
@@ -57,158 +41,171 @@ fun EventDTO.toRealm(entity: EventRealmEntity) {
 
 fun GroupRealmEntity.toDTO(): GroupDTO =
     GroupDTO(
-        cloudId = cloudId,
+        cloudId = identity!!.cloudId,
         name = name,
-        cloudOwnerId = cloudOwnerId!!,
-        version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
         description = description,
+        cloudOwnerId = owner!!.identity!!.cloudId,
+        version = identity!!.version.toMillis(),
+        deleted = identity!!.synchronizationStatus == SynchronizationState.DELETED.name
     )
-
 
 fun GroupDTO.toRealm(entity: GroupRealmEntity) {
     entity.name = name
     entity.description = description
-    entity.cloudOwnerId = cloudOwnerId
-    entity.cloudId = cloudId
-    entity.version = version.toRealmInstant()
-    entity.synchronizationStatus =
+    entity.identity!!.cloudId = cloudId ?: entity.identity!!.cloudId
+    entity.identity!!.version = version.toRealmInstant()
+    entity.identity!!.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
 }
 
-
 fun ProjectRealmEntity.toDTO(): ProjectDTO =
     ProjectDTO(
-        cloudId = cloudId,
+        cloudId = identity!!.cloudId,
         name = name,
-        ownerType = ownerType,
-        cloudOwnerId = cloudOwnerId!!,
-        version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
         description = description,
+        cloudOwnerId = owner!!.identity!!.cloudId,
+        ownerType = when {
+            owner!!.user != null -> OwnerType.USER.name
+            owner!!.group != null -> OwnerType.GROUP.name
+            else -> error("Unresolved owner")
+        },
+        version = identity!!.version.toMillis(),
+        deleted = identity!!.synchronizationStatus == SynchronizationState.DELETED.name
     )
 
 fun ProjectDTO.toRealm(entity: ProjectRealmEntity) {
     entity.name = name
     entity.description = description
-    entity.cloudOwnerId = cloudOwnerId
-    entity.ownerType = ownerType
-    entity.cloudId = cloudId
-    entity.version = version.toRealmInstant()
-    entity.synchronizationStatus =
-        if (deleted) SynchronizationState.DELETED.name
-        else SynchronizationState.CURRENT.name
-}
-
-fun ReminderRealmEntity.toDTO(): ReminderDTO =
-    ReminderDTO(
-        cloudId = cloudId,
-
-        date = at.toMillis(),
-        withTime = withTime,
-        name = this.name,
-        description = this.description,
-
-        cloudOwnerId = cloudOwnerId!!,
-        ownerType = ownerType,
-
-        version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        cloudLinkTo = cloudLinkedTo!!,
-        linkType = linkType!!,
-    )
-
-fun ReminderDTO.toRealm(entity: ReminderRealmEntity) {
-    entity.at = date.toRealmInstant()
-    entity.withTime = withTime
-    entity.name = name
-    entity.description = description
-    entity.cloudOwnerId = cloudOwnerId
-    entity.ownerType = ownerType
-
-    entity.cloudId = cloudId
-    entity.version = version.toRealmInstant()
-    entity.cloudLinkedTo = cloudLinkTo
-    entity.linkType = linkType
-    entity.synchronizationStatus =
+    entity.identity!!.cloudId = cloudId ?: entity.identity!!.cloudId
+    entity.identity!!.version = version.toRealmInstant()
+    entity.identity!!.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
 }
 
 fun TaskRealmEntity.toDTO(): TaskDTO =
     TaskDTO(
-        cloudId = cloudId,
-
+        cloudId = identity!!.cloudId,
         name = name,
-        date = due.toMillis(),
-        withTime = withTime,
         description = description,
+        date = due!!.instant.toMillis(),
+        withTime = due!!.timed,
         status = status,
-        cloudProjectId = cloudProjectId,
-        version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        ownerType = ownerType,
-        cloudOwnerId = cloudOwnerId!!,
+        cloudProjectId = project?.identity?.cloudId,
+        cloudOwnerId = owner!!.identity!!.cloudId,
+        ownerType = when {
+            owner!!.user != null -> OwnerType.USER.name
+            owner!!.group != null -> OwnerType.GROUP.name
+            else -> error("Unresolved owner")
+        },
+        version = identity!!.version.toMillis(),
+        deleted = identity!!.synchronizationStatus == SynchronizationState.DELETED.name
     )
 
 fun TaskDTO.toRealm(entity: TaskRealmEntity) {
     entity.name = name
-    entity.due = date.toRealmInstant()
-    entity.withTime = withTime
     entity.description = description
     entity.status = status
+    entity.due!!.instant = date.toRealmInstant()
+    entity.due!!.timed = withTime
 
-    entity.cloudProjectId = cloudProjectId
-
-    entity.cloudId = cloudId
-    entity.version = version.toRealmInstant()
-    entity.ownerType = ownerType
-    entity.cloudOwnerId = cloudOwnerId
-    entity.synchronizationStatus =
+    entity.identity!!.cloudId = cloudId ?: entity.identity!!.cloudId
+    entity.identity!!.version = version.toRealmInstant()
+    entity.identity!!.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
 }
 
-fun UserRealmEntity.toDTO(): UserDTO =
-    UserDTO(
-        cloudId = cloudId,
-        email = email,
-        version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        name = name
+fun EventRealmEntity.toDTO(): EventDTO =
+    EventDTO(
+        cloudId = identity!!.cloudId,
+        name = name,
+        description = description,
+        cloudProjectId = project?.identity?.cloudId,
+        startDate = start!!.instant.toMillis(),
+        startWithTime = start!!.timed,
+        endDate = end!!.instant.toMillis(),
+        endWithTime = end!!.timed,
+        cloudOwnerId = owner!!.identity!!.cloudId,
+        ownerType = when {
+            owner!!.user != null -> OwnerType.USER.name
+            owner!!.group != null -> OwnerType.GROUP.name
+            else -> error("Unresolved owner")
+        },
+        version = identity!!.version.toMillis(),
+        deleted = identity!!.synchronizationStatus == SynchronizationState.DELETED.name
     )
 
-fun UserDTO.toRealm(entity: UserRealmEntity) {
-    entity.email = email
+fun EventDTO.toRealm(entity: EventRealmEntity) {
     entity.name = name
-    entity.cloudId = cloudId
-    entity.version = version.toRealmInstant()
-    
-    entity.synchronizationStatus =
+    entity.description = description
+    entity.start!!.instant = startDate.toRealmInstant()
+    entity.start!!.timed = startWithTime
+    entity.end!!.instant = endDate.toRealmInstant()
+    entity.end!!.timed = endWithTime
+
+    entity.identity!!.cloudId = cloudId ?: entity.identity!!.cloudId
+    entity.identity!!.version = version.toRealmInstant()
+    entity.identity!!.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
 }
 
-fun RealmMembershipEntity.toDTO(): MembershipDTO =
-    MembershipDTO(
-        cloudId = cloudId,
-        version = version.toMillis(),
-        deleted = synchronizationStatus == SynchronizationState.DELETED.name,
-        cloudEntityId = cloudEntityId!!,
-        cloudMemberId = cloudMemberId!!,
-        type = membershipType
+fun ReminderRealmEntity.toDTO(): ReminderDTO =
+    ReminderDTO(
+        cloudId = identity!!.cloudId,
+        name = name,
+        description = description,
+        date = at!!.instant.toMillis(),
+        withTime = at!!.timed,
+        cloudOwnerId = owner!!.identity!!.cloudId,
+        ownerType = when {
+            owner!!.user != null -> OwnerType.USER.name
+            owner!!.group != null -> OwnerType.GROUP.name
+            else -> error("Unresolved owner")
+        },
+        cloudLinkTo = linkedTo?.identity?.cloudId,
+        linkType = when {
+            linkedTo?.task != null -> LinkedType.TASK.name
+            linkedTo?.event != null -> LinkedType.EVENT.name
+            else -> null
+        },
+        version = identity!!.version.toMillis(),
+        deleted = identity!!.synchronizationStatus == SynchronizationState.DELETED.name
     )
 
+fun ReminderDTO.toRealm(entity: ReminderRealmEntity) {
+    entity.name = name
+    entity.description = description
+    entity.at!!.instant = date.toRealmInstant()
+    entity.at!!.timed = withTime
 
-
-fun MembershipDTO.toRealm(entity: RealmMembershipEntity){
-    entity.cloudId = cloudId
-    entity.version = version.toRealmInstant()
-    entity.synchronizationStatus =
+    entity.identity!!.cloudId = cloudId ?: entity.identity!!.cloudId
+    entity.identity!!.version = version.toRealmInstant()
+    entity.identity!!.synchronizationStatus =
         if (deleted) SynchronizationState.DELETED.name
         else SynchronizationState.CURRENT.name
-    entity.cloudEntityId = cloudEntityId
-    entity.cloudMemberId = cloudMemberId
-    entity.membershipType = type
+}
+
+fun MembershipRealmEntity.toDTO(): MembershipDTO =
+    MembershipDTO(
+        cloudId = identity!!.cloudId,
+        cloudEntityId = membership!!.identity!!.cloudId,
+        cloudMemberId = member!!.identity!!.cloudId,
+        type = when {
+            membership!!.group != null -> MembershipType.GROUP.name
+            membership!!.project != null -> MembershipType.PROJECT.name
+            else -> error("Unresolved membership")
+        },
+        version = identity!!.version.toMillis(),
+        deleted = identity!!.synchronizationStatus == SynchronizationState.DELETED.name
+    )
+
+fun MembershipDTO.toRealm(entity: MembershipRealmEntity) {
+    entity.identity!!.cloudId = cloudId ?: entity.identity!!.cloudId
+    entity.identity!!.version = version.toRealmInstant()
+    entity.identity!!.synchronizationStatus =
+        if (deleted) SynchronizationState.DELETED.name
+        else SynchronizationState.CURRENT.name
 }

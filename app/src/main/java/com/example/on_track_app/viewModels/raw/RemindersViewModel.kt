@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.on_track_app.data.abstractions.repositories.EventRepository
 import com.example.on_track_app.data.abstractions.repositories.ReminderRepository
 import com.example.on_track_app.data.abstractions.repositories.TaskRepository
+import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Identifiable
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockReminder
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Reminder
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.utils.asItemStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,8 +29,8 @@ class RemindersViewModel(
 
 
     private fun mergeFlow(
-        tasks: Flow<List<MockTask>>,
-        events: Flow<List<MockEvent>>
+        tasks: Flow<List<Task>>,
+        events: Flow<List<Event>>
     ): Flow<ItemStatus<List<Identifiable>>> {
         val combined: Flow<List<Identifiable>> =
             combine(tasks, events) { a, b ->
@@ -44,18 +44,14 @@ class RemindersViewModel(
             eventRepository.byProject(project))
             .toReminders()
 
+    fun byGroup(group:String)= repo.of(group).asItemStatus(viewModelScope)
 
-    fun byGroup(group:String)= mergeFlow(tasksRepo.of(group),
-        eventRepository.of(group))
-        .toReminders()
+    fun all() = repo.getAll().asItemStatus(viewModelScope)
 
-    fun all(user:String) = mergeFlow(tasksRepo.of(user),
-        eventRepository.of(user))
-        .toReminders()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun Flow<ItemStatus<List<Identifiable>>>.toReminders(
-    ): StateFlow<ItemStatus<List<MockReminder>>> {
+    ): StateFlow<ItemStatus<List<Reminder>>> {
 
         return this
             .flatMapLatest { referencesStatus ->
@@ -82,7 +78,7 @@ class RemindersViewModel(
             )
     }
 
-    fun update(task: MockReminder){
+    fun update(task: Reminder){
         viewModelScope.launch {
             repo.update(task)
         }

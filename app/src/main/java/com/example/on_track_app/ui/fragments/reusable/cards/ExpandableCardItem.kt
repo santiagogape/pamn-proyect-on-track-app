@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.on_track_app.ui.format
+import com.example.on_track_app.viewModels.format
 import com.example.on_track_app.utils.LocalThemeExtensions
 import java.time.LocalTime
 

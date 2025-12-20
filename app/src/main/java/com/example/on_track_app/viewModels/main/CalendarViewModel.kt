@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.on_track_app.data.abstractions.repositories.EventRepository
 import com.example.on_track_app.data.abstractions.repositories.TaskRepository
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.model.toDate
 import com.example.on_track_app.viewModels.utils.asItemStatus
 import com.example.on_track_app.viewModels.utils.mapItemStatus
@@ -15,19 +15,19 @@ import java.time.LocalDate
 
 class CalendarViewModel(private val repo: EventRepository, private val tasksRepo: TaskRepository) : ViewModel() {
 
-    val events: StateFlow<ItemStatus<List<MockEvent>>> = this.repo.getAll()
+    val events: StateFlow<ItemStatus<List<Event>>> = this.repo.getAll()
         .asItemStatus(viewModelScope, SharingStarted.Eagerly)
 
-    val tasks: StateFlow<ItemStatus<List<MockTask>>> = this.tasksRepo.getAll()
+    val tasks: StateFlow<ItemStatus<List<Task>>> = this.tasksRepo.getAll()
         .asItemStatus(viewModelScope, SharingStarted.Eagerly)
 
-    val eventsByDates: StateFlow<ItemStatus<Map<LocalDate, List<MockEvent>>>> =
+    val eventsByDates: StateFlow<ItemStatus<Map<LocalDate, List<Event>>>> =
         events.mapItemStatus(viewModelScope,
             SharingStarted.Eagerly) {
                 list -> ItemStatus.Success(list.elements.groupBy {  it.start.toDate() })
         }
 
-    val tasksByDates: StateFlow<ItemStatus<Map<LocalDate, List<MockTask>>>> =
+    val tasksByDates: StateFlow<ItemStatus<Map<LocalDate, List<Task>>>> =
         tasks.mapItemStatus(viewModelScope,
             SharingStarted.Eagerly) {
                 list -> ItemStatus.Success(list.elements.groupBy {  it.due.toDate() })
@@ -35,7 +35,7 @@ class CalendarViewModel(private val repo: EventRepository, private val tasksRepo
 
 
 
-    fun byProject(id: String): StateFlow<ItemStatus<Map<LocalDate, List<MockEvent>>>> = this.repo.byProject(id)
+    fun byProject(id: String): StateFlow<ItemStatus<Map<LocalDate, List<Event>>>> = this.repo.byProject(id)
         .asItemStatus(viewModelScope, SharingStarted.Eagerly).mapItemStatus(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000)
@@ -43,7 +43,7 @@ class CalendarViewModel(private val repo: EventRepository, private val tasksRepo
             ItemStatus.Success(success.elements.groupBy { it.start.toDate() })
         }
 
-    fun tasksByProject(id: String): StateFlow<ItemStatus<Map<LocalDate, List<MockTask>>>> = this.tasksRepo.byProject(id)
+    fun tasksByProject(id: String): StateFlow<ItemStatus<Map<LocalDate, List<Task>>>> = this.tasksRepo.byProject(id)
         .asItemStatus(viewModelScope, SharingStarted.Eagerly).mapItemStatus(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000)
@@ -51,7 +51,7 @@ class CalendarViewModel(private val repo: EventRepository, private val tasksRepo
             ItemStatus.Success(success.elements.groupBy { it.due.toDate() })
         }
 
-    fun byGroup(id: String): StateFlow<ItemStatus<Map<LocalDate, List<MockEvent>>>> = this.repo.of(id)
+    fun byGroup(id: String): StateFlow<ItemStatus<Map<LocalDate, List<Event>>>> = this.repo.of(id)
         .asItemStatus(viewModelScope, SharingStarted.Eagerly).mapItemStatus(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000)
@@ -59,7 +59,7 @@ class CalendarViewModel(private val repo: EventRepository, private val tasksRepo
             ItemStatus.Success(success.elements.groupBy { it.start.toDate() })
         }
 
-    fun tasksByGroup(id: String): StateFlow<ItemStatus<Map<LocalDate, List<MockTask>>>> = this.tasksRepo.of(id)
+    fun tasksByGroup(id: String): StateFlow<ItemStatus<Map<LocalDate, List<Task>>>> = this.tasksRepo.of(id)
         .asItemStatus(viewModelScope, SharingStarted.Eagerly).mapItemStatus(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000)

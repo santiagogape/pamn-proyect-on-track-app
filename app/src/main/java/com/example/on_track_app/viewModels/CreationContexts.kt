@@ -1,103 +1,43 @@
 package com.example.on_track_app.viewModels
 
-import com.example.on_track_app.model.Link
-import com.example.on_track_app.model.LinkedType
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockGroup
-import com.example.on_track_app.model.MockProject
-import com.example.on_track_app.model.MockTask
-import com.example.on_track_app.model.OwnerType
-import com.example.on_track_app.model.Ownership
+import com.example.on_track_app.model.User
+
 
 //todo replace LocalOwnership y LocalReference for the interfaces here
 
-//group
-sealed interface ProjectCreationContext: Ownership
-data class UserProjectsContext(val userId: String, val availableGroups: List<MockGroup>): ProjectCreationContext{
-    override val ownerType: OwnerType = OwnerType.USER
-    override val ownerId: String = userId //current
+// project
+sealed interface OwnerContext { val ownerId: String }
+data class UserOwnerContext(private val user: User): OwnerContext{
+    override val ownerId: String = user.id
 }
+data class GroupOwnerContext(override val ownerId:String): OwnerContext
 
-data class GroupProjectsContext(val groupId: String, val userId: String): ProjectCreationContext{
-    override val ownerType: OwnerType = OwnerType.GROUP
-    override val ownerId: String = groupId //current
+// creation common
+sealed interface CreationContext{ val ownerId:String;val projectId: String?}
+data class UserCreationContext(private val user: User): CreationContext{
+    override val projectId: String? = null
+    override val ownerId:String = user.id
 }
-
-
-
-//task, event
-sealed interface CreationContext: Ownership {
-    override val ownerType: OwnerType
-    override val ownerId: String
-    val availableProjects: List<MockProject>
-    val currentProject: String
+data class GroupCreationContext(override val ownerId:String): CreationContext{
+    override val projectId: String? = null
 }
-
-data class Context(
-    val userId: String,
-    override val availableProjects: List<MockProject>,//user -> all
-    override val currentProject: String //user -> all
-) : CreationContext {
-    override val ownerType = OwnerType.USER
-    override val ownerId = userId
-}
-
-data class GroupContext(
-    val groupId: String,
-    override val availableProjects: List<MockProject>, //group
-    override val currentProject: String //group
-) : CreationContext {
-    override val ownerType = OwnerType.GROUP
-    override val ownerId = groupId
-}
+data class ProjectCreationContext(override val ownerId:String, override val projectId: String): CreationContext
 
 //reminder
-sealed interface ReminderCreationContext: Ownership {
-    val link: Link?
-    val availableTasks: List<MockTask>
-    val availableEvents: List<MockEvent>
+sealed interface ReminderCreationContext {val ownerId:String;val linkedTo:String?}
+data class UserReminderCreationContext(private val user: User): ReminderCreationContext{
+    override val linkedTo: String? = null
+    override val ownerId:String = user.id
+}
+data class GroupReminderCreationContext(override val ownerId:String): ReminderCreationContext{
+    override val linkedTo: String? = null
 }
 
-data class RemindersContext(
-    val userId: String,
-    override val availableTasks: List<MockTask>,
-    override val availableEvents: List<MockEvent>
-): ReminderCreationContext {
-    override val link: Link? = null
-    override val ownerType: OwnerType = OwnerType.USER
-    override val ownerId: String = userId
-}
-
-data class GroupRemindersContext(
-    val groupId: String,
-    override val availableTasks: List<MockTask>,
-    override val availableEvents: List<MockEvent>
-): ReminderCreationContext {
-    override val link: Link? = null
-    override val ownerType: OwnerType = OwnerType.GROUP
-    override val ownerId: String = groupId
-}
-
-data class TaskRemindersContext(
-    val taskId: String, //current
-    val ownerContext: ReminderCreationContext, //UserReminderContext o GroupRemindersContext
-): ReminderCreationContext{
-    override val availableTasks: List<MockTask> = ownerContext.availableTasks
-    override val availableEvents: List<MockEvent> = ownerContext.availableEvents
-    override val link: Link = Link(taskId, LinkedType.TASK) //current
-    override val ownerType: OwnerType = ownerContext.ownerType
-    override val ownerId: String = ownerContext.ownerId
-}
-
-data class EventReminderContext(
-    val eventId: String,
-    val ownerContext: ReminderCreationContext, //UserReminderContext o GroupRemindersContext
-): ReminderCreationContext {
-    override val availableTasks: List<MockTask> = ownerContext.availableTasks
-    override val availableEvents: List<MockEvent> = ownerContext.availableEvents
-    override val link: Link = Link(eventId, LinkedType.EVENT)
-    override val ownerType: OwnerType = ownerContext.ownerType
-    override val ownerId: String = ownerContext.ownerId
-}
-
-
+data class TaskReminderCreationContext(
+    override val ownerId: String,
+    override val linkedTo: String
+): ReminderCreationContext
+data class EventReminderCreationContext(
+    override val ownerId: String,
+    override val linkedTo: String
+): ReminderCreationContext

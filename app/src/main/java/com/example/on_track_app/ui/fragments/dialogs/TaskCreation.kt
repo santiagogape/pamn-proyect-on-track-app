@@ -33,18 +33,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.on_track_app.model.MockProject
-import com.example.on_track_app.model.MockTask
-import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.Task
+import com.example.on_track_app.model.TimeField
 import com.example.on_track_app.model.toDate
 import com.example.on_track_app.model.toTime
-import com.example.on_track_app.ui.ConsultProject
-import com.example.on_track_app.ui.ModifyTask
 import com.example.on_track_app.ui.fragments.reusable.Selector
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
 import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
+import com.example.on_track_app.utils.DebugLogcatLogger
+import com.example.on_track_app.viewModels.ConsultProject
+import com.example.on_track_app.viewModels.ModifyTask
 import com.example.on_track_app.viewModels.main.ItemStatus
 import java.time.LocalDate
 import java.time.LocalDate.now
@@ -52,11 +53,12 @@ import java.time.LocalDate.now
 @OptIn(ExperimentalMaterial3Api::class) // Required for ExposedDropdownMenuBox
 @Composable
 fun TaskCreation(
-    defaultProject: MockProject? = null,
-    availableProjects: ItemStatus<List<MockProject>>,
+    defaultProject: Project? = null,
+    availableProjects: ItemStatus<List<Project>>,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String?, LocalDate, Int?, Int?) -> Unit,
-    existingTask: MockTask? = null
+    onSubmit: (String, String, Project?, LocalDate, Int?, Int?) -> Unit,
+    existingTask: Task? = null,
+    currentDate: LocalDate? = null
 ) {
     var deadlineOpen by remember { mutableStateOf(false) }
 
@@ -64,8 +66,10 @@ fun TaskCreation(
     var description by remember { mutableStateOf(existingTask?.description ?: "") }
 
     var selectedProject by remember { mutableStateOf(defaultProject) }
+    DebugLogcatLogger.log(" selected default project ${selectedProject?.name}.")
 
-    var date by remember { mutableStateOf(existingTask?.due?.toDate() ?: now()) }
+
+    var date by remember { mutableStateOf(existingTask?.due?.toDate() ?: currentDate ?: now()) }
     var hour by remember { mutableIntStateOf(existingTask?.due?.toTime()?.hour ?:-1) }
     var minute by remember { mutableIntStateOf(existingTask?.due?.toTime()?.minute ?: -1) }
     var pickHour by remember { mutableStateOf(false) }
@@ -141,6 +145,7 @@ fun TaskCreation(
                         // 4. THE PROJECT DROPDOWN
                         Selector(colors,availableProjects,defaultProject, "Select a Project (Optional)","Selection","No project selected"){
                             selectedProject = it
+                            DebugLogcatLogger.log(" change selected  project ${selectedProject?.name}.")
                         }
                     }
 
@@ -184,7 +189,7 @@ fun TaskCreation(
                                     onSubmit(
                                         name,
                                         description,
-                                        selectedProject?.id,
+                                        selectedProject,
                                         date,
                                         if (hour != -1) hour else null,
                                         if (minute != -1) minute else null
@@ -211,30 +216,26 @@ fun TaskCreation(
 
 @Composable
 fun <T> EditTask(
-    taskToEdit: MockTask?,
-    state: ItemStatus<List<MockProject>>,
+    taskToEdit: Task?,
+    state: ItemStatus<List<Project>>,
     viewModel: T,
     dismiss: ()->Unit
 ) where T: ModifyTask, T: ConsultProject {
     if (taskToEdit != null) {
         TaskCreation(
+            defaultProject = taskToEdit.project,
             availableProjects = state,
-            onDismiss = {
-                dismiss()
-            },
+            onDismiss = {dismiss()},
             onSubmit = { name, desc, projId, date, h, m ->
                 viewModel.update(
                     taskToEdit.update(
                         name, desc,
-                        MockTimeField(date, h, m), projId
+                        TimeField(date, h, m), projId
                     )
                 )
                 dismiss()
             },
             existingTask = taskToEdit,
-            defaultProject = taskToEdit.projectId?.let {
-                viewModel.project(it)
-            }
         )
     }
 }

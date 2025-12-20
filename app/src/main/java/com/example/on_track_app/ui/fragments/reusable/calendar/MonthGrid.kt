@@ -22,8 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Task
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -88,9 +88,9 @@ fun daysOfMonthGrid(month: YearMonth): List<CalendarDay> {
 fun MonthGrid(
     month: YearMonth,
     today: LocalDate,
-    tasksByDate: Map<LocalDate, List<MockTask>>,
+    tasksByDate: Map<LocalDate, List<Task>>,
     onDayClick: (LocalDate) -> Unit,
-    eventsByDates: Map<LocalDate, List<MockEvent>>,
+    eventsByDates: Map<LocalDate, List<Event>>,
 ) {
 
     val days =  daysOfMonthGrid(month)

@@ -1,4 +1,4 @@
-package com.example.on_track_app.ui
+package com.example.on_track_app.viewModels
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -7,11 +7,11 @@ import com.example.on_track_app.data.abstractions.repositories.GroupRepository
 import com.example.on_track_app.data.abstractions.repositories.ProjectRepository
 import com.example.on_track_app.data.abstractions.repositories.ReminderRepository
 import com.example.on_track_app.data.abstractions.repositories.TaskRepository
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockGroup
-import com.example.on_track_app.model.MockProject
-import com.example.on_track_app.model.MockReminder
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Group
+import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.Reminder
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.viewModels.main.ItemStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -27,48 +27,48 @@ fun LocalTime.format(): String =
     }
 
 interface ConsultProject {
-    fun project(id:String): MockProject?
+    fun project(id:String): Project?
 }
 
 interface ProjectsConsultFlow:ConsultProject {
-    fun projects(group: String?): Flow<List<MockProject>>
+    fun projects(group: String?): Flow<List<Project>>
 }
 
 interface ProjectsConsult:ConsultProject {
-    fun projects(group: String?): StateFlow<ItemStatus<List<MockProject>>>
+    fun projects(group: String?): StateFlow<ItemStatus<List<Project>>>
 }
 
 
 
 
 interface ModifyTask {
-    fun update(task: MockTask)
-    fun delete(task: MockTask)
+    fun update(task: Task)
+    fun delete(task: Task)
 }
 interface ModifyEvent {
-    fun update(event: MockEvent)
-    fun delete(event: MockEvent)
+    fun update(event: Event)
+    fun delete(event: Event)
 }
 interface ModifyProject {
-    fun update(project: MockProject)
-    fun delete(project: MockProject)
+    fun update(project: Project)
+    fun delete(project: Project)
 }
 interface ModifyReminder {
-    fun update(reminder: MockReminder)
-    fun delete(reminder: MockReminder)
+    fun update(reminder: Reminder)
+    fun delete(reminder: Reminder)
 }
 interface ModifyGroup {
-    fun update(group: MockGroup)
-    fun delete(group: MockGroup)
+    fun update(group: Group)
+    fun delete(group: Group)
 }
 
 
 class DelegateConsultProject(val projectRepo: ProjectRepository): ProjectsConsultFlow {
-    override fun project(id:String): MockProject? {
+    override fun project(id:String): Project? {
         return this.projectRepo.getById(id)
     }
 
-    override fun projects(group: String?): Flow<List<MockProject>> =
+    override fun projects(group: String?): Flow<List<Project>> =
         group?.let { this.projectRepo.of(it)
         } ?:
         this.projectRepo.getAll()
@@ -76,13 +76,13 @@ class DelegateConsultProject(val projectRepo: ProjectRepository): ProjectsConsul
 
 
 class DelegateModifyEvent(val update: EventRepository, val scope: CoroutineScope): ModifyEvent {
-    override fun update(event: MockEvent){
+    override fun update(event: Event){
         scope.launch {
             update.update(event)
         }
     }
 
-    override fun delete(event: MockEvent) {
+    override fun delete(event: Event) {
         scope.launch {
             update.markAsDeleted(event.id)
             update.delete(event.id)
@@ -91,13 +91,13 @@ class DelegateModifyEvent(val update: EventRepository, val scope: CoroutineScope
 }
 
 class DelegateModifyProject(val update: ProjectRepository, val scope: CoroutineScope): ModifyProject {
-    override fun update(project: MockProject){
+    override fun update(project: Project){
         scope.launch {
             update.update(project)
         }
     }
 
-    override fun delete(project: MockProject) {
+    override fun delete(project: Project) {
         scope.launch {
             update.markAsDeleted(project.id)
             update.delete(project.id)
@@ -106,13 +106,13 @@ class DelegateModifyProject(val update: ProjectRepository, val scope: CoroutineS
 }
 
 class DelegateModifyGroup(val update: GroupRepository, val scope: CoroutineScope): ModifyGroup {
-    override fun update(group: MockGroup){
+    override fun update(group: Group){
         scope.launch {
             update.update(group)
         }
     }
 
-    override fun delete(group: MockGroup) {
+    override fun delete(group: Group) {
         scope.launch {
             update.markAsDeleted(group.id)
             update.delete(group.id)
@@ -121,13 +121,13 @@ class DelegateModifyGroup(val update: GroupRepository, val scope: CoroutineScope
 }
 
 class DelegateModifyReminder(val update: ReminderRepository, val scope: CoroutineScope): ModifyReminder {
-    override fun update(reminder: MockReminder){
+    override fun update(reminder: Reminder){
         scope.launch {
             update.update(reminder)
         }
     }
 
-    override fun delete(reminder: MockReminder) {
+    override fun delete(reminder: Reminder) {
         scope.launch {
             update.markAsDeleted(reminder.id)
             update.delete(reminder.id)
@@ -136,13 +136,13 @@ class DelegateModifyReminder(val update: ReminderRepository, val scope: Coroutin
 }
 
 class DelegateModifyTask(val update: TaskRepository, val scope: CoroutineScope): ModifyTask {
-    override fun update(task: MockTask){
+    override fun update(task: Task){
         scope.launch {
             update.update(task)
         }
     }
 
-    override fun delete(task: MockTask) {
+    override fun delete(task: Task) {
         scope.launch {
             update.markAsDeleted(task.id)
             update.delete(task.id)

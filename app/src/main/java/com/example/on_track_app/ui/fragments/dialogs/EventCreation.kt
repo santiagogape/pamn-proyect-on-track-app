@@ -32,19 +32,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockProject
-import com.example.on_track_app.model.MockTimeField
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Project
+import com.example.on_track_app.model.TimeField
 import com.example.on_track_app.model.toDate
 import com.example.on_track_app.model.toTime
-import com.example.on_track_app.ui.ConsultProject
-import com.example.on_track_app.ui.ModifyEvent
 import com.example.on_track_app.ui.fragments.reusable.Selector
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
 import com.example.on_track_app.ui.theme.ButtonColors
 import com.example.on_track_app.ui.theme.OutlinedTextFieldColors
 import com.example.on_track_app.utils.DebugLogcatLogger
+import com.example.on_track_app.viewModels.ConsultProject
+import com.example.on_track_app.viewModels.ModifyEvent
 import com.example.on_track_app.viewModels.main.ItemStatus
 import java.time.LocalDate
 import java.time.LocalTime
@@ -57,31 +57,32 @@ enum class DateType {
 
 @Composable
 fun EventCreation(
-    defaultProject: MockProject? = null,
-    availableProjects: ItemStatus<List<MockProject>>,
+    defaultProject: Project? = null,
+    availableProjects: ItemStatus<List<Project>>,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String?, MockTimeField, MockTimeField) -> Unit,
-    existingEvent: MockEvent? = null
+    onSubmit: (String, String, Project?, TimeField, TimeField) -> Unit,
+    existingEvent: Event? = null,
+    currentDate: LocalDate? = null
 ) {
     var deadlineOpen: DateType? by remember {mutableStateOf(null)}
     var oneDayEvent by remember { mutableStateOf(existingEvent?.onDayEvent ?: false) }
 
-    var startDate: LocalDate by remember { mutableStateOf(existingEvent?.start?.toDate() ?: today()) }
-    var endDate: LocalDate by remember { mutableStateOf(existingEvent?.end?.toDate() ?: today().plusDays(1)) }
+    var startDate: LocalDate by remember { mutableStateOf(existingEvent?.start?.toDate() ?: currentDate ?: today()) }
+    var endDate: LocalDate by remember { mutableStateOf(existingEvent?.end?.toDate() ?: currentDate?.plusDays(1) ?: today().plusDays(1)) }
 
     var startTime by remember { mutableStateOf(existingEvent?.start?.toTime() ?: currently()) }
     var endTime by remember { mutableStateOf(existingEvent?.end?.toTime() ?:currently()) }
 
     var name by remember { mutableStateOf(existingEvent?.name ?:"") }
     var description by remember { mutableStateOf(existingEvent?.description?:"") }
-    var project by remember { mutableStateOf(defaultProject?.id) }
-    val start: MockTimeField by remember { derivedStateOf {
-        if (oneDayEvent) MockTimeField(startDate)
-        else MockTimeField(startDate,startTime.hour, startTime.minute)
+    var project by remember { mutableStateOf(defaultProject) }
+    val start: TimeField by remember { derivedStateOf {
+        if (oneDayEvent) TimeField(startDate)
+        else TimeField(startDate,startTime.hour, startTime.minute)
     }}
-    val end: MockTimeField by remember { derivedStateOf {
-        if (oneDayEvent) MockTimeField(startDate)
-        else MockTimeField(endDate,endTime.hour, endTime.minute)
+    val end: TimeField by remember { derivedStateOf {
+        if (oneDayEvent) TimeField(startDate)
+        else TimeField(endDate,endTime.hour, endTime.minute)
     }}
 
 
@@ -173,7 +174,7 @@ fun EventCreation(
                                     "Selection",
                                     "No project selected"
                                 ){  DebugLogcatLogger.log("received selected $it")
-                                    project = it?.id }
+                                    project = it }
                             }
 
                             Row(modifier = Modifier.fillMaxWidth(),
@@ -254,17 +255,16 @@ fun EventCreation(
 
 @Composable
 fun <T> EditEvent(
-    eventToEdit: MockEvent?,
-    state: ItemStatus<List<MockProject>>,
+    eventToEdit: Event?,
+    state: ItemStatus<List<Project>>,
     viewModel: T,
     dismiss: () -> Unit,
 ) where T: ModifyEvent, T: ConsultProject {
     if (eventToEdit != null){
         EventCreation(
+            defaultProject = eventToEdit.project,
             availableProjects = state,
-            onDismiss = {
-                dismiss()
-            },
+            onDismiss = { dismiss() },
             onSubmit = { name, desc, projId, start, end ->
                 viewModel.update(
                     eventToEdit.update(
@@ -274,9 +274,6 @@ fun <T> EditEvent(
                 dismiss()
             },
             existingEvent = eventToEdit,
-            defaultProject = eventToEdit.projectId?.let {
-                viewModel.project(it)
-            }
         )
     }
 }

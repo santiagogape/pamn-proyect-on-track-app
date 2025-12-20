@@ -18,11 +18,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.on_track_app.model.OwnerType
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
+import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.viewModels.GroupCreationContext
+import com.example.on_track_app.viewModels.GroupOwnerContext
+import com.example.on_track_app.viewModels.UserOwnerContext
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.raw.ProjectsViewModel
 
@@ -31,19 +34,21 @@ import com.example.on_track_app.viewModels.raw.ProjectsViewModel
 fun ProjectsScreen(
 ) {
     val viewModelFactory = LocalViewModelFactory.current
+    val ownerContext = LocalOwnerContext.current
+    val creationContext = LocalCreationContext.current
+
 
     val viewModel: ProjectsViewModel = viewModel(factory = viewModelFactory)
 
     val context = LocalContext.current
-    val default = LocalOwnership.current
 
-    val projectsSource  =  remember(default.ownerType(), default.currentGroup) {
-        when (default.ownerType()) {
-            OwnerType.USER -> viewModel.projects()
-            OwnerType.GROUP -> viewModel.projectsOf(default.currentGroup!!)
+    val projectsSourceFlow = remember(ownerContext) {
+        when(ownerContext){
+            is GroupOwnerContext -> viewModel.projectsOf(ownerContext.ownerId)
+            is UserOwnerContext -> viewModel.projects()
         }
     }
-    val projects by projectsSource.collectAsStateWithLifecycle()
+    val projects by projectsSourceFlow.collectAsStateWithLifecycle()
     val text by viewModel.text.collectAsStateWithLifecycle()
 
     Box(
@@ -63,7 +68,8 @@ fun ProjectsScreen(
                         val intent = Intent(context, ProjectActivity::class.java)
                         intent.putExtra("PROJECT", projectName)
                         intent.putExtra("PROJECT_ID", projectId)
-                        intent.putExtra("GROUP_ID", default.currentGroup)
+                        if (creationContext is GroupCreationContext)
+                            intent.putExtra("GROUP_ID", creationContext.ownerId)
                         context.startActivity(intent)
                     }
                 }

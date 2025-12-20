@@ -7,15 +7,17 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
-import com.example.on_track_app.model.LocalConfigurations
 import com.example.on_track_app.ui.activities.Main
 import com.example.on_track_app.ui.fragments.login.LoginScreen
 import com.example.on_track_app.utils.DebugLogcatLogger
-import com.example.on_track_app.utils.LocalConfig
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
+import com.example.on_track_app.utils.LocalOwnerContext
+import com.example.on_track_app.utils.LocalReminderCreationContext
 import com.example.on_track_app.utils.LocalViewModelFactory
-import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.viewModels.UserCreationContext
+import com.example.on_track_app.viewModels.UserOwnerContext
+import com.example.on_track_app.viewModels.UserReminderCreationContext
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -53,8 +55,9 @@ class MainActivity : ComponentActivity() {
                 val current = config!!
                 CompositionLocalProvider(
                     LocalViewModelFactory provides factory,
-                    LocalConfig provides LocalConfigurations(current.userID),
-                    LocalOwnership provides OwnershipContext(current.userID,null,null)
+                    LocalOwnerContext provides UserOwnerContext(current.user),
+                    LocalCreationContext provides UserCreationContext(current.user),
+                    LocalReminderCreationContext provides UserReminderCreationContext(current.user)
                 ) {
                     current.let { DebugLogcatLogger.logConfig(checkAuth()!!, "main") }
                     Main(

@@ -38,6 +38,8 @@ fun <T> Selector(
     select: (T?) -> Unit
 ) where T: Selectable {
     var selectedProject by remember { mutableStateOf(default) }
+    DebugLogcatLogger.log(" selector  default  project ${selectedProject?.name}.")
+
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -90,7 +92,10 @@ fun <T> Selector(
                             text = { Text(item.name) },
                             onClick = {
                                 select(item)
+                                DebugLogcatLogger.log("  select  item project ${item.name}.")
                                 selectedProject = item
+                                DebugLogcatLogger.log("  change select in selector  project ${selectedProject?.name}.")
+
                                 expanded = false
                                 DebugLogcatLogger.log("Selection: ${item.name}, ${item.id}")
                             }

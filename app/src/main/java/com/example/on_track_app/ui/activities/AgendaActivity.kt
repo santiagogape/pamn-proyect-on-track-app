@@ -3,10 +3,18 @@ package com.example.on_track_app.ui.activities
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,8 +33,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.on_track_app.OnTrackApp
 import com.example.on_track_app.R
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.model.TimedExpandable
 import com.example.on_track_app.model.sort
 import com.example.on_track_app.ui.fragments.dialogs.EditEvent
@@ -34,11 +42,18 @@ import com.example.on_track_app.ui.fragments.dialogs.EditTask
 import com.example.on_track_app.ui.fragments.reusable.cards.TimedExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
-import com.example.on_track_app.utils.LocalConfig
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
+import com.example.on_track_app.utils.LocalOwnerContext
+import com.example.on_track_app.utils.LocalReminderCreationContext
 import com.example.on_track_app.utils.LocalViewModelFactory
-import com.example.on_track_app.utils.OwnershipContext
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.viewModels.GroupCreationContext
+import com.example.on_track_app.viewModels.GroupOwnerContext
+import com.example.on_track_app.viewModels.GroupReminderCreationContext
+import com.example.on_track_app.viewModels.ProjectCreationContext
+import com.example.on_track_app.viewModels.UserCreationContext
+import com.example.on_track_app.viewModels.UserOwnerContext
+import com.example.on_track_app.viewModels.UserReminderCreationContext
 import com.example.on_track_app.viewModels.main.AgendaViewModel
 import com.example.on_track_app.viewModels.main.ItemStatus
 import kotlinx.coroutines.launch
@@ -63,11 +78,26 @@ class AgendaActivity : ComponentActivity() {
             val groupId = intent.getStringExtra("GROUP_ID")
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
             val conf = config.get()
-            val context = OwnershipContext(conf.userID,projectId,groupId)
+            val ownerContext = when{
+                groupId != null -> GroupOwnerContext(groupId)
+                else -> UserOwnerContext(conf.user)
+            }
+            val creationContext = when {
+                projectId != null -> ProjectCreationContext(ownerContext.ownerId, projectId)
+                else -> when(ownerContext){
+                    is GroupOwnerContext -> GroupCreationContext(ownerContext.ownerId)
+                    is UserOwnerContext -> UserCreationContext(conf.user)
+                }
+            }
+            val reminderContext = when(ownerContext){
+                is GroupOwnerContext -> GroupReminderCreationContext(ownerContext.ownerId)
+                is UserOwnerContext -> UserReminderCreationContext(conf.user)
+            }
             CompositionLocalProvider(
                 LocalViewModelFactory provides factory,
-                LocalConfig provides conf,
-                LocalOwnership provides context
+                LocalOwnerContext provides ownerContext,
+                LocalCreationContext provides creationContext,
+                LocalReminderCreationContext provides reminderContext
             ) {
                 Agenda(
                     darkTheme = darkTheme,{
@@ -90,36 +120,42 @@ fun Agenda(
     date: LocalDate = now(),
 ) {
     val viewModelFactory = LocalViewModelFactory.current
+
     var currentDate by remember { mutableStateOf(date) }
 
-    val config = LocalOwnership.current
+    val ownerContext = LocalOwnerContext.current
+    val creationContext = LocalCreationContext.current
 
     val viewModel: AgendaViewModel = viewModel(factory = viewModelFactory)
-    val sourceFlow = remember(config.currentProject, config.currentGroup) {
-        when {
-            config.currentGroup != null && config.currentProject == null -> viewModel.byGroup(config.currentGroup)
-            config.currentProject != null -> viewModel.byProject(config.currentProject)
-            else -> viewModel.eventsByDates
+    val sourceFlow = remember(creationContext) {
+        when(creationContext){
+            is ProjectCreationContext -> viewModel.byProject(creationContext.projectId)
+            is GroupCreationContext -> viewModel.byGroup(creationContext.ownerId)
+            is UserCreationContext -> viewModel.eventsByDates
         }
     }
 
-    val tasksSourceFlow = remember(config.currentProject, config.currentGroup) {
-        when {
-            config.currentGroup != null && config.currentProject == null -> viewModel.tasksByGroup(
-                config.currentGroup
-            )
-
-            config.currentProject != null -> viewModel.tasksByProject(config.currentProject)
-            else -> viewModel.tasksByDates
+    val tasksSourceFlow = remember(creationContext) {
+        when(creationContext){
+            is ProjectCreationContext -> viewModel.tasksByProject(creationContext.projectId)
+            is GroupCreationContext -> viewModel.tasksByGroup(creationContext.ownerId)
+            is UserCreationContext -> viewModel.tasksByDates
         }
     }
     val events by sourceFlow.collectAsStateWithLifecycle()
     val tasks by tasksSourceFlow.collectAsStateWithLifecycle()
 
-    var taskToEdit by remember { mutableStateOf<MockTask?>(null) }
-    var eventToEdit by remember { mutableStateOf<MockEvent?>(null) }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
+    var eventToEdit by remember { mutableStateOf<Event?>(null) }
 
-    val state by viewModel.projects(config.currentGroup).collectAsStateWithLifecycle()
+    val projectsSourceFlow = remember(ownerContext) {
+        when(ownerContext){
+            is GroupOwnerContext -> viewModel.projects(ownerContext.ownerId)
+            is UserOwnerContext -> viewModel.projects(null)
+        }
+    }
+
+    val state by projectsSourceFlow.collectAsStateWithLifecycle()
 
 
 
@@ -133,7 +169,7 @@ fun Agenda(
                     { currentDate = currentDate.minusDays(1) },
                     { currentDate = currentDate.plusDays(1) }
                 )
-            }
+            }, currentDate = currentDate
         ) {
             Box(
                 modifier = Modifier
@@ -151,17 +187,17 @@ fun Agenda(
 
                     events is ItemStatus.Success && tasks is ItemStatus.Success -> {
                         val currentEvents =
-                            (events as ItemStatus.Success<Map<LocalDate, List<MockEvent>>>).elements
+                            (events as ItemStatus.Success<Map<LocalDate, List<Event>>>).elements
                         val currentTask =
-                            (tasks as ItemStatus.Success<Map<LocalDate, List<MockTask>>>).elements
-                        val taskedMap = mutableMapOf<String, MockTask>()
-                        val eventMap = mutableMapOf<String, MockEvent>()
+                            (tasks as ItemStatus.Success<Map<LocalDate, List<Task>>>).elements
+                        val taskedMap = mutableMapOf<String, Task>()
+                        val eventMap = mutableMapOf<String, Event>()
                         val timedItems: List<TimedExpandable> =
-                            currentEvents[date].orEmpty().map {
+                            currentEvents[currentDate].orEmpty().map {
                                 eventMap[it.id] = it
                                 it
                             } +
-                                    currentTask[date].orEmpty().map {
+                                    currentTask[currentDate].orEmpty().map {
                                         taskedMap[it.id] = it
                                         it
                                     }
@@ -177,8 +213,8 @@ fun Agenda(
                                 eventMap[it.id]?.let { event -> eventToEdit = event }
                             }, {
                                 when(it) {
-                                    is MockTask -> viewModel.delete(it)
-                                    is MockEvent -> viewModel.delete(it)
+                                    is Task -> viewModel.delete(it)
+                                    is Event -> viewModel.delete(it)
                                 }
 
                             })
@@ -191,6 +227,25 @@ fun Agenda(
 
             }
 
+        }
+    }
+}
+
+
+@Composable
+fun NextPrev(onPreviousDay: () -> Unit, onNextDay: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        IconButton(onClick = onPreviousDay) {
+            Icon(Icons.Default.ChevronLeft, contentDescription = "Previous day")
+        }
+        IconButton(onClick = onNextDay) {
+            Icon(Icons.Default.ChevronRight, contentDescription = "Next day")
         }
     }
 }

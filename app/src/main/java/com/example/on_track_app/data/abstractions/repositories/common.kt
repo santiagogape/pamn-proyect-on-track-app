@@ -1,15 +1,18 @@
 package com.example.on_track_app.data.abstractions.repositories
 
+import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.data.synchronization.UserDTO
 import com.example.on_track_app.model.Identifiable
-import com.example.on_track_app.model.MockUser
+import com.example.on_track_app.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.Instant
 
+
 interface Initializable {
-    suspend fun init(remote: MockUser): UserDTO
+    suspend fun init(remote: User): UserDTO
 }
+
 interface UniqueRepository<T> {
     val config: StateFlow<T?>
     fun ready(): Boolean
@@ -21,6 +24,16 @@ interface Config {
 }
 
 const val LOCAL_CONFIG_ID = "LOCAL_CONFIG"
+
+interface SyncRepository<T: SynchronizableDTO>{
+    fun observeRemoteChanges(): Flow<T>
+    suspend fun push(cloudId:String, dto: T)
+    fun generateCloudId(): String
+    suspend fun delete(dto: T)
+    suspend fun getUpdatedAfter(version: Long): List<T>
+    suspend fun  getAll(): List<T>
+    fun setUserId(id: String)
+}
 
 interface BasicById<T: Identifiable> {
     fun getAll(): Flow<List<T>>

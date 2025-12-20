@@ -10,16 +10,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.on_track_app.model.MockEvent
-import com.example.on_track_app.model.MockTask
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Task
 import java.time.LocalDate
 import java.time.YearMonth.now
 
 @Composable
 fun Calendar(
-    eventsByDates: Map<LocalDate, List<MockEvent>>,
+    eventsByDates: Map<LocalDate, List<Event>>,
     onDayClick: (LocalDate) -> Unit,
-    tasksByDate: Map<LocalDate, List<MockTask>>
+    tasksByDate: Map<LocalDate, List<Task>>
 ) {
     var currentMonth by remember { mutableStateOf(now()) }
     val today = LocalDate.now()

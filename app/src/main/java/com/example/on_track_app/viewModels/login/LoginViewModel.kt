@@ -43,12 +43,17 @@ class LoginViewModel(
 
                     withContext(Dispatchers.IO) {
                         remoteInit(dto)
+                        syncEngine.propagateId(result.user.cloudId)
                     }
                 }
 
-                is EnsureUserResult.Exists -> {}
+                is EnsureUserResult.Exists -> {
+                    configureLocal.init(result.user)
+                    syncEngine.propagateId(result.user.cloudId)
+                }
             }
 
+            syncEngine.loadState()
             syncEngine.start()
             _signInState.value = SignInState.Success
         }

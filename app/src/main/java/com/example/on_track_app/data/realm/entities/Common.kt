@@ -1,103 +1,98 @@
 package com.example.on_track_app.data.realm.entities
 
 import com.example.on_track_app.data.realm.utils.SynchronizationState
-import com.example.on_track_app.model.Link
-import com.example.on_track_app.model.LinkedType
+import com.example.on_track_app.model.Named
+import io.realm.kotlin.types.EmbeddedRealmObject
 import io.realm.kotlin.types.RealmInstant
+import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.Index
+import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-//todo refactor ownerId as UserRealmEntity?,GroupRealmEntity?
+// ---------- realm common ----------
+interface Entity { var id: ObjectId }
+sealed interface RealmOwner: Entity, Named
+sealed interface RealmLinkable: Entity,Named
+sealed interface RealmMembership: Entity, Named
+interface RealmOwned { var owner: OwnerReference? }
+interface RealmProjectOwned { var project: ProjectReference? }
+interface RealmLinked { var linkedTo: LinkReference? }
 
-// local references
-interface Entity {
-    var id: ObjectId
-}
-
-interface OwnedEntity {
-    var ownerId: ObjectId
-}
-
-
-interface OwnershipEntity: OwnedEntity {
-    var ownerType: String
-}
-
-interface ProjectOwnershipEntity {
-    var projectId: ObjectId?
-}
-
-interface MembershipEntity {
-
-    var entityId: ObjectId
-    var membershipType: String
-
-    var memberId: ObjectId
-}
-
-interface LinkedEntity {
-    var linkedTo: ObjectId?
-    var linkType: String?
-}
-
-fun LinkedEntity.toLink(): Link? {
-    return if (this.linkedTo != null && this.linkType != null) {
-        Link(
-            to = this.linkedTo!!.toHexString(),
-            ofType = LinkedType.valueOf(this.linkType!!)
-        )
-    } else null
-}
-
-
-
-// remote references
-interface SynchronizableEntity: Entity {
-    var cloudId: String?
+interface Synchronizable : Entity {
+    var cloudId: String
     var version: RealmInstant
     var synchronizationStatus: String
 }
 
-interface SynchronizableOwnedEntity: OwnedEntity {
-    var cloudOwnerId: String?
+class SynchronizationEntity : RealmObject, Entity, Synchronizable{
+    @PrimaryKey
+    override var id: ObjectId = ObjectId()
+    @Index
+    override var cloudId: String = ""
+    @Index
+    override var version: RealmInstant = RealmInstant.now()
+    @Index
+    override var synchronizationStatus: String = SynchronizationState.CREATED.name
 }
 
-interface SynchronizableOwnershipEntity: OwnershipEntity,SynchronizableOwnedEntity
-
-interface SynchronizableProjectOwnershipEntity: ProjectOwnershipEntity {
-    var cloudProjectId: String?
-}
-
-interface SynchronizableMembershipEntity: MembershipEntity {
-    var cloudEntityId: String?
-    var cloudMemberId: String?
-}
-
-interface SynchronizableLinkedEntity: LinkedEntity {
-    var cloudLinkedTo: String?
+interface SynchronizableEntity: Entity{
+    var identity: SynchronizationEntity?
 }
 
 fun SynchronizableEntity.update() {
-    this.version = RealmInstant.now()
-    this.synchronizationStatus = SynchronizationState.UPDATED.name
+    identity?.version = RealmInstant.now()
+    identity?.synchronizationStatus = SynchronizationState.UPDATED.name
 }
-
 fun SynchronizableEntity.delete() {
-    this.version = RealmInstant.now()
-    this.synchronizationStatus = SynchronizationState.DELETED.name
+    identity?.version = RealmInstant.now()
+    identity?.synchronizationStatus = SynchronizationState.DELETED.name
+}
+fun SynchronizableEntity.upToDate() {
+    identity?.version = RealmInstant.now()
+    identity?.synchronizationStatus = SynchronizationState.CURRENT.name
 }
 
-fun SynchronizableEntity.upToDate(){
-    this.version = RealmInstant.now()
-    this.synchronizationStatus = SynchronizationState.CURRENT.name
+sealed interface Reference: SynchronizableEntity
+
+// ---------- Embedded fields ----------
+class TimeRealmEmbeddedObject: EmbeddedRealmObject {
+    @Index
+    var instant: RealmInstant = RealmInstant.now()
+    @Index
+    var timed: Boolean = false
+}
+
+// ---------- Embedded references ----------
+
+class OwnerReference : EmbeddedRealmObject, Reference  {
+    @Index
+    override var id: ObjectId = ObjectId()
+    override var identity: SynchronizationEntity? = null
+    var user: UserRealmEntity? = null
+    var group: GroupRealmEntity? = null
+}
+
+class ProjectReference : EmbeddedRealmObject, Reference {
+    @Index
+    override var id: ObjectId = ObjectId()
+    override var identity: SynchronizationEntity? = null
+    var project: ProjectRealmEntity? = null
 }
 
 
+class LinkReference : EmbeddedRealmObject, Reference {
+    @Index
+    override var id: ObjectId = ObjectId()
+    override var identity: SynchronizationEntity? = null
+    var task: TaskRealmEntity? = null
+    var event: EventRealmEntity? = null
+}
 
 
-
-
-
-
-
-
-
+class MembershipReference  : EmbeddedRealmObject, Reference {
+    @Index
+    override var id: ObjectId = ObjectId()
+    override var identity: SynchronizationEntity? = null
+    var group: GroupRealmEntity? = null
+    var project: ProjectRealmEntity? = null
+}

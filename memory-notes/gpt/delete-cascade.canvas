@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"ui","type":"text","text":"UI / Screen\n\nUser deletes Task / Event / Project","x":-900,"y":0,"width":260,"height":120},
+		{"id":"vm","type":"text","text":"ViewModel\n\ncalls:\nrepo.markDeleted(id)","x":-580,"y":0,"width":300,"height":160},
+		{"id":"repo-local","type":"text","text":"Local Repository (Realm)\nimplements:\n- SynchronizableRepository\n- PurgeableLocalRepository\n\nmarkDeleted(id)\n→ sets deleted=true\n→ updates version\n→ notify SyncEngine","x":-200,"y":0,"width":340,"height":320},
+		{"id":"sync-engine","type":"text","text":"SyncEngine\n\nknows ONLY:\n- DTO\n- SynchronizableRepository\n- SyncRepository\n\nflushLocalChanges()\n→ remote.delete(dto)\n→ remote.push(dto)\n\non success:\n→ call GarbageCollector","x":260,"y":0,"width":360,"height":400},
+		{"id":"remote","type":"text","text":"Remote Repository\n(Firestore)\n\npush()\ndelete()\nobserveRemoteChanges()","x":700,"y":0,"width":260,"height":180},
+		{"id":"gc","type":"text","text":"GarbageCollector\n\nInterface:\nrun(cutoff, order)\n\nuses:\n- dto order\n- inverse order\n\ncalls:\npurgeDeletedUpTo()","x":260,"y":480,"width":360,"height":240},
+		{"id":"purge-repos","type":"text","text":"Local Repositories\n(Realm)\n\nimplements:\nPurgeableLocalRepository\n\npurgeDeletedUpTo(cutoff)\n→ hard delete","x":-200,"y":740,"width":340,"height":220},
+		{"id":"cascade","type":"text","text":"CascadingDeleter\n\nInterfaces:\n- markDeletedByOwner(id)\n- markDeletedByProject(id)\n- markDeletedByLink(id)\n\ncalled from:\n- local repo\n- applyRemoteDelete","x":-200,"y":400,"width":340,"height":320}
+	],
+	"edges":[]
+}

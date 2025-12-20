@@ -6,9 +6,9 @@ import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.synchronization.SynchronizableDTO
 import com.example.on_track_app.model.CloudIdentifiable
 import com.example.on_track_app.model.Identifiable
-import com.example.on_track_app.model.MockUser
 import com.example.on_track_app.model.Named
 import com.example.on_track_app.model.OwnerType
+import com.example.on_track_app.model.User
 
 object DebugLogcatLogger {
 
@@ -20,7 +20,7 @@ object DebugLogcatLogger {
             --------------------------------
             """)
 
-    fun logConfig(conf: MockUser, where: String){
+    fun logConfig(conf: User, where: String){
         Log.d(
             TAG,
             """
@@ -59,15 +59,15 @@ object DebugLogcatLogger {
     // ---------------------------------------------------------------------
     // REALM ENTITY SAVED
     // ---------------------------------------------------------------------
-    fun <T> logRealmSaved(project: T) where T: SynchronizableEntity,T: Entity {
+    fun <T> logRealmSaved(project: T) where T: SynchronizableEntity, T: Entity {
         Log.d(
             TAG,
             """
             ----  SAVED IN REALM ----
             id: ${project.id.toHexString()}
-            cloudId: ${project.cloudId}
-            version: ${project.version}
-            syncStatus: ${project.synchronizationStatus}
+            cloudId: ${project.identity?.cloudId}
+            version: ${project.identity?.version}
+            syncStatus: ${project.identity?.synchronizationStatus}
             --------------------------------
             """.trimIndent()
         )

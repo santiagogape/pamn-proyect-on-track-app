@@ -1,10 +1,7 @@
 package com.example.on_track_app.ui.activities
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -15,14 +12,11 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -46,12 +40,17 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.on_track_app.ui.fragments.dialogs.GlobalDialogCoordinator
 import com.example.on_track_app.ui.navigation.NavItem
 import com.example.on_track_app.ui.navigation.isOnDestination
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
+import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.viewModels.CreationSourcesViewModel
+import com.example.on_track_app.viewModels.ProjectCreationContext
+import java.time.LocalDate
 
 enum class Dialogs {
     TASK, EVENT, PROJECT, NONE, REMINDER
@@ -62,12 +61,17 @@ enum class Dialogs {
 fun ActivityScaffold(
     header: @Composable (()-> Unit),
     footer: @Composable (()-> Unit),
+    sources: CreationSourcesViewModel =  viewModel(factory = LocalViewModelFactory.current),
+    currentDate: LocalDate? = null,
     navigationTarget: @Composable (() -> Unit)
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var dialog by remember {mutableStateOf(Dialogs.NONE)}
-    val ownership = LocalOwnership.current
     val snackBarHostState = remember { SnackbarHostState() }
+    val creationContext = LocalCreationContext.current
+    val inProject = remember(creationContext) {
+        creationContext is ProjectCreationContext
+    }
 
 
     Scaffold(
@@ -114,7 +118,9 @@ fun ActivityScaffold(
                 GlobalDialogCoordinator(
                     activeDialog = dialog,
                     onDismiss = { dialog = Dialogs.NONE },
-                    snackBarHostState = snackBarHostState
+                    snackBarHostState = snackBarHostState,
+                    sources = sources,
+                    currentDate = currentDate
                 )
             }
             if (showMenu) {
@@ -146,7 +152,7 @@ fun ActivityScaffold(
                                     },
                                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
                                 )
-                                if (ownership.currentProject == null)
+                                if (!inProject)
                                     DropdownMenuItem(
                                         text = { Text("NEW PROJECT") },
                                         onClick = {
@@ -218,21 +224,4 @@ fun NavBar(
 }
 
 
-@Composable
-fun NextPrev(onPreviousDay: () -> Unit, onNextDay: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        IconButton(onClick = onPreviousDay) {
-            Icon(Icons.Default.ChevronLeft, contentDescription = "Previous day")
-        }
-        IconButton(onClick = onNextDay) {
-            Icon(Icons.Default.ChevronRight, contentDescription = "Next day")
-        }
-    }
-}
 

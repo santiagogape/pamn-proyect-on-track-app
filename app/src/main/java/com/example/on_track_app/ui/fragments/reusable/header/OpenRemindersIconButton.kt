@@ -41,13 +41,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.on_track_app.model.LinkedType
-import com.example.on_track_app.model.MockReminder
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Reminder
+import com.example.on_track_app.model.Task
 import com.example.on_track_app.model.sortByTime
 import com.example.on_track_app.model.toDate
 import com.example.on_track_app.model.toTime
-import com.example.on_track_app.utils.LocalOwnership
+import com.example.on_track_app.utils.LocalCreationContext
+import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalViewModelFactory
+import com.example.on_track_app.viewModels.GroupCreationContext
+import com.example.on_track_app.viewModels.ProjectCreationContext
+import com.example.on_track_app.viewModels.UserCreationContext
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.raw.RemindersViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -59,18 +64,16 @@ fun OpenRemindersIconButton(
     modifier: Modifier = Modifier,
     tint: Color = LocalContentColor.current
 ) {
-    val ownership = LocalOwnership.current
+    val ownerContext = LocalOwnerContext.current
+    val creationContext = LocalCreationContext.current
     val viewModel: RemindersViewModel = viewModel(factory = LocalViewModelFactory.current)
-    val sourceFlow: StateFlow<ItemStatus<List<MockReminder>>> = remember(ownership.currentProject,ownership.currentGroup) {
-        when {
-            ownership.currentGroup != null && ownership.currentProject == null ->
-                viewModel.byGroup(ownership.currentGroup)
-
-            ownership.currentProject != null ->
-                viewModel.byProject(ownership.currentProject)
-            else -> viewModel.all(ownership.userId)
-
-        }
+    val sourceFlow: StateFlow<ItemStatus<List<Reminder>>> =
+        remember(creationContext) {
+            when(creationContext){
+                is ProjectCreationContext -> viewModel.byProject(creationContext.projectId)
+                is GroupCreationContext -> viewModel.byGroup(creationContext.ownerId)
+                is UserCreationContext -> viewModel.all()
+            }
     }
     val reminders by sourceFlow.collectAsStateWithLifecycle()
     var showPopup by remember { mutableStateOf(false) }
@@ -151,9 +154,9 @@ fun OpenRemindersIconButton(
                                         // CHANGE 2: Added explicit size and standard icons
                                         leadingContent = {
                                             Icon(
-                                                imageVector = when(item.linked?.ofType) {
-                                                    LinkedType.TASK  -> Icons.AutoMirrored.Filled.Assignment
-                                                    LinkedType.EVENT  -> Icons.Filled.DateRange
+                                                imageVector = when(item.linkedTo) {
+                                                    is Event -> Icons.Filled.DateRange
+                                                    is Task -> Icons.AutoMirrored.Filled.Assignment
                                                     else -> Icons.Filled.AccessAlarm
                                                 },
                                                 contentDescription = null,
@@ -169,12 +172,12 @@ fun OpenRemindersIconButton(
                                                 )
 
                                                 // Small Label logic
-                                                item.linked?.ofType?.let {
+                                                item.linkedTo?.let {
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     //todo -> redirect to task activity or so
                                                     SuggestionChip(
                                                         onClick = { /* No-op, just visual */ },
-                                                        label = { Text(it.name) },
+                                                        label = { Text(it.javaClass.simpleName) },
                                                         modifier = Modifier.height(24.dp),
                                                         colors = SuggestionChipDefaults.suggestionChipColors(
                                                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -188,7 +191,7 @@ fun OpenRemindersIconButton(
                                         supportingContent = {
                                             val dateStr = item.at.toDate().format(dateFormatter)
                                             val timeStr = item.at.toTime()?.format(timeFormatter)
-                                            Text(text = dateStr + timeStr?.let { "at $it" })
+                                            Text(text = dateStr + timeStr?.let { " at $it" })
                                         }
                                     )
                                     HorizontalDivider(

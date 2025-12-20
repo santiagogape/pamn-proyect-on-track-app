@@ -2,6 +2,7 @@ package com.example.on_track_app.data.firebase
 
 import com.example.on_track_app.data.abstractions.repositories.SyncRepository
 import com.example.on_track_app.data.synchronization.SynchronizableDTO
+import com.example.on_track_app.utils.DebugLogcatLogger
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -12,18 +13,20 @@ import kotlinx.coroutines.tasks.await
 
 @Suppress("UNCHECKED_CAST")
 class FirestoreSyncRepository<T: SynchronizableDTO>(
-    db: FirebaseFirestore,
-    collectionName: String,
+    private val db: FirebaseFirestore,
+    private val collectionName: String,
     private val clazz: Class<T>
 ): SyncRepository<T> {
+
     override fun generateCloudId(): String {
         return collection.document().id
     }
-
     private val collection: CollectionReference = db.collection(collectionName)
+    private var userId = ""
 
+    //todo -> group -> new observeRemoteChanges call
     override fun observeRemoteChanges(): Flow<T> = callbackFlow {
-        val reg = collection.addSnapshotListener { snap, err ->
+        val reg = collection.whereEqualTo("ownerId",userId).addSnapshotListener { snap, err ->
             if (err != null) {
                 close(err)
                 return@addSnapshotListener
@@ -38,6 +41,7 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
     }
 
     override suspend fun push(cloudId:String, dto: T) {
+        DebugLogcatLogger.log("PUSH ${collection.path}/$cloudId")
         collection.document(cloudId).set(dto, SetOptions.merge()).await()
     }
 
@@ -48,7 +52,7 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
     }
 
     override suspend fun getUpdatedAfter(version: Long): List<T> {
-        return collection
+        return collection.whereEqualTo("ownerId",userId)
             .whereGreaterThan("version", version)
             .get()
             .await()
@@ -62,6 +66,10 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
             .await()
             .documents
             .mapNotNull { it.toObject(clazz) }
+    }
+
+    override fun setUserId(id: String) {
+        userId = id
     }
 
 }
