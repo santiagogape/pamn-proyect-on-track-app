@@ -99,6 +99,7 @@ enum class Filter(val query: String) {
     ALL("identity.synchronizationStatus != $0"),
 
     // ---------- LOCAL ID ----------
+    DTO_ID("id == $0"),
     ENTITY("id == $0 AND identity.synchronizationStatus != $1"),
 
     // ---------- OWNER ----------
@@ -549,6 +550,8 @@ interface RealmRepository<RE>
         realm.uiQuery(localClass, Filter.ENTITY, ObjectId(id))
             .first().find()
 
+    fun entityForDTO(realm: Realm, id: String) = realm.query(localClass, Filter.DTO_ID.query, ObjectId(id))
+        .first().find()
     fun entityByCloudId(realm: Realm, cloudId: String): RE? =
         realm.query(localClass, Filter.REMOTE.query, cloudId)
             .first().find()
@@ -568,7 +571,7 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
     private val mapper: SyncMapper<RE, DTO, DOM>,
     private val maker: () -> RE,
     override val localClass: KClass<RE>,
-    private val transferClass: KClass<DTO>,
+    val transferClass: KClass<DTO>,
     val gc: TriggeredGarbageCollector,
     override val domClass: KClass<DOM>
 ) : RealmRepository<RE>,
@@ -583,7 +586,7 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
               DOM : Identifiable,
               DTO : SynchronizableDTO {
 
-    private var engine: SyncEngine? = null
+    var engine: SyncEngine? = null
 
     override fun toDomain(entity: RE): DOM = mapper.toDomain(entity)
     override fun toLocal(realm:MutableRealm,dto: DTO, entity: RE, isNew: Boolean) = mapper.toLocal(realm,dto, entity,isNew)
@@ -607,6 +610,8 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
             entity(this, id)?.apply { delete() }
         }
         engine?.onLocalChange(id, transferClass)
+        DebugLogcatLogger.log("delete marked $id ${transferClass.simpleName}")
+        gc.propagateOnMarkAsDeleted(domClass, id)
     }
 
     override suspend fun applyRemoteInsert(dto: DTO) {
@@ -663,7 +668,7 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
     }
 
     override suspend fun getDTO(id: String): DTO? =
-        entity(db, id)?.let(::toDTO)
+        entityForDTO(db, id)?.let(::toDTO)
 
     override suspend fun onLocalChange(id: String) {
         engine?.onLocalChange(id, transferClass)
@@ -766,14 +771,10 @@ sealed class MarkAsDeleteByReferencePropagationRepository<RE,DTO,DOM>(
     suspend fun markAndPropagate(targets: RealmResults<RE>):Int {
         if (targets.isEmpty()) return 0
         val ids = mark(targets)
-        ids.forEach { syncCore.gc.propagateOnMarkAsDeleted(syncCore.domClass, it) }
-        return ids.size
-    }
-
-    suspend fun markAndPropagate(klass:KClass<*>,targets: RealmResults<RE>):Int{
-        if (targets.isEmpty()) return 0
-        val ids = mark(targets)
-        ids.forEach { syncCore.gc.propagateOnMarkAsDeleted(klass, it) }
+        ids.forEach {
+            DebugLogcatLogger.log("inner propagation $it ${syncCore.transferClass.simpleName}")
+            syncCore.gc.propagateOnMarkAsDeleted(syncCore.domClass, it)
+        }
         return ids.size
     }
 
@@ -789,6 +790,9 @@ sealed class MarkAsDeleteByReferencePropagationRepository<RE,DTO,DOM>(
                 }
             }
         }
+        ids.forEach {
+            DebugLogcatLogger.log("inner mark $it ${syncCore.transferClass.simpleName} an sent to sync")
+            syncCore.engine?.onLocalChange(it, syncCore.transferClass) }
         return ids
     }
 
@@ -847,6 +851,7 @@ class ProjectGarbageCollectorRepository<RE,DTO,DOM>(
     override suspend fun markAsDeletedByProject(projectId: String): Int {
         val targets = db.uiQuery(localClass, Filter.PROJECT, projectId.toObjectId())
             .find()
+        DebugLogcatLogger.log("marking by project $projectId")
 
         return markAndPropagate(targets)
 
@@ -884,7 +889,7 @@ DTO : SynchronizableDTO{
     override suspend fun markAsDeletedByLink(linkId: String): Int {
         val targets = db.uiQuery(localClass, Filter.LINK, linkId.toObjectId())
             .find()
-
+        DebugLogcatLogger.log("marking link $linkId")
         return markAndPropagate(targets)
     }
 
@@ -904,7 +909,7 @@ class MembershipsGarbageCollectorRepository<RE,DTO,DOM>(
             membershipId.toObjectId()
         ).find()
 
-        return markAndPropagate(syncCore.domClass,targets)
+        return markAndPropagate(targets)
     }
 
     override suspend fun markAsDeletedByMember(userId: String): Int {
@@ -914,7 +919,7 @@ class MembershipsGarbageCollectorRepository<RE,DTO,DOM>(
             userId.toObjectId()
         ).find()
 
-        return markAndPropagate(syncCore.domClass,targets)
+        return markAndPropagate(targets)
     }
 
 }

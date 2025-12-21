@@ -268,11 +268,14 @@ class SyncEngine(
         id: String,
         clazzAny: KClass<out SynchronizableDTO>
     ) {
+        DebugLogcatLogger.log("got $id ${clazzAny.simpleName} any?")
+
         val entryAny = factory.getAny(clazzAny) ?: return
         val entry = anyEntryToBase(entryAny)
+        DebugLogcatLogger.log("got $entryAny ${entry.dtoClass.simpleName} by $id")
 
         val dto = entry.local.getDTO(id) ?: return
-        DebugLogcatLogger.log("got $dto by $id")
+        DebugLogcatLogger.log("got $dto ${dto::class.simpleName} by $id")
 
         if (!connectivity.isOnline.value) {
             if (dto.deleted && pendingQueue.contains(clazzAny, id)) {
@@ -280,11 +283,13 @@ class SyncEngine(
             } else {
                 pendingQueue.add(clazzAny, id)
             }
+            DebugLogcatLogger.log("no connectivity ")
             return
         }
 
         when {
             dto.deleted -> {
+                DebugLogcatLogger.log("deleting $dto by $id, ${dto.cloudId}")
                 entry.remote.delete(dto)
             }
 
@@ -297,6 +302,8 @@ class SyncEngine(
             }
 
             else -> {
+                DebugLogcatLogger.log("changing $dto by $id, ${dto.cloudId}")
+
                 entry.remote.push(dto.cloudId!!, dto)
             }
         }

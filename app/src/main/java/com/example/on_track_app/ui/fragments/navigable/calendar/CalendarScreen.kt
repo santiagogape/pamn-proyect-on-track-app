@@ -21,6 +21,7 @@ import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.activities.AgendaActivity
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
+import com.example.on_track_app.utils.DebugLogcatLogger
 import com.example.on_track_app.utils.LocalCreationContext
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.GroupCreationContext
@@ -84,6 +85,7 @@ fun CalendarScreen(
                         eventsByDates = events,
                         onDayClick = { date ->
                             val intent = Intent(context, AgendaActivity::class.java)
+                            DebugLogcatLogger.log(" date $date context $creationContext ")
                             intent.putExtra("LOCAL_DATE", date.toString())
                             intent.putExtra("PROJECT_ID", creationContext.projectId)
                             if (creationContext is GroupCreationContext)

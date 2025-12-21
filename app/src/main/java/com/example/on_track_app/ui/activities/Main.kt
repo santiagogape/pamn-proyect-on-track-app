@@ -9,14 +9,12 @@ import com.example.on_track_app.ui.navigation.AppNavigation
 import com.example.on_track_app.ui.navigation.Destinations
 import com.example.on_track_app.ui.navigation.isOnDestination
 import com.example.on_track_app.ui.navigation.routes
-import com.example.on_track_app.ui.theme.OnTrackAppTheme
 
 @Composable
 fun Main(darkTheme: Boolean,
          onToggleTheme: () -> Unit,
          ) {
 
-    OnTrackAppTheme(darkTheme = darkTheme) {
         val navController = rememberNavController()
 
         // Bottom navigation items
@@ -40,5 +38,5 @@ fun Main(darkTheme: Boolean,
         }
 
 
-    }
+
 }

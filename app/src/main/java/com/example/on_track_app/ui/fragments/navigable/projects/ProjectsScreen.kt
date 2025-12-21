@@ -64,7 +64,7 @@ fun ProjectsScreen(
                 if (state.elements.isEmpty()) {
                     Text(text = text, style = MaterialTheme.typography.headlineSmall)
                 } else {
-                    StaticCards(state.elements) { projectId,projectName ->
+                    StaticCards(state.elements,{viewModel.delete(it)}) { projectId,projectName ->
                         val intent = Intent(context, ProjectActivity::class.java)
                         intent.putExtra("PROJECT", projectName)
                         intent.putExtra("PROJECT_ID", projectId)

@@ -41,4 +41,10 @@ class ProjectsViewModel(private val repo: ProjectRepository
             repo.update(task)
         }
     }
+
+    fun delete(project: Project) {
+        viewModelScope.launch {
+            repo.markAsDeleted(project.id)
+        }
+    }
 }

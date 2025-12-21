@@ -2,6 +2,7 @@ package com.example.on_track_app.data.firebase
 
 import com.example.on_track_app.data.abstractions.repositories.SyncRepository
 import com.example.on_track_app.data.synchronization.SynchronizableDTO
+import com.example.on_track_app.data.synchronization.UserDTO
 import com.example.on_track_app.utils.DebugLogcatLogger
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -21,12 +22,18 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
     override fun generateCloudId(): String {
         return collection.document().id
     }
+
     private val collection: CollectionReference = this.db.collection(collectionName)
     private var userId = ""
+    val filter = when {
+        clazz.isAssignableFrom(UserDTO::class.java) ->
+            "cloudId"
+        else -> "cloudOwnerId"
+    }
 
     //todo -> group -> new observeRemoteChanges call
     override fun observeRemoteChanges(): Flow<T> = callbackFlow {
-        val reg = collection.whereEqualTo("ownerId",userId).addSnapshotListener { snap, err ->
+        val reg = collection.whereEqualTo(filter, userId).addSnapshotListener { snap, err ->
             if (err != null) {
                 close(err)
                 return@addSnapshotListener
@@ -40,6 +47,7 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
         awaitClose { reg.remove() }
     }
 
+
     override suspend fun push(cloudId:String, dto: T) {
         DebugLogcatLogger.log("PUSH ${collection.path}/$cloudId")
         collection.document(cloudId).set(dto, SetOptions.merge()).await()
@@ -52,7 +60,7 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
     }
 
     override suspend fun getUpdatedAfter(version: Long): List<T> {
-        return collection.whereEqualTo("ownerId",userId)
+        return collection.whereEqualTo(filter,userId)
             .whereGreaterThan("version", version)
             .get()
             .await()

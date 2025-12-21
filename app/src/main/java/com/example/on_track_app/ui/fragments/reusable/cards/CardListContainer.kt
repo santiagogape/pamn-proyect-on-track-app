@@ -62,6 +62,7 @@ fun <T> TimedExpandableCards (
 @Composable
 fun <T>StaticCards(
     contents: List<T>, //todo -> delete para project -> propagate
+    onDelete: (T) -> Unit,
     action: (String, String) -> Unit
 ) where T: Identifiable,T: Named {
     LazyColumn(
@@ -72,6 +73,7 @@ fun <T>StaticCards(
             StaticCard(
                 id = item.id,
                 title = item.name,
+                onDelete = {onDelete(item)},
                 action = action
             )
 

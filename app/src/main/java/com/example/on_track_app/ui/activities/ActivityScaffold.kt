@@ -1,6 +1,7 @@
 package com.example.on_track_app.ui.activities
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -74,7 +75,6 @@ fun ActivityScaffold(
         creationContext is ProjectCreationContext
     }
 
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
@@ -117,8 +117,9 @@ fun ActivityScaffold(
             if (showMenu) {
                 val density = LocalDensity.current
                 val offsetPx = remember(density) {
-                    with(density) { -45.dp.roundToPx() }
+                    with(density) { -20.dp.roundToPx() }
                 }
+
                 Popup(
                     alignment = Alignment.BottomCenter,
                     offset = IntOffset(0, offsetPx),
@@ -132,7 +133,7 @@ fun ActivityScaffold(
                             color = MaterialTheme.colorScheme.surface,
                             shadowElevation = 6.dp
                         ) {
-                            androidx.compose.foundation.layout.Column(
+                            Column(
                                 modifier = Modifier.padding(top = 20.dp, bottom = 20.dp)
                             ) {
                                 DropdownMenuItem(

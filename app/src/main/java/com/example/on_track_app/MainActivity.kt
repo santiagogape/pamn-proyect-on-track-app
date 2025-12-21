@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import com.example.on_track_app.ui.activities.Main
 import com.example.on_track_app.ui.fragments.login.LoginScreen
+import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.DebugLogcatLogger
 import com.example.on_track_app.utils.LocalCreationContext
 import com.example.on_track_app.utils.LocalOwnerContext
@@ -47,33 +48,37 @@ class MainActivity : ComponentActivity() {
         setContent {
             val config by localConfig.config.collectAsState()
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
-            if (config == null) {
-                LoginScreen(
-                    viewModel = loginViewModelFactory(),
-                    onLoginSuccess = {}
-                )
-            } else {
-                val current = config!!
-                val pfp = (application as OnTrackApp)
-                    .authClient
-                    .getProfilePictureUrl()
-                CompositionLocalProvider(
-                    LocalViewModelFactory provides factory,
-                    LocalOwnerContext provides UserOwnerContext(current.user),
-                    LocalCreationContext provides UserCreationContext(current.user),
-                    LocalReminderCreationContext provides UserReminderCreationContext(current.user),
-                    LocalUserPFP provides pfp
-                ) {
-                    current.let { DebugLogcatLogger.logConfig(checkAuth()!!, "main") }
-                    Main(
-                        darkTheme = darkTheme,
-                        onToggleTheme = {
-                            lifecycleScope.launch {
-                                settings.setDarkTheme(!darkTheme)
-                            }
-                        })
+
+            OnTrackAppTheme(darkTheme = darkTheme) {
+                if (config == null) {
+                    LoginScreen(
+                        viewModel = loginViewModelFactory(),
+                        onLoginSuccess = {}
+                    )
+                } else {
+                    val current = config!!
+                    val pfp = (application as OnTrackApp)
+                        .authClient
+                        .getProfilePictureUrl()
+                    CompositionLocalProvider(
+                        LocalViewModelFactory provides factory,
+                        LocalOwnerContext provides UserOwnerContext(current.user),
+                        LocalCreationContext provides UserCreationContext(current.user),
+                        LocalReminderCreationContext provides UserReminderCreationContext(current.user),
+                        LocalUserPFP provides pfp
+                    ) {
+                        current.let { DebugLogcatLogger.logConfig(checkAuth()!!, "main") }
+                        Main(
+                            darkTheme = darkTheme,
+                            onToggleTheme = {
+                                lifecycleScope.launch {
+                                    settings.setDarkTheme(!darkTheme)
+                                }
+                            })
+                    }
                 }
             }
+
         }
     }
 }

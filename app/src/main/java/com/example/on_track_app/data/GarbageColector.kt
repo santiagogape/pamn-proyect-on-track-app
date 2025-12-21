@@ -208,6 +208,7 @@ class GarbageCollector(
         root: String
     ) {
         port.markSoftDone(root)
+        DebugLogcatLogger.log("$root as soft done")
         rules[port.domClass].orEmpty().forEach { propagate(it, root) }
     }
 

@@ -42,9 +42,11 @@ class ProjectActivity : ComponentActivity() {
         (application as OnTrackApp).localConfig
     }
 
-    val pfp = (application as OnTrackApp)
-        .authClient
-        .getProfilePictureUrl()
+    val pfp by lazy {
+        (application as OnTrackApp)
+            .authClient
+            .getProfilePictureUrl()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
