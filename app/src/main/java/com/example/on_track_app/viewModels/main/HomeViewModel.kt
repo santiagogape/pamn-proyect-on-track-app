@@ -47,8 +47,6 @@ class HomeViewModel(
     private val _text = MutableStateFlow("This is home screen")
     val text: StateFlow<String> = _text
 
-    private val _items = MutableStateFlow(listOf("hi", "bye", "welcome"))
-    val items: StateFlow<List<String>> = _items
 
     val tasks = this.taskRepository.between(start,end).asItemStatus(viewModelScope)
     val events = this.eventRepository.between(start,end).asItemStatus(viewModelScope)

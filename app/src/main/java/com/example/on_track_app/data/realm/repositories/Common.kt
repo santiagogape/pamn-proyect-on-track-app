@@ -1,7 +1,13 @@
 package com.example.on_track_app.data.realm.repositories
 
+import com.example.on_track_app.data.GarbageCollectablePort
+import com.example.on_track_app.data.GarbageCollectorPhase
+import com.example.on_track_app.data.SoftDeleteByLinkPort
+import com.example.on_track_app.data.SoftDeleteByMembershipPort
+import com.example.on_track_app.data.SoftDeleteByOwnerPort
+import com.example.on_track_app.data.SoftDeleteByProjectPort
+import com.example.on_track_app.data.TriggeredGarbageCollector
 import com.example.on_track_app.data.abstractions.repositories.BasicById
-import com.example.on_track_app.data.abstractions.repositories.EventRepository
 import com.example.on_track_app.data.abstractions.repositories.IndexedByLink
 import com.example.on_track_app.data.abstractions.repositories.IndexedByOwner
 import com.example.on_track_app.data.abstractions.repositories.IndexedByProject
@@ -14,9 +20,6 @@ import com.example.on_track_app.data.realm.entities.MembershipReference
 import com.example.on_track_app.data.realm.entities.OwnerReference
 import com.example.on_track_app.data.realm.entities.ProjectRealmEntity
 import com.example.on_track_app.data.realm.entities.ProjectReference
-import com.example.on_track_app.data.realm.entities.RealmLinkable
-import com.example.on_track_app.data.realm.entities.RealmMembership
-import com.example.on_track_app.data.realm.entities.RealmOwner
 import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
 import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.realm.entities.SynchronizationEntity
@@ -27,6 +30,7 @@ import com.example.on_track_app.data.realm.entities.delete
 import com.example.on_track_app.data.realm.entities.toDomain
 import com.example.on_track_app.data.realm.entities.toObjectId
 import com.example.on_track_app.data.realm.entities.upToDate
+import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.data.realm.utils.toRealmInstant
 import com.example.on_track_app.data.synchronization.EventDTO
 import com.example.on_track_app.data.synchronization.GroupDTO
@@ -61,56 +65,98 @@ import com.example.on_track_app.viewModels.OwnerContext
 import com.example.on_track_app.viewModels.UserOwnerContext
 import io.realm.kotlin.MutableRealm
 import io.realm.kotlin.Realm
+import io.realm.kotlin.query.RealmResults
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.TypedRealmObject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
-import kotlin.jvm.java
 import kotlin.reflect.KClass
 
+fun < T> Realm.uiQuery(
+    clazz:KClass<T>,
+    filter: Filter,
+    vararg args: Any
+) where  T : TypedRealmObject, T : Entity = query(
+    clazz,
+    filter.query,
+    *args,
+    SynchronizationState.DELETED.name
+)
+
+fun < T > MutableRealm.uiQuery(
+    clazz:KClass<T>,
+    filter: Filter,
+    vararg args: Any
+) where  T : TypedRealmObject, T : Entity  = query(
+    clazz,
+    filter.query,
+    *args,
+    SynchronizationState.DELETED.name
+)
+
 enum class Filter(val query: String) {
+    ALL("identity.synchronizationStatus != $0"),
 
     // ---------- LOCAL ID ----------
-    ENTITY("id == $0"),
+    ENTITY("id == $0 AND identity.synchronizationStatus != $1"),
 
     // ---------- OWNER ----------
-    OWNER("owner.id == $0"),
-    REMOTE_OWNER("owner.identity.cloudId == $0"),
+    OWNER("owner.id == $0 AND identity.synchronizationStatus != $1"),
 
     // ---------- PROJECT ----------
-    PROJECT("project.id == $0"),
-    REMOTE_PROJECT("project.identity.cloudId == $0"),
+    PROJECT("project.id == $0 AND identity.synchronizationStatus != $1"),
 
     // ---------- LINK ----------
-    LINK("linkedTo.id == $0"),
-    LINKS("linkedTo.id IN $0"),
-    REMOTE_LINK("linkedTo.identity.cloudId == $0"),
+    LINK("linkedTo.id == $0 AND identity.synchronizationStatus != $1"),
+    LINKS("linkedTo.id IN $0 AND identity.synchronizationStatus != $1"),
 
     // ---------- TASK ----------
-    TASK_DUE_IN("due.instant >= $0 AND due.instant <= $1"),
-    GROUP_TASK_DUE_IN("owner.id == $0 AND due.instant >= $1 AND due.instant <= $2"),
-    PROJECT_TASK_DUE_IN("project.id == $0 AND due.instant >= $1 AND due.instant <= $2"),
+    TASK_DUE_IN(
+        "due.instant >= $0 AND due.instant <= $1 AND identity.synchronizationStatus != $2"
+    ),
+    GROUP_TASK_DUE_IN(
+        "owner.id == $0 AND due.instant >= $1 AND due.instant <= $2 AND identity.synchronizationStatus != $3"
+    ),
+    PROJECT_TASK_DUE_IN(
+        "project.id == $0 AND due.instant >= $1 AND due.instant <= $2 AND identity.synchronizationStatus != $3"
+    ),
 
     // ---------- EVENT ----------
-    EVENT_IN("start.instant >= $0 AND end.instant <= $1"),
-    GROUP_EVENT_IN("owner.id == $0 AND start.instant >= $1 AND end.instant <= $2"),
-    PROJECT_EVENT_IN("project.id == $0 AND start.instant >= $1 AND end.instant <= $2"),
+    EVENT_IN(
+        "start.instant >= $0 AND end.instant <= $1 AND identity.synchronizationStatus != $2"
+    ),
+    GROUP_EVENT_IN(
+        "owner.id == $0 AND start.instant >= $1 AND end.instant <= $2 AND identity.synchronizationStatus != $3"
+    ),
+    PROJECT_EVENT_IN(
+        "project.id == $0 AND start.instant >= $1 AND end.instant <= $2 AND identity.synchronizationStatus != $3"
+    ),
 
     // ---------- REMINDER ----------
-    REMINDER_IN("at.instant >= $0 AND at.instant <= $1"),
-    LINKED_REMINDER_IN("linkedTo.id IN $0 AND at.instant >= $1 AND at.instant <= $2"),
+    REMINDER_IN(
+        "at.instant >= $0 AND at.instant <= $1 AND identity.synchronizationStatus != $2"
+    ),
+    LINKED_REMINDER_IN(
+        "linkedTo.id IN $0 AND at.instant >= $1 AND at.instant <= $2 AND identity.synchronizationStatus != $3"
+    ),
 
     // ---------- MEMBERSHIP ----------
-    MEMBERSHIP_ENTITY("membership.id == $0"),
-    MEMBERSHIP_MEMBER("member.id == $0"),
+    MEMBERSHIP_ENTITY(
+        "membership.id == $0 AND identity.synchronizationStatus != $1"
+    ),
+    MEMBERSHIP_MEMBER(
+        "member.id == $0 AND identity.synchronizationStatus != $1"
+    ),
 
-    // ---------- REMOTE ENTITY ----------
+    // ---------- REMOTE / SYNC ONLY ----------
     REMOTE("identity.cloudId == $0"),
-    VERSION("identity.version > $0")
+    VERSION("identity.version > $0"),
 
-
+    // ---------- GARBAGE COLLECTOR ----------
+    GC("identity.synchronizationStatus == $0 AND identity.phase == $1");
 }
+
 
 
 // =====================================================
@@ -170,7 +216,7 @@ class RealmReferenceResolver(
 
         val found = when(owner){
 
-            is GroupOwnerContext -> realm.query(GroupRealmEntity::class,  Filter.ENTITY.query, owner.ownerId.toObjectId())
+            is GroupOwnerContext -> realm.uiQuery(GroupRealmEntity::class,  Filter.ENTITY, owner.ownerId.toObjectId())
                 .first().find()?.let { group ->
                     OwnerReference().apply {
                         id = group.id
@@ -178,7 +224,7 @@ class RealmReferenceResolver(
                         this.group = group
                     }
                 }
-            is UserOwnerContext -> realm.query(UserRealmEntity::class,  Filter.ENTITY.query, owner.ownerId.toObjectId())
+            is UserOwnerContext -> realm.uiQuery(UserRealmEntity::class,  Filter.ENTITY, owner.ownerId.toObjectId())
                 .first().find()?.let { user ->
                     OwnerReference().apply {
                         id = user.id
@@ -195,9 +241,9 @@ class RealmReferenceResolver(
         if (project == null) return null
         DebugLogcatLogger.log("  project $project")
 
-        val entity = realm.query(
+        val entity = realm.uiQuery(
             ProjectRealmEntity::class,
-            Filter.ENTITY.query,
+            Filter.ENTITY,
             project.id.toObjectId()
         ).first().find() ?: error("Project not found: ${project.id}")
 
@@ -212,7 +258,7 @@ class RealmReferenceResolver(
         if (link == null) return null
 
         val found = when(link){
-            is Task -> realm.query(TaskRealmEntity::class, Filter.ENTITY.query, link.id.toObjectId())
+            is Task -> realm.uiQuery(TaskRealmEntity::class, Filter.ENTITY, link.id.toObjectId())
                 .first().find()?.let { task ->
                     LinkReference().apply {
                         id = task.id
@@ -220,7 +266,7 @@ class RealmReferenceResolver(
                         this.task = task
                     }
                 }
-            is Event -> realm.query(EventRealmEntity::class, Filter.ENTITY.query, link.id.toObjectId())
+            is Event -> realm.uiQuery(EventRealmEntity::class, Filter.ENTITY, link.id.toObjectId())
                 .first().find()?.let { event ->
                     LinkReference().apply {
                         id = event.id
@@ -234,7 +280,7 @@ class RealmReferenceResolver(
 
     override fun membership(realm:MutableRealm,membership: Membership): MembershipReference {
         val found = when(membership){
-            is Group -> realm.query(GroupRealmEntity::class, Filter.ENTITY.query, membership.id.toObjectId())
+            is Group -> realm.uiQuery(GroupRealmEntity::class, Filter.ENTITY, membership.id.toObjectId())
                 .first().find()?.let { group ->
                     MembershipReference().apply {
                         id = group.id
@@ -242,7 +288,7 @@ class RealmReferenceResolver(
                         this.group = group
                     }
                 }
-            is Project -> realm.query(ProjectRealmEntity::class, Filter.ENTITY.query, membership.id.toObjectId())
+            is Project -> realm.uiQuery(ProjectRealmEntity::class, Filter.ENTITY, membership.id.toObjectId())
                 .first().find()?.let { project ->
                     MembershipReference().apply {
                         id = project.id
@@ -350,9 +396,9 @@ class RealmReferenceResolver(
     ).first().find()
         ?: error("User not found for cloudId=$cloudId")
 
-    override fun user(realm:MutableRealm,user: User) = realm.query(
+    override fun user(realm:MutableRealm,user: User) = realm.uiQuery(
         UserRealmEntity::class,
-        Filter.ENTITY.query,
+        Filter.ENTITY,
         user.id.toObjectId()
     ).first().find() ?: error("Project not found: ${user.id}")
 }
@@ -487,6 +533,8 @@ class RealmSyncMapperFactory(
 
 // ---------------- REALM BASE REPOSITORY ----------------
 
+
+
 interface RealmRepository<RE>
         where RE : TypedRealmObject, RE : Entity {
 
@@ -494,11 +542,11 @@ interface RealmRepository<RE>
     val localClass: KClass<RE>
 
     fun entity(realm: Realm, id: String): RE? =
-        realm.query(localClass, Filter.ENTITY.query, ObjectId(id))
+        realm.uiQuery(localClass, Filter.ENTITY, ObjectId(id))
             .first().find()
 
     fun entity(realm: MutableRealm, id: String): RE? =
-        realm.query(localClass, Filter.ENTITY.query, ObjectId(id))
+        realm.uiQuery(localClass, Filter.ENTITY, ObjectId(id))
             .first().find()
 
     fun entityByCloudId(realm: Realm, cloudId: String): RE? =
@@ -508,6 +556,7 @@ interface RealmRepository<RE>
     fun entityByCloudId(realm: MutableRealm, cloudId: String): RE? =
         realm.query(localClass, Filter.REMOTE.query, cloudId)
             .first().find()
+
 
 }
 
@@ -519,10 +568,13 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
     private val mapper: SyncMapper<RE, DTO, DOM>,
     private val maker: () -> RE,
     override val localClass: KClass<RE>,
-    private val transferClass: KClass<DTO>
+    private val transferClass: KClass<DTO>,
+    val gc: TriggeredGarbageCollector,
+    override val domClass: KClass<DOM>
 ) : RealmRepository<RE>,
     BasicById<DOM>,
     SynchronizableRepository<DTO>,
+    GarbageCollectablePort,
     DomainMapper<RE, DOM>,
     LocalMapper<RE, DTO>,
     DTOMapper<RE, DTO>
@@ -538,7 +590,7 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
     override fun toDTO(entity: RE): DTO = mapper.toDTO(entity)
 
     override fun getAll(): Flow<List<DOM>> =
-        db.query(localClass)
+        db.uiQuery(localClass,Filter.ALL)
             .asFlow()
             .map { it.list.map(::toDomain) }
 
@@ -546,7 +598,7 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
         entity(db, id)?.let(::toDomain)
 
     override fun liveById(id: String): Flow<DOM?> =
-        db.query(localClass, Filter.ENTITY.query, ObjectId(id))
+        db.uiQuery(localClass, Filter.ENTITY, ObjectId(id))
             .first().asFlow()
             .map { it.obj?.let(::toDomain) }
 
@@ -557,11 +609,6 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
         engine?.onLocalChange(id, transferClass)
     }
 
-    override suspend fun delete(id: String) {
-        db.write {
-            entity(this, id)?.let { delete(findLatest(it)!!) }
-        }
-    }
     override suspend fun applyRemoteInsert(dto: DTO) {
         db.write {
             val entity = maker().apply { toLocal(this@write,dto, this,true) }
@@ -585,11 +632,18 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
 
     override suspend fun applyRemoteDelete(dto: DTO) {
         db.write {
-            entityByCloudId(this, dto.cloudId ?: return@write)?.let {
-                delete(findLatest(it)!!)
-            }
+            val entity = entityByCloudId(this, dto.cloudId ?: return@write)
+                ?: return@write
+
+            val identity = entity.identity ?: return@write
+            if (identity.synchronizationStatus == SynchronizationState.DELETED.name) return@write
+
+            entity.delete()
         }
+
+        gc.propagateOnMarkAsDeleted(domClass, getId(dto))
     }
+
 
     override suspend fun applyCloudId(id: String, cloudId: String): DTO {
         lateinit var result: DTO
@@ -623,6 +677,76 @@ open class RealmSynchronizableRepository<RE, DTO, DOM>(
         db.query(localClass,Filter.REMOTE.query,dto.cloudId)
             .first().find()!!.id.toHexString()
 
+    // ------------------------------------
+    // GC ROOT DISCOVERY
+    // ------------------------------------
+
+    override suspend fun findSoftDeleteRoots(): List<String> =
+        db.uiQuery(
+            localClass,
+            Filter.GC,
+            SynchronizationState.DELETED.name,
+            GarbageCollectorPhase.NONE.name
+        )
+            .find()
+            .map { it.id.toHexString() }
+
+    override suspend fun markSoftDone(id: String) {
+        db.write {
+            entity(this, id)?.identity?.setPhase(GarbageCollectorPhase.SOFT_DONE)
+        }
+    }
+
+    // ------------------------------------
+    // FINALIZATION
+    // ------------------------------------
+
+    override suspend fun flushAsFinalized(): Int {
+        val targets = db.uiQuery(
+            localClass,
+            Filter.GC,
+            SynchronizationState.DELETED.name,
+            GarbageCollectorPhase.SOFT_DONE.name
+        ).find()
+
+        if (targets.isEmpty()) return 0
+
+        db.write {
+            targets.forEach {
+                findLatest(it)?.identity?.setPhase(GarbageCollectorPhase.FINALIZED)
+            }
+        }
+        return targets.size
+    }
+
+    // ------------------------------------
+    // HARD DELETE
+    // ------------------------------------
+
+    override suspend fun purgeFinalized(): Int {
+        val targets = db.uiQuery(
+            localClass,
+            Filter.GC,
+            SynchronizationState.DELETED.name,
+            GarbageCollectorPhase.FINALIZED.name
+        ).find()
+
+        if (targets.isEmpty()) return 0
+
+        db.write {
+            targets.forEach {
+                val latest = findLatest(it) ?: return@forEach
+
+                //must or realm grows like a ghost
+                latest.identity?.let { id ->
+                    delete(id)
+                }
+
+                delete(latest)
+            }
+        }
+        return targets.size
+    }
 }
 
 
@@ -633,19 +757,70 @@ abstract class RealmRepositoryDecorator<RE>(
 ) : RealmRepository<RE> by core
         where RE : TypedRealmObject, RE : Entity
 
+sealed class MarkAsDeleteByReferencePropagationRepository<RE,DTO,DOM>(
+    protected val syncCore:RealmSynchronizableRepository<RE,DTO,DOM>
+): RealmRepositoryDecorator<RE>(syncCore)
+        where DOM : Identifiable, DTO : SynchronizableDTO,
+              RE : RealmObject, RE : SynchronizableEntity{
+
+    suspend fun markAndPropagate(targets: RealmResults<RE>):Int {
+        if (targets.isEmpty()) return 0
+        val ids = mark(targets)
+        ids.forEach { syncCore.gc.propagateOnMarkAsDeleted(syncCore.domClass, it) }
+        return ids.size
+    }
+
+    suspend fun markAndPropagate(klass:KClass<*>,targets: RealmResults<RE>):Int{
+        if (targets.isEmpty()) return 0
+        val ids = mark(targets)
+        ids.forEach { syncCore.gc.propagateOnMarkAsDeleted(klass, it) }
+        return ids.size
+    }
+
+    private suspend fun mark(targets: RealmResults<RE>): MutableList<String> {
+        val ids = mutableListOf<String>()
+
+        db.write {
+            targets.forEach {
+                val latest = findLatest(it) ?: return@forEach
+                if (latest.identity?.synchronizationStatus != SynchronizationState.DELETED.name) {
+                    latest.delete()
+                    ids.add(latest.id.toHexString())
+                }
+            }
+        }
+        return ids
+    }
+
+
+}
 
 class OwnershipRepository<RE, DOM>(
     core: RealmRepository<RE>,
     private val mapper: DomainMapper<RE, DOM>
 ) : RealmRepositoryDecorator<RE>(core),
     IndexedByOwner<DOM>
-        where RE : TypedRealmObject, RE : Entity, DOM : Owned,
-              DOM : Identifiable {
+        where RE : TypedRealmObject, RE : Entity,
+              DOM : Owned, DOM : Identifiable {
 
     override fun of(id: String): Flow<List<DOM>> =
-        core.db.query(core.localClass, Filter.OWNER.query, ObjectId(id))
+        core.db.uiQuery(core.localClass, Filter.OWNER, ObjectId(id))
             .find().asFlow()
             .map { it.list.map(mapper::toDomain) }
+}
+
+class OwnershipGarbageCollectorRepository<RE,DTO,DOM>(
+    syncCore:RealmSynchronizableRepository<RE,DTO,DOM>
+):MarkAsDeleteByReferencePropagationRepository<RE,DTO,DOM>(syncCore),
+    SoftDeleteByOwnerPort
+        where RE : RealmObject, RE : SynchronizableEntity,
+              DOM : Identifiable, DTO : SynchronizableDTO{
+    override suspend fun markAsDeletedByOwner(ownerId: String): Int {
+        val targets = db.uiQuery(localClass, Filter.OWNER, ownerId.toObjectId())
+            .find()
+
+        return markAndPropagate(targets)
+    }
 }
 
 
@@ -654,13 +829,29 @@ class ProjectOwnershipRepository<RE, DOM>(
     private val mapper: DomainMapper<RE, DOM>
 ) : RealmRepositoryDecorator<RE>(core),
     IndexedByProject<DOM>
-        where RE : TypedRealmObject, RE : Entity, DOM : ProjectOwned,
-              DOM : Identifiable {
+        where RE : TypedRealmObject, RE : Entity,
+              DOM : ProjectOwned, DOM : Identifiable {
 
     override fun byProject(id: String): Flow<List<DOM>> =
-        core.db.query(core.localClass, Filter.PROJECT.query, ObjectId(id))
+        core.db.uiQuery(core.localClass, Filter.PROJECT, ObjectId(id))
             .find().asFlow()
             .map { it.list.map(mapper::toDomain) }
+}
+
+class ProjectGarbageCollectorRepository<RE,DTO,DOM>(
+    syncCore:RealmSynchronizableRepository<RE,DTO,DOM>
+):MarkAsDeleteByReferencePropagationRepository<RE,DTO,DOM>(syncCore),
+    SoftDeleteByProjectPort
+        where RE : RealmObject, RE : SynchronizableEntity,
+              DOM : Identifiable, DTO : SynchronizableDTO{
+    override suspend fun markAsDeletedByProject(projectId: String): Int {
+        val targets = db.uiQuery(localClass, Filter.PROJECT, projectId.toObjectId())
+            .find()
+
+        return markAndPropagate(targets)
+
+    }
+
 }
 
 
@@ -669,18 +860,63 @@ class LinkedRepository<RE, DOM>(
     private val mapper: DomainMapper<RE, DOM>
 ) : RealmRepositoryDecorator<RE>(core),
     IndexedByLink<DOM>
-        where RE : TypedRealmObject, RE : Entity, DOM : Linked,
-              DOM : Identifiable {
+    where RE : TypedRealmObject, RE : Entity,
+          DOM : Linked, DOM : Identifiable {
 
     override fun linkedTo(id: String): Flow<List<DOM>> =
-        core.db.query(core.localClass, Filter.LINK.query, ObjectId(id))
+        core.db.uiQuery(core.localClass, Filter.LINK, ObjectId(id))
             .find().asFlow()
             .map { it.list.map(mapper::toDomain) }
 
     override fun linkedTo(ids: List<String>): Flow<List<DOM>> =
-        core.db.query(core.localClass, Filter.LINKS.query, ids.map({it.toObjectId()}))
+        core.db.uiQuery(core.localClass, Filter.LINKS, ids.map { it.toObjectId() })
             .find().asFlow()
             .map { it.list.map(mapper::toDomain) }
+}
+
+
+class LinkedGarbageCollectorRepository<RE,DTO,DOM>(
+    syncCore:RealmSynchronizableRepository<RE,DTO,DOM>
+) :MarkAsDeleteByReferencePropagationRepository<RE,DTO,DOM>(syncCore), SoftDeleteByLinkPort where RE : RealmObject,
+RE : SynchronizableEntity,
+DOM : Identifiable,
+DTO : SynchronizableDTO{
+    override suspend fun markAsDeletedByLink(linkId: String): Int {
+        val targets = db.uiQuery(localClass, Filter.LINK, linkId.toObjectId())
+            .find()
+
+        return markAndPropagate(targets)
+    }
+
+}
+
+class MembershipsGarbageCollectorRepository<RE,DTO,DOM>(
+    syncCore:RealmSynchronizableRepository<RE,DTO,DOM>
+) :MarkAsDeleteByReferencePropagationRepository<RE,DTO,DOM>(syncCore), SoftDeleteByMembershipPort where RE : RealmObject,
+                                                                                                  RE : SynchronizableEntity,
+                                                                                                  DOM : Identifiable,
+                                                                                                  DTO : SynchronizableDTO{
+
+    override suspend fun markAsDeletedByMembership(membershipId: String): Int {
+        val targets = db.uiQuery(
+            localClass,
+            Filter.MEMBERSHIP_ENTITY,
+            membershipId.toObjectId()
+        ).find()
+
+        return markAndPropagate(syncCore.domClass,targets)
+    }
+
+    override suspend fun markAsDeletedByMember(userId: String): Int {
+        val targets = db.uiQuery(
+            localClass,
+            Filter.MEMBERSHIP_MEMBER,
+            userId.toObjectId()
+        ).find()
+
+        return markAndPropagate(syncCore.domClass,targets)
+    }
+
 }
 
 

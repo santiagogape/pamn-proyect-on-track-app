@@ -1,5 +1,7 @@
 package com.example.on_track_app.data.realm.entities
 
+import com.example.on_track_app.data.GCSynchronizableEntity
+import com.example.on_track_app.data.GarbageCollectorPhase
 import com.example.on_track_app.data.realm.utils.SynchronizationState
 import com.example.on_track_app.model.Named
 import io.realm.kotlin.types.EmbeddedRealmObject
@@ -18,7 +20,7 @@ interface RealmOwned { var owner: OwnerReference? }
 interface RealmProjectOwned { var project: ProjectReference? }
 interface RealmLinked { var linkedTo: LinkReference? }
 
-interface Synchronizable : Entity {
+interface Synchronizable : Entity, GCSynchronizableEntity {
     var cloudId: String
     var version: RealmInstant
     var synchronizationStatus: String
@@ -33,6 +35,8 @@ class SynchronizationEntity : RealmObject, Entity, Synchronizable{
     override var version: RealmInstant = RealmInstant.now()
     @Index
     override var synchronizationStatus: String = SynchronizationState.CREATED.name
+    @Index
+    override var phase = GarbageCollectorPhase.NONE.name
 }
 
 interface SynchronizableEntity: Entity{

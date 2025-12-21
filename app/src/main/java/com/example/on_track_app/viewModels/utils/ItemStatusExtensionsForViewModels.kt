@@ -51,24 +51,6 @@ inline fun <T,R> ItemStatus<T>.map(
     }
 
 
-
-fun <T> Flow<ItemStatus<T>>.filterItemStatus(
-    scope: CoroutineScope,
-    started: SharingStarted = SharingStarted.WhileSubscribed(5_000),
-    filteredMapper: (T)->T
-): StateFlow<ItemStatus<T>> =
-    this.map<ItemStatus<T>,ItemStatus<T>> { list ->
-        list.filter(filteredMapper)
-    }
-        .onStart {
-            emit(ItemStatus.Loading)
-        }
-        .stateIn(
-            scope,
-            started,
-            ItemStatus.Loading
-        )
-
 fun <T,R> Flow<ItemStatus<T>>.mapItemStatus(
     scope: CoroutineScope,
     started: SharingStarted = SharingStarted.WhileSubscribed(5_000),

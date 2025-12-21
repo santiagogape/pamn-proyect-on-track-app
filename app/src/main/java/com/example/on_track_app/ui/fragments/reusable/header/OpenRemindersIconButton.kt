@@ -48,7 +48,6 @@ import com.example.on_track_app.model.sortByTime
 import com.example.on_track_app.model.toDate
 import com.example.on_track_app.model.toTime
 import com.example.on_track_app.utils.LocalCreationContext
-import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.viewModels.GroupCreationContext
 import com.example.on_track_app.viewModels.ProjectCreationContext
@@ -64,7 +63,6 @@ fun OpenRemindersIconButton(
     modifier: Modifier = Modifier,
     tint: Color = LocalContentColor.current
 ) {
-    val ownerContext = LocalOwnerContext.current
     val creationContext = LocalCreationContext.current
     val viewModel: RemindersViewModel = viewModel(factory = LocalViewModelFactory.current)
     val sourceFlow: StateFlow<ItemStatus<List<Reminder>>> =

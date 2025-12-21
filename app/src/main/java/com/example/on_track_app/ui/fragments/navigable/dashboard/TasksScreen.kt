@@ -74,6 +74,6 @@ fun DashboardScreen(
                 }
             }
         }
-        EditTask(taskToEdit, projectsState, viewModel,{taskToEdit=null})
+        EditTask(taskToEdit, projectsState, viewModel) { taskToEdit = null }
     }
 }

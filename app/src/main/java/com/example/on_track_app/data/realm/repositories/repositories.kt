@@ -1,13 +1,9 @@
 package com.example.on_track_app.data.realm.repositories
 
-/*
-import com.example.on_track_app.data.abstractions.repositories.refactor.*
-import com.example.on_track_app.data.realm.entities.refactor.*
-import com.example.on_track_app.data.realm.utils.*
-import com.example.on_track_app.data.synchronization.*
-import com.example.on_track_app.model.refactor.*
- */
-
+import com.example.on_track_app.data.SoftDeleteByLinkPort
+import com.example.on_track_app.data.SoftDeleteByMembershipPort
+import com.example.on_track_app.data.SoftDeleteByOwnerPort
+import com.example.on_track_app.data.SoftDeleteByProjectPort
 import com.example.on_track_app.data.abstractions.repositories.BasicById
 import com.example.on_track_app.data.abstractions.repositories.EventRepository
 import com.example.on_track_app.data.abstractions.repositories.GroupRepository
@@ -113,6 +109,7 @@ class RealmGroupRepository(
 ) : GroupRepository,
     BasicById<Group> by core,
     IndexedByOwner<Group> by OwnershipRepository(core, core),
+    SoftDeleteByOwnerPort by OwnershipGarbageCollectorRepository(core),
     SynchronizableRepository<GroupDTO> by core {
 
     override suspend fun addGroup(
@@ -162,6 +159,7 @@ class RealmProjectRepository(
 ) : ProjectRepository,
     BasicById<Project> by core,
     IndexedByOwner<Project> by OwnershipRepository(core, core),
+    SoftDeleteByOwnerPort by OwnershipGarbageCollectorRepository(core),
     SynchronizableRepository<ProjectDTO> by core {
 
     override suspend fun addProject(
@@ -210,6 +208,7 @@ class RealmMembershipRepository(
     private val resolver: ReferenceResolver
 ) : MembershipRepository,
     BasicById<UserMembership> by core,
+    SoftDeleteByMembershipPort by MembershipsGarbageCollectorRepository(core),
     SynchronizableRepository<MembershipDTO> by core {
 
     // --------------------------------------------------
@@ -245,9 +244,9 @@ class RealmMembershipRepository(
     // --------------------------------------------------
 
     override fun byMember(user: User): Flow<List<UserMembership>> =
-        db.query(
+        db.uiQuery(
             MembershipRealmEntity::class,
-            Filter.MEMBERSHIP_MEMBER.query,
+            Filter.MEMBERSHIP_MEMBER,
             user.id.toObjectId()
         )
             .find()
@@ -255,9 +254,9 @@ class RealmMembershipRepository(
             .map { it.list.map(core::toDomain) }
 
     override fun byMembership(membership: Membership): Flow<List<UserMembership>> =
-        db.query(
+        db.uiQuery(
             MembershipRealmEntity::class,
-            Filter.MEMBERSHIP_ENTITY.query,
+            Filter.MEMBERSHIP_ENTITY,
             membership.id.toObjectId()
         )
             .find()
@@ -278,6 +277,8 @@ class RealmTaskRepository(
     BasicById<Task> by core,
     IndexedByOwner<Task> by OwnershipRepository(core, core),
     IndexedByProject<Task> by ProjectOwnershipRepository(core, core),
+    SoftDeleteByOwnerPort by OwnershipGarbageCollectorRepository(core),
+    SoftDeleteByProjectPort by ProjectGarbageCollectorRepository(core),
     SynchronizableRepository<TaskDTO> by core {
 
     override suspend fun addTask(
@@ -334,7 +335,7 @@ class RealmTaskRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Task>> =
-        core.db.query(core.localClass, Filter.TASK_DUE_IN.query, start.toRealmInstant(), end.toRealmInstant())
+        core.db.uiQuery(core.localClass, Filter.TASK_DUE_IN, start.toRealmInstant(), end.toRealmInstant())
             .find()
             .asFlow()
             .map { it.list.map(core::toDomain) }
@@ -344,9 +345,9 @@ class RealmTaskRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Task>> =
-        core.db.query(
+        core.db.uiQuery(
             core.localClass,
-            Filter.GROUP_TASK_DUE_IN.query,
+            Filter.GROUP_TASK_DUE_IN,
             group,
             start.toRealmInstant(),
             end.toRealmInstant()
@@ -360,7 +361,7 @@ class RealmTaskRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Task>> =
-        core.db.query(core.localClass, Filter.PROJECT_TASK_DUE_IN.query, start.toRealmInstant(), end.toRealmInstant())
+        core.db.uiQuery(core.localClass, Filter.PROJECT_TASK_DUE_IN, start.toRealmInstant(), end.toRealmInstant())
             .find()
             .asFlow()
             .map { it.list.map(core::toDomain) }
@@ -378,6 +379,8 @@ class RealmEventRepository(
     BasicById<Event> by core,
     IndexedByOwner<Event> by OwnershipRepository(core, core),
     IndexedByProject<Event> by ProjectOwnershipRepository(core, core),
+    SoftDeleteByOwnerPort by OwnershipGarbageCollectorRepository(core),
+    SoftDeleteByProjectPort by ProjectGarbageCollectorRepository(core),
     SynchronizableRepository<EventDTO> by core {
 
     override suspend fun addEvent(
@@ -434,7 +437,7 @@ class RealmEventRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Event>> =
-        core.db.query(core.localClass, Filter.EVENT_IN.query, start.toRealmInstant(), end.toRealmInstant())
+        core.db.uiQuery(core.localClass, Filter.EVENT_IN, start.toRealmInstant(), end.toRealmInstant())
             .find()
             .asFlow()
             .map { it.list.map(core::toDomain) }
@@ -444,7 +447,7 @@ class RealmEventRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Event>> =
-        core.db.query(core.localClass, Filter.GROUP_EVENT_IN.query,group.toObjectId(), start.toRealmInstant(), end.toRealmInstant())
+        core.db.uiQuery(core.localClass, Filter.GROUP_EVENT_IN,group.toObjectId(), start.toRealmInstant(), end.toRealmInstant())
             .find()
             .asFlow()
             .map { it.list.map(core::toDomain) }
@@ -454,7 +457,7 @@ class RealmEventRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Event>> =
-        core.db.query(core.localClass, Filter.PROJECT_EVENT_IN.query, project.toObjectId(),start.toRealmInstant(), end.toRealmInstant())
+        core.db.uiQuery(core.localClass, Filter.PROJECT_EVENT_IN, project.toObjectId(),start.toRealmInstant(), end.toRealmInstant())
             .find()
             .asFlow()
             .map { it.list.map(core::toDomain) }
@@ -472,6 +475,8 @@ class RealmReminderRepository(
     BasicById<Reminder> by core,
     IndexedByOwner<Reminder> by OwnershipRepository(core, core),
     IndexedByLink<Reminder> by LinkedRepository(core, core),
+    SoftDeleteByOwnerPort by OwnershipGarbageCollectorRepository(core),
+    SoftDeleteByLinkPort by LinkedGarbageCollectorRepository(core),
     SynchronizableRepository<ReminderDTO> by core {
 
     override suspend fun addReminder(
@@ -522,7 +527,7 @@ class RealmReminderRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Reminder>> =
-        core.db.query(core.localClass, Filter.REMINDER_IN.query, start.toRealmInstant(), end.toRealmInstant())
+        core.db.uiQuery(core.localClass, Filter.REMINDER_IN, start.toRealmInstant(), end.toRealmInstant())
             .find()
             .asFlow()
             .map { it.list.map(core::toDomain) }
@@ -532,7 +537,7 @@ class RealmReminderRepository(
         start: Instant,
         end: Instant
     ): Flow<List<Reminder>> =
-        core.db.query(core.localClass, Filter.LINKED_REMINDER_IN.query,links, start.toRealmInstant(), end.toRealmInstant())
+        core.db.uiQuery(core.localClass, Filter.LINKED_REMINDER_IN,links, start.toRealmInstant(), end.toRealmInstant())
             .find()
             .asFlow()
             .map { it.list.map(core::toDomain) }

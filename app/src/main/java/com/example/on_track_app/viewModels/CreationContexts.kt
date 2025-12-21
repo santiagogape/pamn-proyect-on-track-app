@@ -3,7 +3,6 @@ package com.example.on_track_app.viewModels
 import com.example.on_track_app.model.User
 
 
-//todo replace LocalOwnership y LocalReference for the interfaces here
 
 // project
 sealed interface OwnerContext { val ownerId: String }

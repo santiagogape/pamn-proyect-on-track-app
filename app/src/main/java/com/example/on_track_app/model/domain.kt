@@ -18,9 +18,9 @@ interface Selectable: Identifiable,Named
 interface Expandable: Selectable, Described
 interface TimedExpandable: Expandable, Timed
 fun List<TimedExpandable>.sort(): List<TimedExpandable> =
-    this.sortedWith(compareBy({ it.toTime() ?: LocalTime.MIN }))
+    this.sortedWith(compareBy { it.toTime() ?: LocalTime.MIN })
 fun <T> List<T>.sortByTime(): List<T> where T: Timed =
-    this.sortedWith(compareBy({ it.toTime() ?: LocalTime.MIN }))
+    this.sortedWith(compareBy { it.toTime() ?: LocalTime.MIN })
 
 // ---- RELATIONS ----
 sealed interface Owner : Selectable

@@ -13,6 +13,7 @@ import com.example.on_track_app.utils.DebugLogcatLogger
 import com.example.on_track_app.utils.LocalCreationContext
 import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalReminderCreationContext
+import com.example.on_track_app.utils.LocalUserPFP
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
 import com.example.on_track_app.viewModels.UserCreationContext
@@ -53,11 +54,15 @@ class MainActivity : ComponentActivity() {
                 )
             } else {
                 val current = config!!
+                val pfp = (application as OnTrackApp)
+                    .authClient
+                    .getProfilePictureUrl()
                 CompositionLocalProvider(
                     LocalViewModelFactory provides factory,
                     LocalOwnerContext provides UserOwnerContext(current.user),
                     LocalCreationContext provides UserCreationContext(current.user),
-                    LocalReminderCreationContext provides UserReminderCreationContext(current.user)
+                    LocalReminderCreationContext provides UserReminderCreationContext(current.user),
+                    LocalUserPFP provides pfp
                 ) {
                     current.let { DebugLogcatLogger.logConfig(checkAuth()!!, "main") }
                     Main(

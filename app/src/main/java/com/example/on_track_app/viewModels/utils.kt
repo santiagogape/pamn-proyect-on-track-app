@@ -85,7 +85,6 @@ class DelegateModifyEvent(val update: EventRepository, val scope: CoroutineScope
     override fun delete(event: Event) {
         scope.launch {
             update.markAsDeleted(event.id)
-            update.delete(event.id)
         }
     }
 }
@@ -100,7 +99,6 @@ class DelegateModifyProject(val update: ProjectRepository, val scope: CoroutineS
     override fun delete(project: Project) {
         scope.launch {
             update.markAsDeleted(project.id)
-            update.delete(project.id)
         }
     }
 }
@@ -115,7 +113,6 @@ class DelegateModifyGroup(val update: GroupRepository, val scope: CoroutineScope
     override fun delete(group: Group) {
         scope.launch {
             update.markAsDeleted(group.id)
-            update.delete(group.id)
         }
     }
 }
@@ -130,7 +127,6 @@ class DelegateModifyReminder(val update: ReminderRepository, val scope: Coroutin
     override fun delete(reminder: Reminder) {
         scope.launch {
             update.markAsDeleted(reminder.id)
-            update.delete(reminder.id)
         }
     }
 }
@@ -145,7 +141,6 @@ class DelegateModifyTask(val update: TaskRepository, val scope: CoroutineScope):
     override fun delete(task: Task) {
         scope.launch {
             update.markAsDeleted(task.id)
-            update.delete(task.id)
         }
     }
 }

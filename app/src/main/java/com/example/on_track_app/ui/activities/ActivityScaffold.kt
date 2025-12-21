@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarToday
@@ -113,16 +114,6 @@ fun ActivityScaffold(
             contentAlignment = Alignment.Center
         ) {
             navigationTarget()
-
-            if (dialog != Dialogs.NONE) {
-                GlobalDialogCoordinator(
-                    activeDialog = dialog,
-                    onDismiss = { dialog = Dialogs.NONE },
-                    snackBarHostState = snackBarHostState,
-                    sources = sources,
-                    currentDate = currentDate
-                )
-            }
             if (showMenu) {
                 val density = LocalDensity.current
                 val offsetPx = remember(density) {
@@ -159,7 +150,7 @@ fun ActivityScaffold(
                                             showMenu = false
                                             dialog = Dialogs.PROJECT
                                         },
-                                        leadingIcon = { Icon(Icons.Default.Alarm, contentDescription = null) }
+                                        leadingIcon = { Icon(Icons.Default.AccountTree, contentDescription = null) }
                                     )
                                 DropdownMenuItem(
                                     text = { Text("NEW EVENT") },
@@ -181,6 +172,15 @@ fun ActivityScaffold(
                         }
                     }
                 }
+            }
+            if (dialog != Dialogs.NONE) {
+                GlobalDialogCoordinator(
+                    activeDialog = dialog,
+                    onDismiss = { dialog = Dialogs.NONE },
+                    snackBarHostState = snackBarHostState,
+                    sources = sources,
+                    currentDate = currentDate
+                )
             }
         }
     }

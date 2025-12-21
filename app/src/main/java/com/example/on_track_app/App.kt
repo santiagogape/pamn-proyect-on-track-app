@@ -2,7 +2,9 @@ package com.example.on_track_app
 
 
 import android.app.Application
+import com.example.on_track_app.data.GarbageCollector
 import com.example.on_track_app.data.abstractions.repositories.UniqueRepository
+import com.example.on_track_app.data.auth.AuthClient
 import com.example.on_track_app.data.auth.GoogleAuthClient
 import com.example.on_track_app.data.di.CatalogBindingsFactory
 import com.example.on_track_app.data.di.SyncEngineBuilder
@@ -28,6 +30,7 @@ import com.example.on_track_app.viewModels.login.LoginViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
 class OnTrackApp : Application() {
@@ -43,13 +46,22 @@ class OnTrackApp : Application() {
         )
 
     lateinit var viewModelsFactory: ViewModelsFactory
+        private set
+
     lateinit var applicationScope: CoroutineScope
+        private set
 
     lateinit var localConfig: UniqueRepository<LocalConfigurations>
+        private set
 
     lateinit var authViewModelFactory: ()-> LoginViewModel
+        private set
     lateinit var authenticationCheck: () -> User?
+        private set
     lateinit var connectivityProvider: ConnectivityProvider
+        private set
+
+    lateinit var authClient: AuthClient
         private set
 
 
@@ -68,11 +80,12 @@ class OnTrackApp : Application() {
         val localConfigRepo = LocalConfigRepository(RealmDatabase.realm)
 
         localConfig = localConfigRepo
-
-        val catalogBindingsFactory = CatalogBindingsFactory()
+        val garbageCollector = GarbageCollector(domain)
+        val catalogBindingsFactory = CatalogBindingsFactory(garbageCollector)
 
         //view model factory using repositories
         viewModelsFactory = ViewModelsFactoryBuilder(catalogBindingsFactory).build()
+
 
 
         // Sync Engine
@@ -85,10 +98,15 @@ class OnTrackApp : Application() {
                 catalogBinding = catalogBindingsFactory,
             ).build()
         }
-        val auth = GoogleAuthClient(this)
-        authViewModelFactory = authViewmodelBuilder(auth,localConfigRepo,syncEngine,catalogBindingsFactory)
-        authenticationCheck = authCheck(auth,localConfigRepo,catalogBindingsFactory)
+        authClient = GoogleAuthClient(this)
+        authViewModelFactory = authViewmodelBuilder(authClient,localConfigRepo,syncEngine,catalogBindingsFactory)
+        authenticationCheck = authCheck(authClient,localConfigRepo,catalogBindingsFactory)
 
+        garbageCollector.init()
+
+        applicationScope.launch {
+            //start gc for periodic or event trigger deleteOnCascade....
+        }
 
     }
 }

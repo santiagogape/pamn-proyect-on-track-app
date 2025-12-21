@@ -22,11 +22,15 @@ abstract class AuthClient(protected val context: Context) {
     abstract suspend fun signIn(activityContext: Context): Boolean
     abstract fun getUser(): User?
     abstract suspend fun ensureUserExists(): EnsureUserResult
+    open fun getProfilePictureUrl(): String? = null
 }
 class GoogleAuthClient(context: Context):AuthClient(context) {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirestoreService.firestore
     private val credentialManager = CredentialManager.create(this.context)
+
+    override fun getProfilePictureUrl(): String? =
+        auth.currentUser?.photoUrl?.toString()
 
     override suspend fun signIn(activityContext: Context): Boolean {
         try {

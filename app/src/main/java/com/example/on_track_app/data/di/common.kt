@@ -1,5 +1,6 @@
 package com.example.on_track_app.data.di
 
+import com.example.on_track_app.data.GarbageCollector
 import com.example.on_track_app.data.abstractions.repositories.BasicById
 import com.example.on_track_app.data.realm.entities.EventRealmEntity
 import com.example.on_track_app.data.realm.entities.GroupRealmEntity
@@ -69,6 +70,8 @@ class GenericRepositoryBuilder<DOM, LOCAL, DTO, R>(
     private val catalog: Catalog<DOM, LOCAL, DTO>,
     private val mapper: SyncMapper<LOCAL, DTO, DOM>,
     private val maker: () -> LOCAL,
+    private val gc: GarbageCollector,
+    private val clazz: KClass<DOM> = catalog.domain,
     private val buildRepo: (
         core: RealmSynchronizableRepository<LOCAL, DTO, DOM>
     ) -> R
@@ -85,7 +88,10 @@ R: BasicById<DOM>, R: SynchronizableRepository<DTO>{
             maker = maker,
             localClass = catalog.local,
             transferClass = catalog.dto,
-            mapper = mapper
+            mapper = mapper,
+            gc = gc,
+            domClass = clazz
+
         )
         val repo = buildRepo(core)
 

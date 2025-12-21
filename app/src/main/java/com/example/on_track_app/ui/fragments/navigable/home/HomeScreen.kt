@@ -89,8 +89,8 @@ fun HomeScreen(
             }
         }
 
-        EditTask(taskToEdit, state, viewModel,{taskToEdit=null})
-        EditEvent(eventToEdit, state, viewModel,{eventToEdit=null})
+        EditTask(taskToEdit, state, viewModel) { taskToEdit = null }
+        EditEvent(eventToEdit, state, viewModel) { eventToEdit = null }
     }
 }
 

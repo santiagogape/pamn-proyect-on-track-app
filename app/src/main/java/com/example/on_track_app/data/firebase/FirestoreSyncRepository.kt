@@ -21,7 +21,7 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
     override fun generateCloudId(): String {
         return collection.document().id
     }
-    private val collection: CollectionReference = db.collection(collectionName)
+    private val collection: CollectionReference = this.db.collection(collectionName)
     private var userId = ""
 
     //todo -> group -> new observeRemoteChanges call
@@ -57,7 +57,7 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
             .get()
             .await()
             .documents
-            .mapNotNull { it.toObject(clazz) }
+            .mapNotNull { it.toObject(this.clazz) }
     }
 
     override suspend fun getAll(): List<T> {
@@ -65,7 +65,7 @@ class FirestoreSyncRepository<T: SynchronizableDTO>(
             .get()
             .await()
             .documents
-            .mapNotNull { it.toObject(clazz) }
+            .mapNotNull { it.toObject(this.clazz) }
     }
 
     override fun setUserId(id: String) {

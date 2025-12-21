@@ -1,5 +1,9 @@
 package com.example.on_track_app.data.di
 
+import com.example.on_track_app.data.GarbageCollector
+import com.example.on_track_app.data.SoftDeleteByLinkPort
+import com.example.on_track_app.data.SoftDeleteByOwnerPort
+import com.example.on_track_app.data.SoftDeleteByProjectPort
 import com.example.on_track_app.data.abstractions.repositories.BasicById
 import com.example.on_track_app.data.abstractions.repositories.EventRepository
 import com.example.on_track_app.data.abstractions.repositories.ProjectRepository
@@ -18,10 +22,7 @@ import com.example.on_track_app.data.realm.entities.ReminderRealmEntity
 import com.example.on_track_app.data.realm.entities.SynchronizableEntity
 import com.example.on_track_app.data.realm.entities.TaskRealmEntity
 import com.example.on_track_app.data.realm.entities.UserRealmEntity
-import com.example.on_track_app.data.realm.repositories.LinkedRepository
 import com.example.on_track_app.data.realm.repositories.LocalConfigRepository
-import com.example.on_track_app.data.realm.repositories.OwnershipRepository
-import com.example.on_track_app.data.realm.repositories.ProjectOwnershipRepository
 import com.example.on_track_app.data.realm.repositories.RealmEventRepository
 import com.example.on_track_app.data.realm.repositories.RealmGroupRepository
 import com.example.on_track_app.data.realm.repositories.RealmMembershipRepository
@@ -184,7 +185,7 @@ class RemoteRepositoryFactory {
  * ------------------------------------------------------------ */
 
 class CatalogBindingsFactory(
-
+val gc: GarbageCollector
 ) {
     private val realm: Realm = RealmDatabase.realm
     private val referenceResolver: RealmReferenceResolver = RealmReferenceResolver()
@@ -199,8 +200,10 @@ class CatalogBindingsFactory(
                 realm,
                 USER_CATALOG,
                 mappers.user,
-                { UserRealmEntity() }
+                { UserRealmEntity() },
+                gc,
             ) { core ->
+                gc.subscribe(User::class, core)
                 RealmUserRepository(realm,core)
             }.build()
 
@@ -213,9 +216,13 @@ class CatalogBindingsFactory(
                 realm,
                 GROUP_CATALOG,
                 mappers.group,
-                { GroupRealmEntity() }
+                { GroupRealmEntity() },
+                gc,
             ) { core ->
-                RealmGroupRepository(realm,core,referenceResolver)
+                gc.subscribe(Group::class, core)
+                val realmGroupRepository = RealmGroupRepository(realm, core, referenceResolver)
+                gc.subscribe(Group::class, realmGroupRepository)
+                realmGroupRepository
             }.build()
 
         CatalogBinding(GROUP_CATALOG, handle.repo, handle.sync, remoteFactory.group())
@@ -227,9 +234,13 @@ class CatalogBindingsFactory(
                 realm,
                 PROJECT_CATALOG,
                 mappers.project,
-                { ProjectRealmEntity() }
+                { ProjectRealmEntity() },
+                gc,
             ) { core ->
-                RealmProjectRepository(realm,core,referenceResolver)
+                val realmProjectRepository = RealmProjectRepository(realm, core, referenceResolver)
+                gc.subscribe(Project::class, realmProjectRepository)
+                gc.subscribe(Project::class, core)
+                realmProjectRepository
             }.build()
 
         CatalogBinding(PROJECT_CATALOG, handle.repo, handle.sync, remoteFactory.project())
@@ -241,9 +252,14 @@ class CatalogBindingsFactory(
                 realm,
                 MEMBERSHIP_CATALOG,
                 mappers.membership,
-                { MembershipRealmEntity() }
+                { MembershipRealmEntity() },
+                gc,
             ) { core ->
-                RealmMembershipRepository(realm,core,referenceResolver)
+                val realmMembershipRepository =
+                    RealmMembershipRepository(realm, core, referenceResolver)
+                gc.subscribe(realmMembershipRepository)
+                gc.subscribe(UserMembership::class, core)
+                realmMembershipRepository
             }.build()
 
         CatalogBinding(MEMBERSHIP_CATALOG, handle.repo, handle.sync, remoteFactory.membership())
@@ -255,9 +271,14 @@ class CatalogBindingsFactory(
                 realm,
                 TASK_CATALOG,
                 mappers.task,
-                { TaskRealmEntity() }
+                { TaskRealmEntity() },
+                gc,
             ) { core ->
-                RealmTaskRepository(realm,core,referenceResolver)
+                val realmTaskRepository = RealmTaskRepository(realm, core, referenceResolver)
+                gc.subscribe(Task::class, realmTaskRepository as SoftDeleteByOwnerPort)
+                gc.subscribe(Task::class, realmTaskRepository as SoftDeleteByProjectPort)
+                gc.subscribe(Task::class, core)
+                realmTaskRepository
             }.build()
 
         CatalogBinding(TASK_CATALOG, handle.repo, handle.sync, remoteFactory.task())
@@ -269,12 +290,14 @@ class CatalogBindingsFactory(
                 realm,
                 EVENT_CATALOG,
                 mappers.event,
-                { EventRealmEntity() }
+                { EventRealmEntity() },
+                gc,
             ) { core ->
-                OwnershipRepository(core, core)
-                ProjectOwnershipRepository(core, core)
-
-                RealmEventRepository(realm,core,referenceResolver)
+                val realmEventRepository = RealmEventRepository(realm, core, referenceResolver)
+                gc.subscribe(Event::class, realmEventRepository as SoftDeleteByOwnerPort)
+                gc.subscribe(Event::class, realmEventRepository as SoftDeleteByProjectPort)
+                gc.subscribe(Event::class, core)
+                realmEventRepository
             }.build()
 
         CatalogBinding(EVENT_CATALOG, handle.repo, handle.sync, remoteFactory.event())
@@ -286,12 +309,15 @@ class CatalogBindingsFactory(
                 realm,
                 REMINDER_CATALOG,
                 mappers.reminder,
-                { ReminderRealmEntity() }
+                { ReminderRealmEntity() },
+                gc,
             ) { core ->
-                OwnershipRepository(core, core)
-                LinkedRepository(core, core)
-
-                RealmReminderRepository(realm,core,referenceResolver)
+                val realmReminderRepository =
+                    RealmReminderRepository(realm, core, referenceResolver)
+                gc.subscribe(Reminder::class, core)
+                gc.subscribe(Reminder::class, realmReminderRepository as SoftDeleteByOwnerPort)
+                gc.subscribe(Task::class, realmReminderRepository as SoftDeleteByLinkPort)
+                realmReminderRepository
             }.build()
 
         CatalogBinding(REMINDER_CATALOG, handle.repo, handle.sync, remoteFactory.reminder())

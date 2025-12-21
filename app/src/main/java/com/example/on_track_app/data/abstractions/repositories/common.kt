@@ -40,7 +40,6 @@ interface BasicById<T: Identifiable> {
     fun getById(id: String): T?
     fun liveById(id: String): Flow<T?>
     suspend fun markAsDeleted(id: String)
-    suspend fun delete(id: String)
 }
 
 interface IndexedByProject<T> {
