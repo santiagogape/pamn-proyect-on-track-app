@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OnTrack</string>
     <string name="title_home">Home</string>
@@ -7,5 +8,47 @@
     <string name="theme_toggle">change theme</string>
     <string name="get_back">back to projects</string>
     <string name="day_empty">nothing is due</string>
-    <string name="calendar_empty">Nothings is happening today or ever, create a task or something, be productive</string>
+    <string name="calendar_empty">
+        Nothings is happening today or ever, create a task or something, be productive
+    </string>
+    <string name="new_task">New Task</string>
+    <string name="TEXT_FIELD_LABEL_NAME">Name</string>
+    <string name="TEXT_FIELD_LABEL_DESCRIPTION">Description</string>
+    <string name="select_a_project_optional">Select a Project (Optional)</string>
+    <string name="selection">Selection</string>
+    <string name="no_project_selected">No project selected</string>
+    <string name="deadline">Deadline</string>
+    <string name="wanna_specify_hour">wanna specify hour?</string>
+    <string name="no_time_needed">no time needed</string>
+    <string name="submit">Submit</string>
+    <string name="set_reminder">Set Reminder</string>
+    <string name="link_this_reminder_to_another_scheduled_activity">
+        link this reminder to another scheduled activity
+    </string>
+    <string name="scheduled_activities">tasks, events, ...</string>
+    <string name="no_link_selected">no link selected</string>
+    <string name="link">link</string>
+    <string name="not_linked">not linked to anything</string>
+    <string name="new_project">New Project</string>
+    <string name="project_name">Project Name</string>
+    <string name="choose_both_limits_instead">choose both limits instead</string>
+    <string name="just_one_whole_day">just one whole day?</string>
+    <string name="end">End</string>
+    <string name="start">Start</string>
+    <string name="reminder_created_successfully">Reminder created successfully</string>
+    <string name="project_created_successfully">Project created successfully</string>
+    <string name="task_created_successfully">Task created successfully</string>
+    <string name="event_created_successfully">Event created successfully</string>
+    <string name="tasks_empty">Your task list is empty</string>
+    <string name="home_empty">you have nothing scheduled</string>
+    <string name="projects_empty">you have no projects currently</string>
+    <string name="language">Language</string>
+    <string name="english">English</string>
+    <string name="spanish">Spanish</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_projects">Projects</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_next">Next</string>
+    <string name="nav_prev">Previous</string>
 </resources>

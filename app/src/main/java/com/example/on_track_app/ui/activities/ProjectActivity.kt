@@ -17,12 +17,14 @@ import com.example.on_track_app.ui.navigation.Destinations
 import com.example.on_track_app.ui.navigation.ProjectNavigation
 import com.example.on_track_app.ui.navigation.routes
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.utils.Language
 import com.example.on_track_app.utils.LocalCreationContext
 import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalReminderCreationContext
 import com.example.on_track_app.utils.LocalUserPFP
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.utils.changeLanguage
 import com.example.on_track_app.viewModels.GroupOwnerContext
 import com.example.on_track_app.viewModels.GroupReminderCreationContext
 import com.example.on_track_app.viewModels.ProjectCreationContext
@@ -48,6 +50,7 @@ class ProjectActivity : ComponentActivity() {
             .getProfilePictureUrl()
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -57,6 +60,9 @@ class ProjectActivity : ComponentActivity() {
             val groupId = intent.getStringExtra("GROUP_ID")
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
 
+            val language = settings.languageFlow.collectAsState(Language.ENG)
+
+            val currentLanguage by language
 
             val ownerContext = when{
                 groupId != null -> GroupOwnerContext(groupId)
@@ -81,6 +87,8 @@ class ProjectActivity : ComponentActivity() {
                 Project(
                     label = projectName,
                     darkTheme = darkTheme,
+                    currentLanguage = currentLanguage,
+                    {lang -> changeLanguage(lang, settings, this, this, lifecycleScope)},
                     onToggleTheme = {
                         lifecycleScope.launch {
                             settings.setDarkTheme(!darkTheme)
@@ -96,6 +104,8 @@ class ProjectActivity : ComponentActivity() {
 fun Project(
     label:String,
     darkTheme: Boolean,
+    currentLanguage: Language,
+    changeLanguage: (Language) -> Unit,
     onToggleTheme: () -> Unit,
 ) {
     val factory = LocalViewModelFactory.current
@@ -116,7 +126,7 @@ fun Project(
 
         ActivityScaffold(
             header = {
-                ProjectsHeader(project?.name ?: label,darkTheme,onToggleTheme)
+                ProjectsHeader(project?.name ?: label,darkTheme,currentLanguage, changeLanguage,onToggleTheme)
                 },
             footer = { NavBar(navController,items) },
         ){

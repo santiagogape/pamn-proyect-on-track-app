@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
@@ -45,7 +46,9 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.on_track_app.R
 import com.example.on_track_app.ui.fragments.dialogs.GlobalDialogCoordinator
+import com.example.on_track_app.ui.navigation.Destinations
 import com.example.on_track_app.ui.navigation.NavItem
 import com.example.on_track_app.ui.navigation.isOnDestination
 import com.example.on_track_app.utils.LocalCreationContext
@@ -212,7 +215,15 @@ fun NavBar(
                     }
                 },
                 icon = { Icon(imageVector = item.icon, contentDescription = item.label) },
-                label = { Text(item.label) },
+                label = { Text(when (item.label){
+                    Destinations.HOME -> stringResource(R.string.nav_home)
+                    Destinations.TASKS -> stringResource(R.string.nav_tasks)
+                    Destinations.PROJECTS -> stringResource(R.string.nav_projects)
+                    Destinations.CALENDAR -> stringResource(R.string.nav_calendar)
+                    Destinations.NEXT -> stringResource(R.string.nav_next)
+                    Destinations.PREV -> stringResource(R.string.nav_prev)
+                    else -> ""
+                }) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.onPrimary,
                     unselectedIconColor = MaterialTheme.colorScheme.onBackground,

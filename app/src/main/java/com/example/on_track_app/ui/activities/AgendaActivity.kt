@@ -42,12 +42,14 @@ import com.example.on_track_app.ui.fragments.dialogs.EditTask
 import com.example.on_track_app.ui.fragments.reusable.cards.TimedExpandableCards
 import com.example.on_track_app.ui.fragments.reusable.header.AgendaHeader
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
+import com.example.on_track_app.utils.Language
 import com.example.on_track_app.utils.LocalCreationContext
 import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalReminderCreationContext
 import com.example.on_track_app.utils.LocalUserPFP
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.utils.changeLanguage
 import com.example.on_track_app.viewModels.GroupCreationContext
 import com.example.on_track_app.viewModels.GroupOwnerContext
 import com.example.on_track_app.viewModels.GroupReminderCreationContext
@@ -77,6 +79,7 @@ class AgendaActivity : ComponentActivity() {
             .getProfilePictureUrl()
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -84,6 +87,8 @@ class AgendaActivity : ComponentActivity() {
             val projectId = intent.getStringExtra("PROJECT_ID")
             val groupId = intent.getStringExtra("GROUP_ID")
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
+            val language = settings.languageFlow.collectAsState(Language.ENG)
+            val currentLanguage by language
             val conf = config.get()
             val ownerContext = when{
                 groupId != null -> GroupOwnerContext(groupId)
@@ -108,7 +113,9 @@ class AgendaActivity : ComponentActivity() {
                 LocalUserPFP provides pfp
             ) {
                 Agenda(
-                    darkTheme = darkTheme,{
+                    darkTheme = darkTheme,
+                    currentLanguage = currentLanguage,
+                    {lang -> changeLanguage(lang, settings, this, this, lifecycleScope)},{
                     lifecycleScope.launch {
                         settings.setDarkTheme(!darkTheme)
                     }
@@ -124,6 +131,8 @@ class AgendaActivity : ComponentActivity() {
 @Composable
 fun Agenda(
     darkTheme: Boolean,
+    currentLanguage: Language,
+    changeLanguage: (Language) -> Unit,
     onToggleTheme: () -> Unit,
     date: LocalDate = now(),
 ) {
@@ -170,7 +179,7 @@ fun Agenda(
     OnTrackAppTheme(darkTheme = darkTheme) {
         ActivityScaffold(
             header = {
-                AgendaHeader(currentDate, darkTheme, onToggleTheme)
+                AgendaHeader(currentDate, darkTheme, currentLanguage, changeLanguage,onToggleTheme)
             },
             footer = {
                 NextPrev(

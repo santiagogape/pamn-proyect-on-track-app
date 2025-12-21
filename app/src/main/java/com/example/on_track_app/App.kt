@@ -25,11 +25,13 @@ import com.example.on_track_app.model.User
 import com.example.on_track_app.model.UserMembership
 import com.example.on_track_app.utils.AndroidConnectivityProvider
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.utils.setAppLocale
 import com.example.on_track_app.viewModels.factory.ViewModelsFactory
 import com.example.on_track_app.viewModels.login.LoginViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
@@ -68,6 +70,8 @@ class OnTrackApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
+
+
         // coroutine scope for global services and coroutines
         applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         connectivityProvider = AndroidConnectivityProvider(
@@ -75,6 +79,13 @@ class OnTrackApp : Application() {
             scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         )
 
+        val settings = SettingsDataStore(this)
+
+        applicationScope.launch {
+            settings.languageFlow.first().let { lang ->
+                setAppLocale(lang)
+            }
+        }
 
         //init
         val localConfigRepo = LocalConfigRepository(RealmDatabase.realm)
@@ -105,7 +116,7 @@ class OnTrackApp : Application() {
         garbageCollector.init()
 
         applicationScope.launch {
-            //start gc for periodic or event trigger deleteOnCascade....
+            //start gc for periodic or event trigger deleteOnCascade
         }
 
     }

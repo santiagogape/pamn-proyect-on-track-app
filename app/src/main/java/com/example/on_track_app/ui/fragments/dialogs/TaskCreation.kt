@@ -31,8 +31,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.on_track_app.R
 import com.example.on_track_app.model.Project
 import com.example.on_track_app.model.Task
 import com.example.on_track_app.model.TimeField
@@ -103,7 +105,7 @@ fun TaskCreation(
                     }
                     // TITLE
                     Text(
-                        text = "New Task",
+                        text = stringResource(R.string.new_task),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -122,7 +124,7 @@ fun TaskCreation(
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Name *") },
+                            label = { Text(stringResource(R.string.TEXT_FIELD_LABEL_NAME)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -133,7 +135,7 @@ fun TaskCreation(
                         OutlinedTextField(
                             value = description,
                             onValueChange = { description = it },
-                            label = { Text("Description *") },
+                            label = { Text(stringResource(R.string.TEXT_FIELD_LABEL_DESCRIPTION)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 80.dp, max = 250.dp),
@@ -143,7 +145,11 @@ fun TaskCreation(
                         )
 
                         // 4. THE PROJECT DROPDOWN
-                        Selector(colors,availableProjects,defaultProject, "Select a Project (Optional)","Selection","No project selected"){
+                        Selector(colors,availableProjects,defaultProject,
+                            stringResource(R.string.select_a_project_optional),
+                            stringResource(R.string.selection),
+                            stringResource(R.string.no_project_selected)
+                        ){
                             selectedProject = it
                             DebugLogcatLogger.log(" change selected  project ${selectedProject?.name}.")
                         }
@@ -157,7 +163,7 @@ fun TaskCreation(
                             onOpenCalendar = { deadlineOpen = true },
                             onTime = { h, m -> hour = h; minute = m },
                             withTime = pickHour,
-                            label = "Deadline\n" + date.toString().split("-").reversed()
+                            label = stringResource(R.string.deadline) +"\n" + date.toString().split("-").reversed()
                                 .joinToString("/")
                         )
                     }
@@ -176,7 +182,10 @@ fun TaskCreation(
                                 colors = colors,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("with time")
+                                Text(
+                                    if(!pickHour) stringResource(R.string.wanna_specify_hour)
+                                    else stringResource(R.string.no_time_needed)
+                                )
                                 if (pickHour) Icon(Icons.Filled.Check, null)
                                 else Icon(Icons.Filled.Close, null)
                             }
@@ -203,7 +212,7 @@ fun TaskCreation(
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Submit")
+                            Text(stringResource(R.string.submit))
                         }
                     }
                 }

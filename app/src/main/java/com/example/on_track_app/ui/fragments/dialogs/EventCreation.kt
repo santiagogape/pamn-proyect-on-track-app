@@ -30,8 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.on_track_app.R
 import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Project
 import com.example.on_track_app.model.TimeField
@@ -146,7 +148,7 @@ fun EventCreation(
                                 OutlinedTextField(
                                     value = name,
                                     onValueChange = { name = it },
-                                    label = { Text("Name *") },
+                                    label = { Text(stringResource(R.string.TEXT_FIELD_LABEL_NAME)) },
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(12.dp),
@@ -157,7 +159,7 @@ fun EventCreation(
                                 OutlinedTextField(
                                     value = description,
                                     onValueChange = { description = it },
-                                    label = { Text("Description *") },
+                                    label = { Text(stringResource(R.string.TEXT_FIELD_LABEL_DESCRIPTION)) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .heightIn(min = 80.dp, max = 250.dp),
@@ -170,9 +172,9 @@ fun EventCreation(
                                     colors,
                                     availableProjects,
                                     defaultProject,
-                                    "Select a Project (Optional)",
-                                    "Selection",
-                                    "No project selected"
+                                    stringResource(R.string.select_a_project_optional),
+                                    stringResource(R.string.selection),
+                                    stringResource(R.string.no_project_selected)
                                 ){  DebugLogcatLogger.log("received selected $it")
                                     project = it }
                             }
@@ -187,7 +189,7 @@ fun EventCreation(
                                     onOpenCalendar = { deadlineOpen = DateType.START },
                                     onTime = { h, m -> startTime = LocalTime.of(h, m) },
                                     withTime = !oneDayEvent,
-                                    label = "Start\n" + startDate.toString().split("-").reversed().joinToString("/")
+                                    label = stringResource(R.string.start) +"\n" + startDate.toString().split("-").reversed().joinToString("/")
                                 )
 
                                 if (!oneDayEvent) {
@@ -195,7 +197,7 @@ fun EventCreation(
                                         onOpenCalendar = { deadlineOpen = DateType.END },
                                         onTime = { h, m -> endTime = LocalTime.of(h, m) },
                                         withTime = true,
-                                        label = "End\n" + endDate.toString().split("-").reversed().joinToString("/")
+                                        label = stringResource(R.string.end) + "\n" + endDate.toString().split("-").reversed().joinToString("/")
                                     )
                                 }
                             }
@@ -218,7 +220,9 @@ fun EventCreation(
                                         colors = colors,
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
-                                        Text("one day")
+                                        Text( if (!oneDayEvent) stringResource(R.string.just_one_whole_day) else stringResource(
+                                            R.string.choose_both_limits_instead
+                                        ))
                                         if (oneDayEvent) Icon(Icons.Filled.Check,null)
                                         else Icon(Icons.Filled.Close,null)
                                     }
@@ -239,7 +243,7 @@ fun EventCreation(
                                     ),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Text("Submit")
+                                    Text(stringResource(R.string.submit))
 
                                 }
                             }

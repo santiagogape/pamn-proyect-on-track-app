@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -25,17 +24,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.on_track_app.R
+import com.example.on_track_app.utils.Language
 
 @Composable
 fun ProfilePicture(
     url: String?,
-    onSettingsClick: () -> Unit = {},
+    currentLanguage: Language,
+    onSettingsClick: (Language) -> Unit,
     onLogoutClick: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var showLanguageMenu by remember { mutableStateOf(false) }
+
 
     Box(
         contentAlignment = Alignment.Center
@@ -73,13 +79,20 @@ fun ProfilePicture(
             onDismissRequest = { showMenu = false },
         ) {
             DropdownMenuItem(
-                text = { Text("Settings") },
-                onClick = {
-                    showMenu = false
-                    onSettingsClick()
-                },
-                leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) }
+                text = { Text(stringResource(R.string.language)) },
+                onClick = { showLanguageMenu = true },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(
+                            if (currentLanguage == Language.ES) R.drawable.es
+                            else R.drawable.uk
+                        ),
+                        contentDescription = null,
+                        modifier = imageModifier
+                    )
+                }
             )
+
             DropdownMenuItem(
                 text = { Text("Sign out") },
                 onClick = {
@@ -89,5 +102,43 @@ fun ProfilePicture(
                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) }
             )
         }
+
+        DropdownMenu(
+            expanded = showLanguageMenu,
+            onDismissRequest = { showLanguageMenu = false }
+        ) {
+
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.english)) },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.uk),
+                        contentDescription = null,
+                        modifier = imageModifier
+                    )
+                },
+                onClick = {
+
+                    onSettingsClick(Language.ENG)
+                }
+            )
+
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.spanish)) },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.es),
+                        contentDescription = null,
+                        modifier = imageModifier
+                    )
+                },
+                onClick = {
+                    onSettingsClick(Language.ES)
+                }
+            )
+        }
+
+
+
     }
 }

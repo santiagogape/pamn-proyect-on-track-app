@@ -13,9 +13,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.R
 import com.example.on_track_app.model.Task
 import com.example.on_track_app.ui.fragments.dialogs.EditTask
 import com.example.on_track_app.ui.fragments.reusable.cards.ExpandableCards
@@ -38,7 +40,6 @@ fun DashboardScreen(
     val viewModelFactory = LocalViewModelFactory.current
 
     val viewModel: TasksViewModel = viewModel(factory = viewModelFactory)
-    val text by viewModel.text.collectAsStateWithLifecycle()
     val sourceFlow = remember(creationContext) {
         when(creationContext){
             is ProjectCreationContext -> viewModel.byProject(creationContext.projectId)
@@ -68,7 +69,7 @@ fun DashboardScreen(
             ItemStatus.Loading -> CircularProgressIndicator()
             is ItemStatus.Success -> {
                 if (state.elements.isEmpty()){
-                    Text(text = text, style = MaterialTheme.typography.headlineSmall)
+                    Text(text = stringResource(R.string.tasks_empty), style = MaterialTheme.typography.headlineSmall)
                 } else {
                     ExpandableCards(state.elements,{taskToEdit=it},{viewModel.delete(it)})
                 }

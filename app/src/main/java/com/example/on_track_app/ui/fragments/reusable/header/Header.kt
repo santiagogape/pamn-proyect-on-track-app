@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.on_track_app.utils.Language
 import com.example.on_track_app.utils.LocalUserPFP
 import java.time.LocalDate
 
@@ -57,6 +58,8 @@ private fun Header(
 fun MainHeader(
     label: String,
     darkTheme: Boolean,
+    currentLanguage: Language,
+    changeLanguage: (Language) -> Unit,
     onToggleTheme: () -> Unit,
 ) {
     val pfp = LocalUserPFP.current
@@ -70,7 +73,7 @@ fun MainHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            pfp?.let { ProfilePicture(it)}
+            pfp?.let { ProfilePicture(it, currentLanguage = currentLanguage, changeLanguage)}
         }
     )
 }
@@ -79,6 +82,8 @@ fun MainHeader(
 fun ProjectsHeader(
     label: String,
     darkTheme: Boolean,
+    currentLanguage: Language,
+    changeLanguage: (Language) -> Unit,
     onToggleTheme: () -> Unit,
 ) {
     val pfp = LocalUserPFP.current
@@ -95,7 +100,7 @@ fun ProjectsHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            pfp?.let { ProfilePicture(it)}
+            pfp?.let { ProfilePicture(it, currentLanguage = currentLanguage, changeLanguage)}
         }
     )
 }
@@ -105,6 +110,8 @@ fun ProjectsHeader(
 fun AgendaHeader(
     date: LocalDate,
     darkTheme: Boolean,
+    currentLanguage: Language,
+    changeLanguage: (Language) -> Unit,
     onToggleTheme: () -> Unit,
 ) {
     val pfp = LocalUserPFP.current
@@ -127,7 +134,7 @@ fun AgendaHeader(
         },
         endContent = {
             ThemeToggleIconButton(darkTheme, onToggleTheme)
-            pfp?.let { ProfilePicture(it)}
+            pfp?.let { ProfilePicture(it,currentLanguage = currentLanguage, changeLanguage)}
         }
     )
 }

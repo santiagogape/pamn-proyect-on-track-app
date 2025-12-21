@@ -11,12 +11,14 @@ import com.example.on_track_app.ui.activities.Main
 import com.example.on_track_app.ui.fragments.login.LoginScreen
 import com.example.on_track_app.ui.theme.OnTrackAppTheme
 import com.example.on_track_app.utils.DebugLogcatLogger
+import com.example.on_track_app.utils.Language
 import com.example.on_track_app.utils.LocalCreationContext
 import com.example.on_track_app.utils.LocalOwnerContext
 import com.example.on_track_app.utils.LocalReminderCreationContext
 import com.example.on_track_app.utils.LocalUserPFP
 import com.example.on_track_app.utils.LocalViewModelFactory
 import com.example.on_track_app.utils.SettingsDataStore
+import com.example.on_track_app.utils.changeLanguage
 import com.example.on_track_app.viewModels.UserCreationContext
 import com.example.on_track_app.viewModels.UserOwnerContext
 import com.example.on_track_app.viewModels.UserReminderCreationContext
@@ -49,6 +51,11 @@ class MainActivity : ComponentActivity() {
             val config by localConfig.config.collectAsState()
             val darkTheme by settings.darkThemeFlow.collectAsState(initial = false)
 
+            val language = settings.languageFlow.collectAsState(Language.ENG)
+
+            val currentLanguage by language
+
+
             OnTrackAppTheme(darkTheme = darkTheme) {
                 if (config == null) {
                     LoginScreen(
@@ -67,14 +74,16 @@ class MainActivity : ComponentActivity() {
                         LocalReminderCreationContext provides UserReminderCreationContext(current.user),
                         LocalUserPFP provides pfp
                     ) {
-                        current.let { DebugLogcatLogger.logConfig(checkAuth()!!, "main") }
+                        current.let { DebugLogcatLogger.logConfig(it.user, "main") }
                         Main(
                             darkTheme = darkTheme,
-                            onToggleTheme = {
-                                lifecycleScope.launch {
-                                    settings.setDarkTheme(!darkTheme)
-                                }
-                            })
+                            currentLanguage = currentLanguage,
+                            {lang -> changeLanguage(lang, settings, this, this, lifecycleScope)}
+                        ) {
+                            lifecycleScope.launch {
+                                settings.setDarkTheme(!darkTheme)
+                            }
+                        }
                     }
                 }
             }

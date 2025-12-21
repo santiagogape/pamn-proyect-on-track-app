@@ -15,9 +15,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.R
 import com.example.on_track_app.ui.activities.ProjectActivity
 import com.example.on_track_app.ui.fragments.reusable.cards.StaticCards
 import com.example.on_track_app.utils.LocalCreationContext
@@ -49,7 +51,6 @@ fun ProjectsScreen(
         }
     }
     val projects by projectsSourceFlow.collectAsStateWithLifecycle()
-    val text by viewModel.text.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -62,7 +63,7 @@ fun ProjectsScreen(
             ItemStatus.Error -> {}
             is ItemStatus.Success -> {
                 if (state.elements.isEmpty()) {
-                    Text(text = text, style = MaterialTheme.typography.headlineSmall)
+                    Text(text = stringResource(R.string.projects_empty), style = MaterialTheme.typography.headlineSmall)
                 } else {
                     StaticCards(state.elements,{viewModel.delete(it)}) { projectId,projectName ->
                         val intent = Intent(context, ProjectActivity::class.java)

@@ -9,10 +9,14 @@ import com.example.on_track_app.ui.navigation.AppNavigation
 import com.example.on_track_app.ui.navigation.Destinations
 import com.example.on_track_app.ui.navigation.isOnDestination
 import com.example.on_track_app.ui.navigation.routes
+import com.example.on_track_app.utils.Language
 
 @Composable
-fun Main(darkTheme: Boolean,
-         onToggleTheme: () -> Unit,
+fun Main(
+    darkTheme: Boolean,
+    currentLanguage: Language,
+    changeLanguage: (Language) -> Unit,
+    onToggleTheme: () -> Unit,
          ) {
 
         val navController = rememberNavController()
@@ -30,7 +34,7 @@ fun Main(darkTheme: Boolean,
 
         ActivityScaffold(
             header = {
-                MainHeader(label,darkTheme,onToggleTheme)
+                MainHeader(label,darkTheme, currentLanguage, changeLanguage,onToggleTheme)
                      },
             footer = { NavBar(navController,items) },
         ){

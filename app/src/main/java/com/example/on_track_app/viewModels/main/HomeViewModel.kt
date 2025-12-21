@@ -16,7 +16,6 @@ import com.example.on_track_app.viewModels.ModifyEvent
 import com.example.on_track_app.viewModels.ModifyTask
 import com.example.on_track_app.viewModels.ProjectsConsult
 import com.example.on_track_app.viewModels.utils.asItemStatus
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -43,9 +42,6 @@ class HomeViewModel(
     override fun update(event: Event) = updateEvent.update(event)
     override fun delete(task: Task) = updateTask.delete(task)
     override fun delete(event: Event) = updateEvent.delete(event)
-
-    private val _text = MutableStateFlow("This is home screen")
-    val text: StateFlow<String> = _text
 
 
     val tasks = this.taskRepository.between(start,end).asItemStatus(viewModelScope)

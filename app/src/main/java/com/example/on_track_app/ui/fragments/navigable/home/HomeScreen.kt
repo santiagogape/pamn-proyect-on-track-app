@@ -13,9 +13,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.R
 import com.example.on_track_app.model.Event
 import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.model.Task
@@ -30,7 +32,6 @@ import com.example.on_track_app.viewModels.main.ItemStatus
 fun HomeScreen(
 ) {
     val viewModel: HomeViewModel = viewModel(factory = LocalViewModelFactory.current)
-    val text by viewModel.text.collectAsStateWithLifecycle()
 
     val events by viewModel.events.collectAsStateWithLifecycle()
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
@@ -58,7 +59,7 @@ fun HomeScreen(
                 val currentEvents = (events as ItemStatus.Success<List<Event>>).elements
                 val currentTask = (tasks as ItemStatus.Success<List<Task>>).elements
                 if (currentTask.isEmpty() && currentEvents.isEmpty()) {
-                    Text(text = text, style = MaterialTheme.typography.headlineSmall)
+                    Text(text = stringResource(R.string.home_empty), style = MaterialTheme.typography.headlineSmall)
                 } else {
                     val contents: Map<String, List<Expandable>> = mapOf(
                         "Tasks" to currentTask,

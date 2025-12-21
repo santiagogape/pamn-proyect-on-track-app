@@ -6,7 +6,6 @@ import com.example.on_track_app.data.abstractions.repositories.ProjectRepository
 import com.example.on_track_app.model.Project
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.utils.asItemStatus
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -16,8 +15,6 @@ class ProjectsViewModel(private val repo: ProjectRepository
 ) : ViewModel() {
 
 
-    private val _text = MutableStateFlow("This is projects screen")
-    val text: StateFlow<String> = _text
 
 
     fun project(id:String): Project? {

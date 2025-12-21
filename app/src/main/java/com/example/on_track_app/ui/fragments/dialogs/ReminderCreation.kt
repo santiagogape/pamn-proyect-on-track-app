@@ -29,8 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.on_track_app.R
 import com.example.on_track_app.model.Linkable
 import com.example.on_track_app.model.LinkedType
 import com.example.on_track_app.model.Selectable
@@ -101,7 +103,7 @@ fun ReminderCreation(
                         Icon(Icons.Filled.Close, contentDescription = "Close")
                     }
                     Text(
-                        text = "Set Reminder",
+                        text = stringResource(R.string.set_reminder),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -123,7 +125,7 @@ fun ReminderCreation(
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Name *") },
+                            label = { Text(stringResource(R.string.TEXT_FIELD_LABEL_NAME)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -135,7 +137,7 @@ fun ReminderCreation(
                         OutlinedTextField(
                             value = description,
                             onValueChange = { description = it },
-                            label = { Text("Description") },
+                            label = { Text(stringResource(R.string.TEXT_FIELD_LABEL_DESCRIPTION)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             singleLine = true,
@@ -155,9 +157,9 @@ fun ReminderCreation(
                                 colors,
                                 ItemStatus.Success(types),
                                 default = null,
-                                label = "Select a type to link",
-                                placeholder = "tasks, events, ...",
-                                noSelectionLabel = "no link selected",
+                                label = stringResource(R.string.link_this_reminder_to_another_scheduled_activity),
+                                placeholder = stringResource(R.string.scheduled_activities),
+                                noSelectionLabel = stringResource(R.string.not_linked),
                                 select = { selection ->
                                     selectedType = selection
                                 }
@@ -169,9 +171,9 @@ fun ReminderCreation(
                                     builder.sources[LinkedType.valueOf(selection.name)]
                                         ?: ItemStatus.Loading,
                                     null,
-                                    label = "select",
-                                    placeholder = "link",
-                                    noSelectionLabel = "no link selected",
+                                    label = stringResource(R.string.selection),
+                                    placeholder = stringResource(R.string.link),
+                                    noSelectionLabel = stringResource(R.string.no_link_selected),
                                 ) { selection ->
                                     selected = selection
                                 }
@@ -228,7 +230,7 @@ fun ReminderCreation(
                             shape = RoundedCornerShape(12.dp)
                         ) {
 
-                            Text("Set Reminder")
+                            Text(stringResource(R.string.submit))
 
                         }
                     }

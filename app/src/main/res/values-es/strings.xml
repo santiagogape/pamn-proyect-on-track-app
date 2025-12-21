@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OnTrack</string>
+    <string name="title_home">Inicio</string>
+    <string name="title_dashboard">Panel</string>
+    <string name="title_notifications">Notificaciones</string>
+    <string name="title_calendar">Calendario</string>
+    <string name="theme_toggle">cambiar tema</string>
+    <string name="get_back">volver a proyectos</string>
+    <string name="day_empty">no hay nada pendiente</string>
+    <string name="calendar_empty">
+        No pasa nada hoy ni nunca, crea una tarea o algo, sé productivo
+    </string>
+    <string name="new_task">Nueva tarea</string>
+    <string name="TEXT_FIELD_LABEL_NAME">Nombre</string>
+    <string name="TEXT_FIELD_LABEL_DESCRIPTION">Descripción</string>
+    <string name="select_a_project_optional">Seleccionar un proyecto (opcional)</string>
+    <string name="selection">Selección</string>
+    <string name="no_project_selected">Ningún proyecto seleccionado</string>
+    <string name="deadline">Fecha límite</string>
+    <string name="wanna_specify_hour">¿quieres especificar una hora?</string>
+    <string name="no_time_needed">no se necesita hora</string>
+    <string name="submit">Confirmar</string>
+    <string name="set_reminder">Crear recordatorio</string>
+    <string name="link_this_reminder_to_another_scheduled_activity">
+        vincular este recordatorio a otra actividad programada
+    </string>
+    <string name="scheduled_activities">tareas, eventos, …</string>
+    <string name="no_link_selected">ningún vínculo seleccionado</string>
+    <string name="link">vincular</string>
+    <string name="not_linked">no vinculado a nada</string>
+    <string name="new_project">Nuevo proyecto</string>
+    <string name="project_name">Nombre del proyecto</string>
+    <string name="choose_both_limits_instead">elige ambos límites en su lugar</string>
+    <string name="just_one_whole_day">¿solo un día completo?</string>
+    <string name="start">Inicio</string>
+    <string name="end">Fin</string>
+    <string name="reminder_created_successfully">Recordatorio creado correctamente</string>
+    <string name="project_created_successfully">Proyecto creado correctamente</string>
+    <string name="task_created_successfully">Tarea creada correctamente</string>
+    <string name="event_created_successfully">Evento creado correctamente</string>
+    <string name="tasks_empty">Tu lista de tareas está vacía</string>
+    <string name="home_empty">no tienes nada programado</string>
+    <string name="projects_empty">no tienes proyectos actualmente</string>
+    <string name="language">Idioma</string>
+    <string name="english">Ingles</string>
+    <string name="spanish">Español</string>
+    <string name="nav_home">Todos</string>
+    <string name="nav_tasks">Tareas</string>
+    <string name="nav_projects">Proyectos</string>
+    <string name="nav_calendar">Calendario</string>
+    <string name="nav_next">Siguiente</string>
+    <string name="nav_prev">Anterior</string>
+</resources>

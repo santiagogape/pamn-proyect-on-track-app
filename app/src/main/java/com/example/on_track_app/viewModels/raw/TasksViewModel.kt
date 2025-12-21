@@ -12,7 +12,6 @@ import com.example.on_track_app.viewModels.ModifyTask
 import com.example.on_track_app.viewModels.ProjectsConsult
 import com.example.on_track_app.viewModels.main.ItemStatus
 import com.example.on_track_app.viewModels.utils.asItemStatus
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
@@ -30,12 +29,10 @@ class TasksViewModel(
     override fun update(task: Task) = updateTask.update(task)
     override fun delete(task: Task) = updateTask.delete(task)
 
-    private val _text = MutableStateFlow("Your task list is empty")
     private val tasks: StateFlow<ItemStatus<List<Task>>> = this.repo.getAll()
         .asItemStatus(viewModelScope)
 
 
-    val text: StateFlow<String> = _text
 
     val allTasks: StateFlow<ItemStatus<List<Task>>> = tasks
 

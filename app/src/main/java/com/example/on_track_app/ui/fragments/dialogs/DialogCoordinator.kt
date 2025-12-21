@@ -5,8 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.on_track_app.R
 import com.example.on_track_app.model.LinkedType
 import com.example.on_track_app.ui.activities.Dialogs
 import com.example.on_track_app.utils.DebugLogcatLogger
@@ -37,6 +39,15 @@ fun GlobalDialogCoordinator(
     val tasksSourceFlow = remember(creationContext) { sources.tasks(creationContext) }
     val eventsSourceFlow = remember(creationContext) { sources.events(creationContext) }
     val scope = rememberCoroutineScope()
+
+    val ux = object {
+        val reminders = stringResource(R.string.reminder_created_successfully)
+        val projects = stringResource(R.string.project_created_successfully)
+        val tasks = stringResource(R.string.task_created_successfully)
+        val events = stringResource(R.string.event_created_successfully)
+
+    }
+
     when (activeDialog) {
         Dialogs.NONE -> { /* Do nothing */ }
 
@@ -51,7 +62,7 @@ fun GlobalDialogCoordinator(
                     creator.addNewTask(name, desc, project,ownerContext, date,hour,min )
                     onDismiss()
                     scope.launch {
-                        snackBarHostState.showSnackbar("Task created successfully")
+                        snackBarHostState.showSnackbar(ux.tasks)
                     }
                 },
                 currentDate = currentDate
@@ -77,7 +88,7 @@ fun GlobalDialogCoordinator(
                     )
                     onDismiss()
                     scope.launch {
-                        snackBarHostState.showSnackbar("Task created successfully")
+                        snackBarHostState.showSnackbar(ux.events)
                     }
                 },
                 currentDate = currentDate
@@ -93,7 +104,7 @@ fun GlobalDialogCoordinator(
                     creator.addNewProject(name, desc,ownerContext)
                     onDismiss()
                     scope.launch {
-                        snackBarHostState.showSnackbar("Project created successfully")
+                        snackBarHostState.showSnackbar(ux.projects)
                     }
                 }
             )
@@ -113,7 +124,8 @@ fun GlobalDialogCoordinator(
                         date, hour,minute, ownerContext, linkedTo)
                     onDismiss()
                     scope.launch {
-                        snackBarHostState.showSnackbar("Reminder created successfully")
+
+                        snackBarHostState.showSnackbar(ux.reminders)
                     }
                 },
                 builder = ReminderCreationBuilder(
