@@ -25,7 +25,7 @@ class AppViewModelFactory(
             }
             modelClass.isAssignableFrom(RemindersViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")
-                RemindersViewModel(container.reminderRepository, container.taskRepository, container.googleAuthClient) as T
+                RemindersViewModel(container.reminderRepository, container.taskRepository, container.eventRepository, container.googleAuthClient) as T
             }
             modelClass.isAssignableFrom(TasksViewModel::class.java) -> {
                 @Suppress("UNCHECKED_CAST")

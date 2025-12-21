@@ -113,6 +113,7 @@ fun HomeScreen(
                             onDismiss = {
                                 eventToEdit = null // Reset editing state
                             },
+                            availableProjects = availableProjects as List<Project>,
                             onSubmit = { name, desc, projId, start, end ->
                                 viewModel.updateEvent(eventToEdit!!.id, name, desc, projId, start, end)
                                 eventToEdit = null

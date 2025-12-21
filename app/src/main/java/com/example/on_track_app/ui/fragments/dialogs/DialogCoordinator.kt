@@ -156,13 +156,18 @@ private fun ReminderCreationCoordinator(
 ) {
     val status by viewModel.creationStatus.collectAsStateWithLifecycle()
 
-    val uiState by viewModel.availableTasks.collectAsStateWithLifecycle()
+    val uiStateTask by viewModel.availableTasks.collectAsStateWithLifecycle()
     var availableTasks = emptyList<Expandable>()
-    if (uiState is ItemStatus.Success) {
-        availableTasks = (uiState as ItemStatus.Success).elements
+    if (uiStateTask is ItemStatus.Success) {
+        availableTasks = (uiStateTask as ItemStatus.Success).elements
     }
 
-    val availableEvents = emptyList<Expandable>()
+    val uiStateEvent by viewModel.availableEvents.collectAsStateWithLifecycle()
+    var availableEvents = emptyList<Expandable>()
+    if (uiStateEvent is ItemStatus.Success) {
+        availableEvents = (uiStateEvent as ItemStatus.Success).elements
+    }
+
 
     LaunchedEffect(status) {
         if (status is CreationStatus.Success) {
@@ -190,6 +195,12 @@ private fun EventCreationCoordinator(
 ) {
     val status by viewModel.creationStatus.collectAsStateWithLifecycle()
 
+    val uiState by viewModel.availableProjects.collectAsStateWithLifecycle()
+    var availableProjects = emptyList<Expandable>()
+    if (uiState is ItemStatus.Success) {
+        availableProjects = (uiState as ItemStatus.Success).elements
+    }
+
     LaunchedEffect(status) {
         if (status is CreationStatus.Success) {
             viewModel.resetStatus()
@@ -200,6 +211,7 @@ private fun EventCreationCoordinator(
     EventCreation(
         isLoading = status == CreationStatus.Loading,
         onDismiss = onDismiss,
+        availableProjects = availableProjects as List<Project>,
         onSubmit = { name, desc, projId, start, end ->
             viewModel.createEvent(name, desc, projId, start, end)
         }

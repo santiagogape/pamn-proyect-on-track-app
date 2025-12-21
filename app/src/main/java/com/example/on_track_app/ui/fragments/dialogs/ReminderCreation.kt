@@ -227,7 +227,7 @@ fun ReminderCreation(
                                 minute = m
                             },
                             withTime = true,
-                            label = "${date.toString().split("-").reversed().joinToString("/")}\nAt $hour:${minute.toString().padStart(2, '0')}"
+                            label = date.toString().split("-").reversed().joinToString("/")
                         )
                     }
 

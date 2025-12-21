@@ -90,10 +90,6 @@ fun Agenda(
 
     val viewModel: CalendarViewModel = viewModel(factory = factory)
 
-    LaunchedEffect(projectId) {
-        viewModel.setProjectId(projectId)
-    }
-
     val tasksToday by viewModel.tasksFor(currentDate)
         .collectAsStateWithLifecycle()
 
@@ -188,6 +184,7 @@ fun Agenda(
                             onDismiss = {
                                 eventToEdit = null // Reset editing state
                             },
+                            availableProjects = availableProjects as List<Project>,
                             onSubmit = { name, desc, projId, start, end ->
                                 viewModel.updateEvent(eventToEdit!!.id, name, desc, projId, start, end)
                                 eventToEdit = null

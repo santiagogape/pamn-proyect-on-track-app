@@ -55,6 +55,7 @@ class CalendarViewModel(
 
     private val _currentProjectId = MutableStateFlow<String?>(null)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val events: StateFlow<List<Expandable>> = _currentProjectId
         .flatMapLatest { projectId ->
             if (projectId == null) {

@@ -123,6 +123,19 @@ fun OpenRemindersIconButton(
                                                 border = null // Remove border for cleaner look
                                             )
                                         }
+                                        if (isLinkedToEvent) {
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            SuggestionChip(
+                                                onClick = { /* No-op, just visual */ },
+                                                label = { Text("Event") },
+                                                modifier = Modifier.height(24.dp),
+                                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                                    containerColor = MaterialTheme.colorScheme.background,
+                                                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                                ),
+                                                border = null // Remove border for cleaner look
+                                            )
+                                        }
                                     }
                                 },
                                 supportingContent = {

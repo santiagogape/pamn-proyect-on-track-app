@@ -12,7 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.on_track_app.model.Event // Make sure to import your Event model
+import com.example.on_track_app.model.Event
+import com.example.on_track_app.model.Project // Import Project
 import com.example.on_track_app.ui.fragments.reusable.calendar.Calendar
 import com.example.on_track_app.ui.fragments.reusable.time.DateTimeField
 import com.example.on_track_app.ui.theme.ButtonColors
@@ -25,44 +26,43 @@ enum class DateType {
     START, END
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // Needed for ExposedDropdownMenuBox
 @Composable
 fun EventCreation(
     isLoading: Boolean,
+    availableProjects: List<Project>, // <--- NEW PARAMETER
     existingEvent: Event? = null,
     onDismiss: () -> Unit,
     onSubmit: (String, String, String?, LocalDateTime, LocalDateTime) -> Unit
 ) {
     var deadlineOpen: DateType? by remember { mutableStateOf(null) }
-
     var oneDayEvent by remember(existingEvent) { mutableStateOf(false) }
 
+    // --- Date/Time State ---
     var startDate: LocalDate by remember(existingEvent) {
-        mutableStateOf(
-            // Try to parse existing ISO string, or default to Today
-            existingEvent?.startDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
-        )
+        mutableStateOf(existingEvent?.startDate?.let { LocalDate.parse(it) } ?: LocalDate.now())
     }
     var endDate: LocalDate by remember(existingEvent) {
-        mutableStateOf(
-            existingEvent?.endDate?.let { LocalDate.parse(it) } ?: LocalDate.now().plusDays(1)
-        )
+        mutableStateOf(existingEvent?.endDate?.let { LocalDate.parse(it) } ?: LocalDate.now().plusDays(1))
     }
-
     var startTime by remember(existingEvent) {
-        mutableStateOf(
-            existingEvent?.startTime?.let { LocalTime.parse(it) } ?: LocalTime.now()
-        )
+        mutableStateOf(existingEvent?.startTime?.let { LocalTime.parse(it) } ?: LocalTime.now())
     }
     var endTime by remember(existingEvent) {
-        mutableStateOf(
-            existingEvent?.endTime?.let { LocalTime.parse(it) } ?: LocalTime.now()
-        )
+        mutableStateOf(existingEvent?.endTime?.let { LocalTime.parse(it) } ?: LocalTime.now())
     }
 
+    // --- Form Fields State ---
     var name by remember(existingEvent) { mutableStateOf(existingEvent?.name ?: "") }
     var description by remember(existingEvent) { mutableStateOf(existingEvent?.description ?: "") }
-    var project by remember(existingEvent) { mutableStateOf(existingEvent?.projectId ?: "") }
 
+    // --- Project Dropdown State ---
+    var expanded by remember { mutableStateOf(false) }
+    var selectedProject by remember(existingEvent, availableProjects) {
+        mutableStateOf(availableProjects.find { it.id == existingEvent?.projectId })
+    }
+
+    // --- Derived Times ---
     val start: LocalDateTime by remember {
         derivedStateOf {
             if (oneDayEvent) LocalDateTime.of(startDate, LocalTime.of(0, 0))
@@ -94,17 +94,13 @@ fun EventCreation(
             )
             {
                 // HEADER
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     IconButton(
                         modifier = Modifier.align(Alignment.CenterStart),
                         onClick = onDismiss
                     ) {
                         Icon(Icons.Filled.Close, null)
                     }
-                    // TITLE CHANGE
                     Text(
                         text = if (existingEvent != null) "Edit Event" else "New Event",
                         style = MaterialTheme.typography.titleLarge,
@@ -113,24 +109,15 @@ fun EventCreation(
                 }
 
                 when (deadlineOpen) {
-                    DateType.START ->
-                        Calendar(
-                            eventsByDate = emptyMap(), // Pass empty map
-                            tasksByDate = emptyMap(),  // Pass empty map
-                        ) { chosen ->
-                            startDate = chosen
-                            deadlineOpen = null
-                        }
-                    DateType.END ->
-                        Calendar(
-                            eventsByDate = emptyMap(), // Pass empty map
-                            tasksByDate = emptyMap(),  // Pass empty map
-                        ) { chosen ->
-                            endDate = chosen
-                            deadlineOpen = null
-                        }
+                    DateType.START -> Calendar(emptyMap(), emptyMap()) { chosen ->
+                        startDate = chosen; deadlineOpen = null
+                    }
+                    DateType.END -> Calendar(emptyMap(), emptyMap()) { chosen ->
+                        endDate = chosen; deadlineOpen = null
+                    }
                     null -> {
                         OutlinedTextFieldColors { colors ->
+                            // 1. Name Field
                             OutlinedTextField(
                                 value = name,
                                 onValueChange = { name = it },
@@ -142,6 +129,7 @@ fun EventCreation(
                                 colors = colors
                             )
 
+                            // 2. Description Field
                             OutlinedTextField(
                                 value = description,
                                 onValueChange = { description = it },
@@ -154,29 +142,61 @@ fun EventCreation(
                                 colors = colors
                             )
 
-                            OutlinedTextField(
-                                value = project,
-                                onValueChange = { project = it },
-                                label = { Text("Project (optional)") },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = colors
-                            )
+                            // 3. Project Dropdown (Replaces the old text field)
+                            ExposedDropdownMenuBox(
+                                expanded = expanded,
+                                onExpandedChange = { expanded = !expanded },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedProject?.name ?: "No Project",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Project (Optional)") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                    colors = colors,
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+
+                                ExposedDropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    // Option to clear selection
+                                    DropdownMenuItem(
+                                        text = { Text("None") },
+                                        onClick = {
+                                            selectedProject = null
+                                            expanded = false
+                                        }
+                                    )
+                                    // List available projects
+                                    availableProjects.forEach { project ->
+                                        DropdownMenuItem(
+                                            text = { Text(project.name) },
+                                            onClick = {
+                                                selectedProject = project
+                                                expanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
                         }
 
+                        // Time Fields Row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement =
-                                if (oneDayEvent) Arrangement.Center
-                                else Arrangement.SpaceBetween
+                            horizontalArrangement = if (oneDayEvent) Arrangement.Center else Arrangement.SpaceBetween
                         ) {
-
                             DateTimeField(
                                 onOpenCalendar = { deadlineOpen = DateType.START },
                                 onTime = { h, m -> startTime = LocalTime.of(h, m) },
                                 withTime = !oneDayEvent,
-                                label = "Start\n" + startDate.toString().split("-").reversed()
-                                    .joinToString("/")
+                                label = "Start\n" + startDate.toString().split("-").reversed().joinToString("/")
                             )
 
                             if (!oneDayEvent) {
@@ -184,20 +204,18 @@ fun EventCreation(
                                     onOpenCalendar = { deadlineOpen = DateType.END },
                                     onTime = { h, m -> endTime = LocalTime.of(h, m) },
                                     withTime = true,
-                                    label = "End\n" + endDate.toString().split("-").reversed()
-                                        .joinToString("/")
+                                    label = "End\n" + endDate.toString().split("-").reversed().joinToString("/")
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // BUTTON ROW
+                        // Action Buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
-                        )
-                        {
+                        ) {
                             ButtonColors { colors ->
                                 Button(
                                     onClick = { oneDayEvent = !oneDayEvent },
@@ -210,12 +228,14 @@ fun EventCreation(
                                 }
                             }
 
-                            // SUBMIT / SAVE
                             Button(
                                 onClick = {
                                     onSubmit(
-                                        name, description, project.ifBlank { null },
-                                        start, end
+                                        name,
+                                        description,
+                                        selectedProject?.id, // Pass the ID from the selected object
+                                        start,
+                                        end
                                     )
                                 },
                                 enabled = !isLoading && name.isNotEmpty() && description.isNotEmpty(),

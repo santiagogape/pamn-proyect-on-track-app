@@ -7,6 +7,7 @@ import com.example.on_track_app.data.auth.GoogleAuthClient
 import com.example.on_track_app.model.Expandable
 import com.example.on_track_app.model.Reminder
 import com.example.on_track_app.model.Task
+import com.example.on_track_app.model.Event
 import com.example.on_track_app.ui.fragments.dialogs.CreationStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,7 @@ import java.time.LocalTime
 class RemindersViewModel(
     private val reminderRepository: FirestoreRepository<Reminder>,
     private val taskRepository: FirestoreRepository<Task>,
+    private val eventRepository: FirestoreRepository<Event>,
     private val googleAuthClient: GoogleAuthClient
 ) : ViewModel() {
 
@@ -68,6 +70,26 @@ class RemindersViewModel(
     }
         .map { projectList ->
             ItemStatus.Success(projectList) as ItemStatus
+        }
+        .onStart {
+            emit(ItemStatus.Loading)
+        }
+        .catch {
+            emit(ItemStatus.Error)
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            ItemStatus.Loading
+        )
+
+    val availableEvents: StateFlow<ItemStatus> = if (userId != null) {
+        eventRepository.getElements(userId)
+    } else {
+        flowOf(emptyList())
+    }
+        .map { eventList ->
+            ItemStatus.Success(eventList) as ItemStatus
         }
         .onStart {
             emit(ItemStatus.Loading)
